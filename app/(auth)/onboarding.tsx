@@ -259,7 +259,7 @@ const OnboardingItem = ({
     );
 };
 
-const Welcome = () => {
+const OnboardingScreen = () => {
     const { width } = useWindowDimensions();
     const flatListRef = useRef<FlatList>(null);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -345,4 +345,4 @@ const Welcome = () => {
     );
 };
 
-export default Welcome;
+export default OnboardingScreen;
