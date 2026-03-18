@@ -43,7 +43,7 @@ const OnboardingDot = ({
         const dotWidth = interpolate(
             scrollX.value,
             [(index - 1) * width, index * width, (index + 1) * width],
-            [9, 28, 9],
+            [15, 28, 15],
             Extrapolation.CLAMP,
         );
         const opacity = interpolate(
@@ -235,7 +235,7 @@ const OnboardingItem = ({
                 </Text>
 
                 {/* Tech and Feature Labels */}
-                <View className="absolute inset-x-0 bottom-[-20px] flex-row justify-between px-4">
+                <View className="absolute inset-x-0 bottom-[-20px] flex-row justify-between px-8">
                     <Animated.View
                         style={techStyle}
                         className="bg-[#0286FF]/10 px-3 py-1 rounded-full border border-[#0286FF]/20"
