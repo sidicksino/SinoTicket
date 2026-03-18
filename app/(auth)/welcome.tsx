@@ -233,6 +233,27 @@ const OnboardingItem = ({
                 >
                     {item.description}
                 </Text>
+
+                {/* Tech and Feature Labels */}
+                <View className="absolute inset-x-0 bottom-[-20px] flex-row justify-between px-4">
+                    <Animated.View
+                        style={techStyle}
+                        className="bg-[#0286FF]/10 px-3 py-1 rounded-full border border-[#0286FF]/20"
+                    >
+                        <Text className="text-[#0286FF] text-xs font-bold uppercase tracking-wider">
+                            {item.tech}
+                        </Text>
+                    </Animated.View>
+
+                    <Animated.View
+                        style={featureStyle}
+                        className="bg-[#F8FAFC] px-3 py-1 rounded-full border border-[#E2E8F0]"
+                    >
+                        <Text className="text-[#64748B] text-xs font-bold uppercase tracking-wider">
+                            {item.feature}
+                        </Text>
+                    </Animated.View>
+                </View>
             </Animated.View>
         </View>
     );

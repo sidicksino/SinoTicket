@@ -14,6 +14,8 @@ export const onboarding = [
         description:
             "Find concerts, festivals, and the best events happening near you with SinoTicket.",
         image: images.onboarding1,
+        tech: "Smart Event Radar",
+        feature: "Live Ticket Sync",
     },
     {
         id: 2,
@@ -21,6 +23,8 @@ export const onboarding = [
         description:
             "Reserve your spot in seconds and never miss your favorite shows and parties.",
         image: images.onboarding2,
+        tech: "Instant Checkout",
+        feature: "Secure QR Entry",
     },
     {
         id: 3,
@@ -28,6 +32,8 @@ export const onboarding = [
         description:
             "Get your digital ticket instantly and access events fast with secure QR code entry.",
         image: images.onboarding3,
+        tech: "Priority Lane",
+        feature: "Loyalty Rewards",
     },
 ];
 
