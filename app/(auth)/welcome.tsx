@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Swiper from "react-native-swiper";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import Animated, { FadeInRight, FadeInUp } from "react-native-reanimated";
 
 import CustomButton from "@/components/CustomButton";
 import { onboarding } from "@/constants";
@@ -22,7 +22,7 @@ const Home = () => {
                 }}
                 className="w-full flex justify-end items-end py-5"
             >
-                <Text className="text-black text-md font-semibold opacity-60">Skip</Text>
+                <Text className="text-black text-md font-semibold opacity-40">Skip</Text>
             </TouchableOpacity>
 
             <Swiper
@@ -32,15 +32,15 @@ const Home = () => {
                     <View className="w-[8px] h-[8px] mx-1 bg-[#E2E8F0] rounded-full" />
                 }
                 activeDot={
-                    <View className="w-[32px] h-[8px] mx-1 bg-[#0286FF] rounded-full" />
+                    <View className="w-[28px] h-[8px] mx-1 bg-[#0286FF] rounded-full" />
                 }
                 onIndexChanged={(index) => setActiveIndex(index)}
             >
-                {onboarding.map((item, index) => (
-                    <View key={item.id} className="flex items-center justify-center p-5">
+                {onboarding.map((item) => (
+                    <View key={item.id} className="flex items-center justify-center py-5">
                         <Animated.View 
-                            entering={FadeInUp.duration(1000).delay(100)}
-                            className="w-full h-[300px] items-center justify-center"
+                            entering={FadeInUp.duration(1000).delay(200).springify()}
+                            className="w-full h-[280px] items-center justify-center mb-8"
                         >
                             <Image
                                 source={item.image}
@@ -49,22 +49,21 @@ const Home = () => {
                             />
                         </Animated.View>
                         
-                        <Animated.View 
-                            entering={FadeInDown.duration(1000).delay(200)}
-                            className="flex flex-row items-center justify-center w-full mt-10"
-                        >
-                            <Text className="text-black text-3xl font-extrabold text-center leading-tight">
+                        <View className="w-full px-4">
+                            <Animated.Text 
+                                entering={FadeInRight.duration(800).delay(400).springify()}
+                                className="text-black text-4xl font-extrabold text-center leading-[44px]"
+                            >
                                 {item.title}
-                            </Text>
-                        </Animated.View>
+                            </Animated.Text>
 
-                        <Animated.View 
-                            entering={FadeInDown.duration(1000).delay(400)}
-                        >
-                            <Text className="text-md font-medium text-center text-[#858585] mt-5 px-4 mb-10">
+                            <Animated.Text 
+                                entering={FadeInRight.duration(800).delay(600).springify()}
+                                className="text-lg font-medium text-center text-[#858585] mt-6"
+                            >
                                 {item.description}
-                            </Text>
-                        </Animated.View>
+                            </Animated.Text>
+                        </View>
                     </View>
                 ))}
             </Swiper>
@@ -77,7 +76,7 @@ const Home = () => {
                             ? router.replace("/(auth)/sign-up")
                             : swiperRef.current?.scrollBy(1)
                     }
-                    className="mt-10"
+                    className="mt-10 py-5"
                 />
             </View>
         </SafeAreaView>
