@@ -1,20 +1,20 @@
 import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {
-    FlatList,
-    Image,
-    Text,
-    TouchableOpacity,
-    View,
-    useWindowDimensions,
+  FlatList,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import Animated, {
-    Extrapolation,
-    SharedValue,
-    interpolate,
-    useAnimatedScrollHandler,
-    useAnimatedStyle,
-    useSharedValue,
+  Extrapolation,
+  SharedValue,
+  interpolate,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -222,7 +222,7 @@ const OnboardingItem = ({
       >
         <Text
           style={{ fontSize: headerSize }}
-          className="text-center font-extrabold leading-tight text-[#0F172A]"
+          className="text-center font-syne font-extrabold leading-tight text-[#0F172A]"
         >
           {item.title}
         </Text>
