@@ -21,18 +21,23 @@ const SignUp = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined} // ✅ FIX
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled" // ✅ FIX
+          keyboardDismissMode="on-drag" // ✅ FIX
         >
           <View className="flex-1 px-8 pt-12 pb-8">
-            <AnimatedView entering={FadeInDown.delay(100)}>
+            {/* HEADER */}
+            <AnimatedView
+              entering={FadeInDown.duration(800)
+                .delay(100)
+                .springify()
+                .damping(14)}
+            >
               <View className="mb-6 h-12 w-12 items-center justify-center rounded-2xl bg-[#0286FF]/10">
                 <Ionicons name="person-add" size={24} color="#0286FF" />
               </View>
@@ -41,87 +46,124 @@ const SignUp = () => {
                 Create Account
               </Text>
 
-              <Text className="mb-10 text-[16px] text-[#64748B]">
+              <Text className="mb-10 text-[16px] font-medium text-[#64748B]">
                 Join SinoTicket today. Let&apos;s explore together.
               </Text>
             </AnimatedView>
 
-            <View>
-              <AnimatedView entering={FadeInDown.delay(200)}>
+            {/* FORM */}
+            <View className="w-full">
+              <AnimatedView
+                entering={FadeInDown.duration(800)
+                  .delay(200)
+                  .springify()
+                  .damping(14)}
+              >
                 <InputField
                   label="Full Name"
                   placeholder="John Doe"
                   icon="person-outline"
+                  autoCapitalize="words"
                 />
               </AnimatedView>
 
-              <AnimatedView entering={FadeInDown.delay(300)}>
+              <AnimatedView
+                entering={FadeInDown.duration(800)
+                  .delay(300)
+                  .springify()
+                  .damping(14)}
+              >
                 <InputField
                   label="Email Address"
                   placeholder="name@example.com"
                   icon="mail-outline"
                   keyboardType="email-address"
+                  autoCapitalize="none"
                 />
               </AnimatedView>
 
-              <AnimatedView entering={FadeInDown.delay(400)}>
+              <AnimatedView
+                entering={FadeInDown.duration(800)
+                  .delay(400)
+                  .springify()
+                  .damping(14)}
+              >
                 <InputField
                   label="Password"
                   placeholder="Min. 8 characters"
                   icon="lock-closed-outline"
-                  secureTextEntry
+                  secureTextEntry={true}
                 />
               </AnimatedView>
 
-              <AnimatedView entering={FadeInDown.delay(500)}>
+              <AnimatedView
+                entering={FadeInDown.duration(800)
+                  .delay(500)
+                  .springify()
+                  .damping(14)}
+              >
                 <CustomButton
                   title="Create Account"
                   onPress={() => { }}
-                  className="mt-4"
+                  className="mt-4 shadow-lg shadow-[#0286FF]/30"
                 />
               </AnimatedView>
             </View>
 
+            {/* DIVIDER */}
             <AnimatedView
-              entering={FadeInDown.delay(600)}
-              className="mt-8 flex-row items-center"
+              entering={FadeInDown.duration(800)
+                .delay(600)
+                .springify()
+                .damping(14)}
+              className="mt-8 flex flex-row items-center justify-center gap-x-4"
             >
-              <View className="flex-1 h-[1px] bg-[#E2E8F0]" />
-              <Text className="mx-3 text-[#94A3B8]">
+              <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
+              <Text className="text-[14px] font-medium text-[#94A3B8]">
                 or continue with
               </Text>
-              <View className="flex-1 h-[1px] bg-[#E2E8F0]" />
+              <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
             </AnimatedView>
 
+            {/* SOCIAL */}
             <AnimatedView
-              entering={FadeInDown.delay(700)}
-              className="mt-6 flex-row justify-center gap-5"
+              entering={FadeInDown.duration(800)
+                .delay(700)
+                .springify()
+                .damping(14)}
+              className="mt-6 flex flex-row items-center justify-center gap-x-5"
             >
-              <TouchableOpacity className="h-[50px] w-[85px] items-center justify-center rounded-xl border border-[#E2E8F0]">
+              <TouchableOpacity className="flex h-[50px] w-[85px] flex-row items-center justify-center rounded-xl border border-[#E2E8F0] bg-white">
                 <Image
                   source={require("@/assets/icons/google-icon.png")}
                   style={{ width: 22, height: 22 }}
+                  resizeMode="contain"
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity className="h-[50px] w-[85px] items-center justify-center rounded-xl border border-[#E2E8F0]">
+              <TouchableOpacity className="flex h-[50px] w-[85px] flex-row items-center justify-center rounded-xl border border-[#E2E8F0] bg-white">
                 <Image
                   source={require("@/assets/icons/phone-icon.png")}
                   style={{ width: 22, height: 22 }}
+                  resizeMode="contain"
                 />
               </TouchableOpacity>
             </AnimatedView>
 
+            {/* FOOTER */}
             <AnimatedView
-              entering={FadeInDown.delay(800)}
+              entering={FadeInDown.duration(800)
+                .delay(800)
+                .springify()
+                .damping(14)}
               className="mt-auto pt-8"
             >
-              <View className="flex-row justify-center">
-                <Text className="text-[#64748B]">
+              <View className="flex flex-row justify-center">
+                <Text className="text-[15px] font-medium text-[#64748B]">
                   Already have an account?{" "}
                 </Text>
                 <Link href="/(auth)/sign-in">
-                  <Text className="font-bold text-[#0286FF]">
+                  <Text className="text-[15px] font-bold text-[#0286FF]">
                     Log in
                   </Text>
                 </Link>
