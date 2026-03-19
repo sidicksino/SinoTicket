@@ -3,8 +3,8 @@ import { images } from "@/constants";
 import { router } from "expo-router";
 import React from "react";
 import { DimensionValue, Image, Text, View, useWindowDimensions } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Welcome = () => {
     const { height } = useWindowDimensions();
@@ -13,9 +13,9 @@ const Welcome = () => {
     return (
         <SafeAreaView className="flex-1 bg-white">
             <View className="flex-1 px-8 justify-between pb-10 pt-4">
-                <Animated.View 
-                   entering={FadeInUp.duration(800).springify().damping(14)}
-                   className="w-full items-center justify-center flex-1"
+                <Animated.View
+                    entering={FadeInUp.duration(800).springify().damping(14)}
+                    className="w-full items-center justify-center flex-1"
                 >
                     <Image
                         source={images.welcome}
