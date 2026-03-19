@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, Redirect, useRouter } from "expo-router";
 import React from "react";
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -62,7 +63,7 @@ const SignUp = () => {
       const firstName = names[0] || "";
       const lastName = names.length > 1 ? names.slice(1).join(" ") : "";
 
-      await signUp.create({
+      const response = await signUp.create({
         emailAddress,
         // @ts-ignore - Valid in Clerk runtime, typed differently in some versions
         password,
@@ -70,16 +71,33 @@ const SignUp = () => {
         lastName,
       });
 
+      if ((response as any)?.error) {
+        throw (response as any).error;
+      }
+
       await signUp.verifications.sendEmailCode();
       setPendingVerification(true);
     } catch (err: any) {
-      setApiError(
-        err.errors?.[0]?.longMessage ||
-        err.errors?.[0]?.message ||
-        err.message ||
-        "An error occurred."
-      );
-      console.error(err);
+      const clerkError = err.errors?.[0];
+      const msg = clerkError?.longMessage || clerkError?.message || err.message || "An error occurred during sign-up.";
+      
+      if (
+        clerkError?.code === "form_identifier_exists" || 
+        msg.toLowerCase().includes("email address is taken") || 
+        msg.toLowerCase().includes("already exists")
+      ) {
+        Alert.alert(
+          "Account Exists",
+          "An account with this email already exists. Would you like to sign in instead?",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Sign In", onPress: () => router.push("/(auth)/sign-in") }
+          ]
+        );
+      } else {
+        setApiError(msg);
+        Alert.alert("Error", msg);
+      }
     }
   };
 
@@ -102,19 +120,15 @@ const SignUp = () => {
         }
         router.replace("/(root)/(tabs)/home");
       } else {
-        setApiError(
-          "Sign-up incomplete. Missing: " + signUp.missingFields?.join(", ")
-        );
+        const msg = "Sign-up incomplete. Missing: " + (signUp.missingFields?.join(", ") || "Unknown fields");
+        setApiError(msg);
+        Alert.alert("Incomplete", msg);
         console.error("Missing fields:", signUp.missingFields);
       }
     } catch (err: any) {
-      setApiError(
-        err.errors?.[0]?.longMessage ||
-        err.errors?.[0]?.message ||
-        err.message ||
-        "An error occurred."
-      );
-      console.error(err);
+      const msg = err.errors?.[0]?.longMessage || err.errors?.[0]?.message || err.message || "An error occurred during verification.";
+      setApiError(msg);
+      Alert.alert("Error", msg);
     }
   };
 
