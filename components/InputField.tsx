@@ -34,27 +34,26 @@ const InputField = ({
           </Text>
         ) : null}
         <View
-          className={`flex h-[60px] flex-row items-center justify-start rounded-2xl border px-4 ${containerStyle}`}
+          className={`flex h-[60px] flex-row items-center justify-start rounded-2xl border px-4 transition-all duration-300 ${containerStyle}`}
           style={
             isFocused
               ? {
-                  borderColor: "#0286FF",
-                  backgroundColor: "#FFFFFF",
-                  shadowColor: "#0286FF",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.12,
-                  shadowRadius: 10,
-                  elevation: 6,
-                }
+                borderColor: "#0286FF",
+                backgroundColor: "#FFFFFF",
+                shadowColor: "#0286FF",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.12,
+                shadowRadius: 10,
+                elevation: 6,
+              }
               : {
-                  borderColor: "#E2E8F0",
-                  backgroundColor: "#F8FAFC",
-                }
+                borderColor: "#E2E8F0",
+                backgroundColor: "#F8FAFC",
+              }
           }
         >
           {icon && (
-            <Ionicons
-              name={icon as any}
+            <Ionicons name={icon as any}
               size={24}
               color={isFocused ? "#0286FF" : "#94A3B8"}
               className={`mr-3 ${iconStyle}`}

@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -52,7 +53,6 @@ const SignUp = () => {
                 autoCapitalize="words"
               />
             </AnimatedView>
-
             <AnimatedView entering={FadeInDown.duration(800).delay(300).springify().damping(18)}>
               <InputField
                 label="Email Address"
@@ -62,7 +62,6 @@ const SignUp = () => {
                 autoCapitalize="none"
               />
             </AnimatedView>
-
             <AnimatedView entering={FadeInDown.duration(800).delay(400).springify().damping(18)}>
               <InputField
                 label="Password"
@@ -82,56 +81,56 @@ const SignUp = () => {
                 </Text>
               </TouchableOpacity>
             </AnimatedView>
-          </View>
 
-          {/* DIVIDER */}
-          <AnimatedView
-            entering={FadeInDown.duration(800).delay(600).springify().damping(18)}
-            className="mt-10 mb-6 flex flex-row items-center justify-center gap-x-4"
-          >
-            <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
-            <Text className="text-[13px] font-bold text-[#94A3B8] uppercase tracking-widest">
-              Or continue with
-            </Text>
-            <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
-          </AnimatedView>
-
-          {/* SOCIAL LOGIN */}
-          <AnimatedView
-            entering={FadeInDown.duration(800).delay(700).springify().damping(18)}
-            className="flex flex-row items-center justify-between gap-x-4"
-          >
-            <TouchableOpacity className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]">
-              <Image
-                source={require("@/assets/icons/google-icon.png")}
-                style={{ width: 24, height: 24 }}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]">
-              <Image
-                source={require("@/assets/icons/phone-icon.png")}
-                style={{ width: 24, height: 24 }}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-          </AnimatedView>
-
-          {/* FOOTER */}
-          <AnimatedView
-            entering={FadeInUp.duration(800).delay(800).springify().damping(18)}
-            className="mt-10 flex flex-row justify-center items-center"
-          >
-            <Text className="text-[15px] font-medium text-[#64748B]">
-              Already have an account?{" "}
-            </Text>
-            <Link href="/(auth)/sign-in">
-              <Text className="text-[15px] font-bold text-[#0286FF]">
-                Log In
+            {/* DIVIDER */}
+            <AnimatedView
+              entering={FadeInDown.duration(800).delay(600).springify().damping(18)}
+              className="mt-10 mb-6 flex flex-row items-center justify-center gap-x-4"
+            >
+              <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
+              <Text className="text-[13px] font-bold text-[#94A3B8] uppercase tracking-widest">
+                Or continue with
               </Text>
-            </Link>
-          </AnimatedView>
+              <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
+            </AnimatedView>
+
+            {/* SOCIAL LOGIN */}
+            <AnimatedView
+              entering={FadeInDown.duration(800).delay(700).springify().damping(18)}
+              className="flex flex-row items-center justify-between gap-x-4"
+            >
+              <TouchableOpacity className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]">
+                <Image
+                  source={require("@/assets/icons/google-icon.png")}
+                  style={{ width: 24, height: 24 }}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]">
+                <Image
+                  source={require("@/assets/icons/phone-icon.png")}
+                  style={{ width: 24, height: 24 }}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            </AnimatedView>
+
+            {/* FOOTER */}
+            <AnimatedView
+              entering={FadeInUp.duration(800).delay(800).springify().damping(18)}
+              className="mt-10 flex flex-row justify-center items-center"
+            >
+              <Text className="text-[15px] font-medium text-[#64748B]">
+                Already have an account?{" "}
+              </Text>
+              <Link href="/(auth)/sign-in">
+                <Text className="text-[15px] font-bold text-[#0286FF]">
+                  Log In
+                </Text>
+              </Link>
+            </AnimatedView>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
