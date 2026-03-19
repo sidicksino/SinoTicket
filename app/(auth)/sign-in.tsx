@@ -63,7 +63,7 @@ const SignIn = () => {
               >
                 <InputField
                   label="Email Address"
-                  placeholder="name@example.com"
+                  placeholder="Enter your email"
                   icon="mail-outline"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -140,14 +140,6 @@ const SignIn = () => {
               <TouchableOpacity className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]">
                 <Image
                   source={require("@/assets/icons/google-icon.png")}
-                  style={{ width: 24, height: 24 }}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]">
-                <Image
-                  source={require("@/assets/icons/phone-icon.png")}
                   style={{ width: 24, height: 24 }}
                   resizeMode="contain"
                 />

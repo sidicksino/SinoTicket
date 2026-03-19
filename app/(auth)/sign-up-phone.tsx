@@ -19,7 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 // that occurs when using Animated.createAnimatedComponent(View) manually.
 const AnimatedView = Animated.View;
 
-const SignUp = () => {
+const SignUpPhone = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       {/* KeyboardAvoidingView belongs here — once, at the screen level */}
@@ -47,7 +47,7 @@ const SignUp = () => {
                   Account.
                 </Text>
                 <Text className="text-[16px] font-medium text-[#64748B] leading-relaxed">
-                  Join SinoTicket today and unlock access to the best events in town.
+                  Join SinoTicket today using your phone number to discover events safely.
                 </Text>
               </View>
             </AnimatedView>
@@ -64,10 +64,10 @@ const SignUp = () => {
               </AnimatedView>
               <AnimatedView entering={FadeInDown.duration(800).delay(300).springify().damping(18)}>
                 <InputField
-                  label="Email Address"
-                  placeholder="Enter your email"
-                  icon="mail-outline"
-                  keyboardType="email-address"
+                  label="Phone Number"
+                  placeholder="Enter your phone number"
+                  icon="call-outline"
+                  keyboardType="phone-pad"
                   autoCapitalize="none"
                 />
               </AnimatedView>
@@ -125,11 +125,11 @@ const SignUp = () => {
                   />
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  onPress={() => router.push('/(auth)/sign-up-phone')}
                   className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]"
+                  onPress={() => router.push('/(auth)/sign-up')}
                 >
                   <Image
-                    source={require("@/assets/icons/phone-icon.png")}
+                    source={require("@/assets/icons/gmail-icon.png")}
                     style={{ width: 24, height: 24 }}
                     resizeMode="contain"
                   />
@@ -158,4 +158,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default SignUpPhone;

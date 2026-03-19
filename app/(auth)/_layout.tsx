@@ -5,19 +5,26 @@ const Layout = () => {
     <Stack>
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="welcome" options={{ headerShown: false }} />
-      <Stack.Screen 
-        name="sign-up" 
-        options={{ 
+      <Stack.Screen
+        name="sign-up"
+        options={{
           headerShown: false,
-          animation: "slide_from_right" 
-        }} 
+          animation: "slide_from_right"
+        }}
       />
-      <Stack.Screen 
-        name="sign-in" 
-        options={{ 
+      <Stack.Screen
+        name="sign-in"
+        options={{
           headerShown: false,
-          animation: "slide_from_right" 
-        }} 
+          animation: "slide_from_right"
+        }}
+      />
+      <Stack.Screen
+        name="sign-up-phone"
+        options={{
+          headerShown: false,
+          animation: "slide_from_right"
+        }}
       />
     </Stack>
   );
