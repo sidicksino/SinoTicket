@@ -1,13 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
   Text,
   TextInput,
   TextInputProps,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  Keyboard,
   View,
 } from "react-native";
 
@@ -28,52 +27,48 @@ const InputField = ({
   const [isSecureTextVisible, setIsSecureTextVisible] = useState(secureTextEntry);
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="mb-4 w-full"
-    >
-      <TouchableWithoutFeedback>
-        <View className="flex flex-col gap-2">
-          <Text className="text-[15px] font-semibold text-[#333333]">
-            {label}
-          </Text>
-          <View
-            className={`flex flex-row items-center justify-start rounded-xl border bg-neutral-50 px-4 py-3 shadow-sm shadow-neutral-200/50 ${
-              isFocused ? "border-[#0286FF]" : "border-neutral-200"
-            } ${className}`}
-          >
-            {icon && (
-              <Ionicons
-                name={icon}
-                size={20}
-                color="#666666"
-                className="mr-3"
-                style={{ marginRight: 12 }}
-              />
-            )}
-            <TextInput
-              className="flex-1 font-medium text-black text-[15px]"
-              secureTextEntry={isSecureTextVisible}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholderTextColor="#9ca3af"
-              {...props}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View className={`mb-5 w-full flex flex-col gap-2 ${className}`}>
+        <Text className="text-[14px] font-bold text-[#1E293B] ml-1">
+          {label}
+        </Text>
+        <View
+          className={`flex h-[56px] flex-row items-center justify-start rounded-2xl border px-4 transition-colors duration-200 ${
+            isFocused ? "border-[#0286FF] bg-[#0286FF]/5 shadow-sm shadow-[#0286FF]/10" : "border-[#E2E8F0] bg-[#F8FAFC]"
+          }`}
+        >
+          {icon && (
+            <Ionicons
+              name={icon}
+              size={22}
+              color={isFocused ? "#0286FF" : "#94A3B8"}
+              className="mr-3"
+              style={{ marginRight: 12 }}
             />
-            {secureTextEntry && (
-              <TouchableOpacity
-                onPress={() => setIsSecureTextVisible(!isSecureTextVisible)}
-              >
-                <Ionicons
-                  name={isSecureTextVisible ? "eye-off-outline" : "eye-outline"}
-                  size={20}
-                  color="#666666"
-                />
-              </TouchableOpacity>
-            )}
-          </View>
+          )}
+          <TextInput
+            className="flex-1 font-medium text-[#0F172A] text-[16px] h-full"
+            secureTextEntry={isSecureTextVisible}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            placeholderTextColor="#94A3B8"
+            {...props}
+          />
+          {secureTextEntry && (
+            <TouchableOpacity
+              onPress={() => setIsSecureTextVisible(!isSecureTextVisible)}
+              className="p-1"
+            >
+              <Ionicons
+                name={isSecureTextVisible ? "eye-off-outline" : "eye-outline"}
+                size={22}
+                color="#94A3B8"
+              />
+            </TouchableOpacity>
+          )}
         </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
