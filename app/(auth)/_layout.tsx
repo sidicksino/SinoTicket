@@ -26,6 +26,13 @@ const Layout = () => {
           animation: "slide_from_right"
         }}
       />
+      <Stack.Screen
+        name="forgot-password"
+        options={{
+          headerShown: false,
+          animation: "slide_from_right"
+        }}
+      />
     </Stack>
   );
 };
