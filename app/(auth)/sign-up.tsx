@@ -3,7 +3,7 @@ import InputField from "@/components/InputField";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import React from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View, KeyboardAvoidingView, Platform } from "react-native";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -12,18 +12,15 @@ const AnimatedView = Animated.createAnimatedComponent(View);
 const SignUp = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-        style={{ flex: 1 }}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1 }}
-        >
-          <View className="flex-1 px-8 pt-12 pb-8">
+        <View className="flex-1 px-8 pt-12 pb-8">
             <AnimatedView entering={FadeInDown.duration(800).delay(100).springify().damping(14)}>
               <View className="mb-6 h-12 w-12 items-center justify-center rounded-2xl bg-[#0286FF]/10">
-                  <Ionicons name="person-add" size={24} color="#0286FF" />
+                <Ionicons name="person-add" size={24} color="#0286FF" />
               </View>
               <Text className="mb-2 font-syne text-[32px] font-extrabold text-[#0F172A]">
                 Create Account
@@ -38,7 +35,6 @@ const SignUp = () => {
                 <InputField
                   label="Full Name"
                   placeholder="John Doe"
-                  icon="person-outline"
                   autoCapitalize="words"
                 />
               </AnimatedView>
@@ -47,7 +43,6 @@ const SignUp = () => {
                 <InputField
                   label="Email Address"
                   placeholder="name@example.com"
-                  icon="mail-outline"
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
@@ -57,7 +52,6 @@ const SignUp = () => {
                 <InputField
                   label="Password"
                   placeholder="Min. 8 characters"
-                  icon="lock-closed-outline"
                   secureTextEntry={true}
                 />
               </AnimatedView>
@@ -65,7 +59,7 @@ const SignUp = () => {
               <AnimatedView entering={FadeInDown.duration(800).delay(500).springify().damping(14)}>
                 <CustomButton
                   title="Create Account"
-                  onPress={() => {}}
+                  onPress={() => { }}
                   className="mt-4 shadow-lg shadow-[#0286FF]/30"
                 />
               </AnimatedView>
@@ -82,19 +76,21 @@ const SignUp = () => {
 
             <AnimatedView
               entering={FadeInDown.duration(800).delay(700).springify().damping(14)}
-              className="mt-8 flex flex-row items-center justify-center gap-x-6"
+              className="mt-6 flex flex-row items-center justify-center gap-x-5"
             >
-              <TouchableOpacity className="flex h-[60px] w-[80px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white shadow-sm shadow-slate-100">
+              <TouchableOpacity className="flex h-[50px] w-[85px] flex-row items-center justify-center rounded-xl border border-[#E2E8F0] bg-white">
                 <Image
-                  source={{
-                    uri: "https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg",
-                  }}
-                  style={{ width: 24, height: 24 }}
+                  source={require('@/assets/icons/google-icon.png')}
+                  style={{ width: 22, height: 22 }}
                   resizeMode="contain"
                 />
               </TouchableOpacity>
-              <TouchableOpacity className="flex h-[60px] w-[80px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-white shadow-sm shadow-slate-100">
-                <Ionicons name="logo-apple" size={26} color="#0F172A" />
+              <TouchableOpacity className="flex h-[50px] w-[85px] flex-row items-center justify-center rounded-xl border border-[#E2E8F0] bg-white">
+                <Image
+                  source={require('@/assets/icons/phone-icon.png')}
+                  style={{ width: 22, height: 22 }}
+                  resizeMode="contain"
+                />
               </TouchableOpacity>
             </AnimatedView>
 
@@ -112,7 +108,6 @@ const SignUp = () => {
             </AnimatedView>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
