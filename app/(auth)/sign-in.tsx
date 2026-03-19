@@ -62,10 +62,9 @@ const SignIn = () => {
                   .damping(18)}
               >
                 <InputField
-                  label="Email Address"
-                  placeholder="Enter your email"
-                  icon="mail-outline"
-                  keyboardType="email-address"
+                  label="Email or Phone Number"
+                  placeholder="Enter email or phone"
+                  icon="person-outline"
                   autoCapitalize="none"
                 />
               </AnimatedView>
