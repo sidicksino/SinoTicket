@@ -275,7 +275,7 @@ const OnboardingScreen = () => {
 
   const handleNext = () => {
     if (isLastSlide) {
-      router.replace("/(auth)/sign-up");
+      router.replace("/(auth)/welcome" as any);
       return;
     }
 
@@ -288,7 +288,7 @@ const OnboardingScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <TouchableOpacity
-        onPress={() => router.replace("/(auth)/sign-up")}
+        onPress={() => router.replace("/(auth)/welcome" as any)}
         className="w-full items-end px-6 py-4"
       >
         <Text className="text-base font-semibold text-[#334155] opacity-70">
