@@ -1,7 +1,7 @@
 import InputField from "@/components/InputField";
 import { useAuth, useClerk, useSignUp } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
-import { Link, useRouter } from "expo-router";
+import { Link, Redirect, useRouter } from "expo-router";
 import React from "react";
 import {
   Image,
@@ -20,7 +20,7 @@ const AnimatedView = Animated.View;
 
 const SignUp = () => {
   const { signUp, fetchStatus } = useSignUp();
-  const { isSignedIn } = useAuth();
+  const { isLoaded: authLoaded } = useAuth();
   const { setActive } = useClerk();
   const router = useRouter();
 
@@ -118,8 +118,12 @@ const SignUp = () => {
     }
   };
 
-  if (signUp?.status === "complete" || isSignedIn) {
+  if (!authLoaded) {
     return null;
+  }
+
+  if (signUp?.status === "complete") {
+    return <Redirect href="/(root)/(tabs)/home" />;
   }
 
   if (pendingVerification) {
