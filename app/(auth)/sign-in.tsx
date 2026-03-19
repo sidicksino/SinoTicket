@@ -7,14 +7,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const AnimatedView = Animated.createAnimatedComponent(View);
 
 const SignIn = () => {
   return (
@@ -31,35 +30,27 @@ const SignIn = () => {
         >
           <View className="flex-1 px-8 pt-8">
             {/* HEADER SECTION */}
-            <AnimatedView
-              entering={FadeInDown.duration(800)
-                .delay(100)
-                .springify()
-                .damping(18)}
+            <Animated.View
+              entering={FadeInDown.duration(800).delay(100).springify().damping(18)}
             >
               <View className="mb-5 h-14 w-14 items-center justify-center rounded-[20px] bg-[#0286FF]/10">
                 <Ionicons name="log-in-outline" size={32} color="#0286FF" />
               </View>
-
               <Text className="font-syne text-[42px] font-black text-[#0F172A] leading-tight">
                 Welcome
               </Text>
               <Text className="font-syne text-[42px] font-black text-[#0286FF] leading-tight mb-4">
                 Back.
               </Text>
-
               <Text className="mb-8 text-[16px] font-medium text-[#64748B] leading-relaxed">
                 Log in to SinoTicket to manage your tickets and discover fantastic events.
               </Text>
-            </AnimatedView>
+            </Animated.View>
 
             {/* FORM SECTION */}
             <View className="w-full mt-2">
-              <AnimatedView
-                entering={FadeInDown.duration(800)
-                  .delay(200)
-                  .springify()
-                  .damping(18)}
+              <Animated.View
+                entering={FadeInDown.duration(800).delay(200).springify().damping(18)}
               >
                 <InputField
                   label="Email or Phone Number"
@@ -67,13 +58,10 @@ const SignIn = () => {
                   icon="person-outline"
                   autoCapitalize="none"
                 />
-              </AnimatedView>
+              </Animated.View>
 
-              <AnimatedView
-                entering={FadeInDown.duration(800)
-                  .delay(300)
-                  .springify()
-                  .damping(18)}
+              <Animated.View
+                entering={FadeInDown.duration(800).delay(300).springify().damping(18)}
               >
                 <InputField
                   label="Password"
@@ -81,62 +69,49 @@ const SignIn = () => {
                   icon="lock-closed-outline"
                   secureTextEntry={true}
                 />
-              </AnimatedView>
+              </Animated.View>
 
-              {/* FORGOT PASSWORD */}
-              <AnimatedView
-                entering={FadeInDown.duration(800)
-                  .delay(400)
-                  .springify()
-                  .damping(18)}
-                className="flex flex-row justify-end mb-6 mt-1"
+              {/* FORGOT PASSWORD — style prop instead of className so the
+                  view has a real height and the Link is tappable */}
+              <Animated.View
+                entering={FadeInDown.duration(800).delay(400).springify().damping(18)}
+                style={styles.forgotPassword}
               >
                 <Link href="/(auth)/forgot-password">
-                  <Text className="text-[14px] font-bold text-[#0286FF] active:opacity-70">
+                  <Text className="text-[14px] font-bold text-[#0286FF]">
                     Forgot Password?
                   </Text>
                 </Link>
-              </AnimatedView>
+              </Animated.View>
 
               {/* CALL TO ACTION BUTTON */}
-              <AnimatedView
-                entering={FadeInDown.duration(800)
-                  .delay(500)
-                  .springify()
-                  .damping(18)}
+              <Animated.View
+                entering={FadeInDown.duration(800).delay(500).springify().damping(18)}
               >
-                <TouchableOpacity
-                  className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"
-                >
+                <TouchableOpacity className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80">
                   <Text className="text-white font-syne font-bold text-[18px]">
                     Log In
                   </Text>
                 </TouchableOpacity>
-              </AnimatedView>
+              </Animated.View>
             </View>
 
             {/* DIVIDER */}
-            <AnimatedView
-              entering={FadeInDown.duration(800)
-                .delay(600)
-                .springify()
-                .damping(18)}
-              className="mt-10 mb-6 flex flex-row items-center justify-center gap-x-4"
+            <Animated.View
+              entering={FadeInDown.duration(800).delay(600).springify().damping(18)}
+              style={styles.divider}
             >
-              <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
+              <View style={styles.dividerLine} />
               <Text className="text-[13px] font-bold text-[#94A3B8] uppercase tracking-widest">
                 Or continue with
               </Text>
-              <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
-            </AnimatedView>
+              <View style={styles.dividerLine} />
+            </Animated.View>
 
             {/* SOCIAL LOGIN */}
-            <AnimatedView
-              entering={FadeInDown.duration(800)
-                .delay(700)
-                .springify()
-                .damping(18)}
-              className="flex flex-row items-center justify-between gap-x-4"
+            <Animated.View
+              entering={FadeInDown.duration(800).delay(700).springify().damping(18)}
+              style={styles.socialRow}
             >
               <TouchableOpacity className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]">
                 <Image
@@ -145,15 +120,12 @@ const SignIn = () => {
                   resizeMode="contain"
                 />
               </TouchableOpacity>
-            </AnimatedView>
+            </Animated.View>
 
             {/* FOOTER */}
-            <AnimatedView
-              entering={FadeInUp.duration(800)
-                .delay(800)
-                .springify()
-                .damping(18)}
-              className="mt-10 flex flex-row justify-center items-center"
+            <Animated.View
+              entering={FadeInUp.duration(800).delay(800).springify().damping(18)}
+              style={styles.footer}
             >
               <Text className="text-[15px] font-medium text-[#64748B]">
                 Don&apos;t have an account?{" "}
@@ -163,12 +135,45 @@ const SignIn = () => {
                   Sign Up
                 </Text>
               </Link>
-            </AnimatedView>
+            </Animated.View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  forgotPassword: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginBottom: 24,
+    marginTop: 4,
+  },
+  divider: {
+    marginTop: 40,
+    marginBottom: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  dividerLine: {
+    height: 1,
+    flex: 1,
+    backgroundColor: "#E2E8F0",
+  },
+  socialRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+  },
+  footer: {
+    marginTop: 40,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
 
 export default SignIn;

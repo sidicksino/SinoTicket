@@ -124,7 +124,7 @@ const SignUp = () => {
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => router.push('/(auth)/sign-up-phone')}
                   className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]"
                 >
