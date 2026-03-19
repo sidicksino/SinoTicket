@@ -34,7 +34,7 @@ const InputField = ({
           </Text>
         ) : null}
         <View
-          className={`flex h-[60px] flex-row items-center justify-start rounded-2xl border px-4 transition-all duration-300 ${containerStyle}`}
+          className={`flex h-[60px] flex-row items-center justify-start rounded-2xl border px-4 ${containerStyle}`}
           style={
             isFocused
               ? {
