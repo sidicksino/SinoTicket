@@ -1,9 +1,10 @@
 import InputField from "@/components/InputField";
 import { Ionicons } from "@expo/vector-icons";
-import { useSignIn } from "@clerk/expo";
-import { Link, useRouter, type Href } from "expo-router";
+import { useSignIn, useAuth, useClerk } from "@clerk/expo";
+import { Link, useRouter } from "expo-router";
 import React from "react";
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -18,6 +19,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const SignIn = () => {
   const { signIn, errors, fetchStatus } = useSignIn();
+  const { setActive } = useClerk();
+  const { isLoaded } = useAuth();
   const router = useRouter();
 
   const [emailAddress, setEmailAddress] = React.useState("");
@@ -26,64 +29,84 @@ const SignIn = () => {
   const [apiError, setApiError] = React.useState("");
 
   const handleSubmit = async () => {
-    if (!signIn) return;
+    if (!isLoaded || !signIn) return;
     setApiError("");
-    try {
-      const { error } = await signIn.password({
-        emailAddress,
-        password,
-      });
-      if (error) {
-        setApiError((error as any).errors?.[0]?.longMessage || (error as any).errors?.[0]?.message || "Log in failed.");
+
+    if (!emailAddress) {
+      const msg = "Email or phone number is required.";
+      setApiError(msg);
+      Alert.alert("Error", msg);
+      return;
+    }
+    
+    if (emailAddress.includes('@')) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailAddress)) {
+        const msg = "Please enter a valid email address.";
+        setApiError(msg);
+        Alert.alert("Error", msg);
         return;
       }
-      if (signIn.status === 'complete') {
-        await signIn.finalize({
-          navigate: ({ session, decorateUrl }) => {
-            if (session?.currentTask) return;
-            const url = decorateUrl('/');
-            if (url.startsWith('http')) {
-              window.location.href = url;
-            } else {
-              router.push(url as Href);
-            }
-          },
-        });
-      } else if (signIn.status === 'needs_client_trust') {
-        const emailCodeFactor = signIn.supportedSecondFactors.find(
-          (factor) => factor.strategy === 'email_code',
+    }
+
+    try {
+      const { error } = await signIn.create({
+        identifier: emailAddress,
+        // @ts-ignore
+        password,
+      });
+
+      if (error) {
+        const msg = (error as any).errors?.[0]?.longMessage || (error as any).errors?.[0]?.message || "Log in failed.";
+        Alert.alert("Error", msg);
+        setApiError(msg);
+        return;
+      }
+
+      if ((signIn as any).status === 'complete') {
+        if ((signIn as any).createdSessionId) {
+          await setActive({ session: (signIn as any).createdSessionId });
+        }
+        router.replace('/(root)/(tabs)/home');
+      } else if ((signIn as any).status === 'needs_client_trust') {
+        const emailCodeFactor = (signIn as any).supportedSecondFactors?.find(
+          (factor: any) => factor.strategy === 'email_code',
         );
         if (emailCodeFactor) {
           await signIn.mfa.sendEmailCode();
         }
+      } else {
+        Alert.alert("Error", "Log in failed. Please try again.");
+        setApiError("Log in failed.");
       }
     } catch (err: any) {
-      setApiError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || err.message || "An error occurred.");
-      console.error(err);
+      console.error(JSON.stringify(err, null, 2));
+      const msg = err.errors?.[0]?.longMessage || err.message || "An error occurred.";
+      Alert.alert("Error", msg);
+      setApiError(msg);
     }
   };
 
   const handleVerify = async () => {
-    if (!signIn) return;
+    if (!isLoaded || !signIn) return;
     setApiError("");
     try {
+      // @ts-ignore
       await signIn.mfa.verifyEmailCode({ code });
-      if (signIn.status === 'complete') {
-        await signIn.finalize({
-          navigate: ({ session, decorateUrl }) => {
-            if (session?.currentTask) return;
-            const url = decorateUrl('/');
-            if (url.startsWith('http')) {
-              window.location.href = url;
-            } else {
-              router.push(url as Href);
-            }
-          },
-        });
+
+      if ((signIn as any).status === 'complete') {
+        if ((signIn as any).createdSessionId) {
+          await setActive({ session: (signIn as any).createdSessionId });
+        }
+        router.replace('/(root)/(tabs)/home');
+      } else {
+        Alert.alert("Error", "Verification attempt not complete.");
       }
     } catch (err: any) {
-      setApiError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || err.message || "An error occurred.");
-      console.error(err);
+      console.error(JSON.stringify(err, null, 2));
+      const msg = err.errors?.[0]?.longMessage || err.message || "An error occurred.";
+      Alert.alert("Error", msg);
+      setApiError(msg);
     }
   };
 
@@ -171,8 +194,6 @@ const SignIn = () => {
                   value={password}
                   onChangeText={setPassword}
                 />
-                {errors?.fields?.identifier && <Text className="text-red-500 mt-2">{errors.fields.identifier.message}</Text>}
-                {errors?.fields?.password && <Text className="text-red-500 mt-2">{errors.fields.password.message}</Text>}
               </Animated.View>
 
               {/* FORGOT PASSWORD — style prop instead of className so the
