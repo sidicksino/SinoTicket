@@ -1,6 +1,7 @@
 import InputField from "@/components/InputField";
 import { Ionicons } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { useSignIn } from "@clerk/expo";
+import { Link, useRouter, type Href } from "expo-router";
 import React from "react";
 import {
   Image,
@@ -16,6 +17,104 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const SignIn = () => {
+  const { signIn, errors, fetchStatus } = useSignIn();
+  const router = useRouter();
+
+  const [emailAddress, setEmailAddress] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [code, setCode] = React.useState("");
+  const [apiError, setApiError] = React.useState("");
+
+  const handleSubmit = async () => {
+    if (!signIn) return;
+    setApiError("");
+    try {
+      const { error } = await signIn.password({
+        emailAddress,
+        password,
+      });
+      if (error) {
+        setApiError((error as any).errors?.[0]?.longMessage || (error as any).errors?.[0]?.message || "Log in failed.");
+        console.error(JSON.stringify(error, null, 2));
+        return;
+      }
+      if (signIn.status === 'complete') {
+        await signIn.finalize({
+          navigate: ({ session, decorateUrl }) => {
+            if (session?.currentTask) return;
+            const url = decorateUrl('/');
+            if (url.startsWith('http')) {
+              window.location.href = url;
+            } else {
+              router.push(url as Href);
+            }
+          },
+        });
+      } else if (signIn.status === 'needs_client_trust') {
+        const emailCodeFactor = signIn.supportedSecondFactors.find(
+          (factor) => factor.strategy === 'email_code',
+        );
+        if (emailCodeFactor) {
+          await signIn.mfa.sendEmailCode();
+        }
+      }
+    } catch (err: any) {
+      setApiError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || err.message || "An error occurred.");
+      console.error(err);
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!signIn) return;
+    setApiError("");
+    try {
+      await signIn.mfa.verifyEmailCode({ code });
+      if (signIn.status === 'complete') {
+        await signIn.finalize({
+          navigate: ({ session, decorateUrl }) => {
+            if (session?.currentTask) return;
+            const url = decorateUrl('/');
+            if (url.startsWith('http')) {
+              window.location.href = url;
+            } else {
+              router.push(url as Href);
+            }
+          },
+        });
+      }
+    } catch (err: any) {
+      setApiError(err.errors?.[0]?.longMessage || err.errors?.[0]?.message || err.message || "An error occurred.");
+      console.error(err);
+    }
+  };
+
+  if (signIn?.status === 'needs_client_trust') {
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 px-8 pt-16">
+          <Text className="font-syne text-[32px] font-black text-[#0F172A] mb-4">Verify Account</Text>
+          <InputField
+            label="Verification Code"
+            placeholder="Enter your verification code"
+            icon="key-outline"
+            keyboardType="numeric"
+            value={code}
+            onChangeText={setCode}
+          />
+          {errors?.fields?.code && <Text className="text-red-500 mb-2">{errors.fields.code.message}</Text>}
+          {apiError ? <Text className="text-red-500 font-medium mb-4 text-center">{apiError}</Text> : null}
+          <TouchableOpacity 
+            onPress={handleVerify}
+            disabled={fetchStatus === 'fetching'}
+            className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 mt-4 active:opacity-80"
+          >
+            <Text className="text-white font-syne font-bold text-[18px]">Verify</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
@@ -57,6 +156,8 @@ const SignIn = () => {
                   placeholder="Enter email or phone"
                   icon="person-outline"
                   autoCapitalize="none"
+                  value={emailAddress}
+                  onChangeText={setEmailAddress}
                 />
               </Animated.View>
 
@@ -68,7 +169,11 @@ const SignIn = () => {
                   placeholder="Enter your password"
                   icon="lock-closed-outline"
                   secureTextEntry={true}
+                  value={password}
+                  onChangeText={setPassword}
                 />
+                {errors?.fields?.identifier && <Text className="text-red-500 mt-2">{errors.fields.identifier.message}</Text>}
+                {errors?.fields?.password && <Text className="text-red-500 mt-2">{errors.fields.password.message}</Text>}
               </Animated.View>
 
               {/* FORGOT PASSWORD — style prop instead of className so the
@@ -84,15 +189,24 @@ const SignIn = () => {
                 </Link>
               </Animated.View>
 
-              {/* CALL TO ACTION BUTTON */}
               <Animated.View
                 entering={FadeInDown.duration(800).delay(500).springify().damping(18)}
               >
-                <TouchableOpacity className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80">
+                <TouchableOpacity 
+                  onPress={handleSubmit}
+                  disabled={!emailAddress || !password || fetchStatus === 'fetching'}
+                  className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"
+                  style={(!emailAddress || !password || fetchStatus === 'fetching') ? { opacity: 0.5 } : {}}
+                >
                   <Text className="text-white font-syne font-bold text-[18px]">
                     Log In
                   </Text>
                 </TouchableOpacity>
+                {apiError ? (
+                  <Text className="text-red-500 font-medium text-[14px] mt-4 text-center">
+                    {apiError}
+                  </Text>
+                ) : null}
               </Animated.View>
             </View>
 
