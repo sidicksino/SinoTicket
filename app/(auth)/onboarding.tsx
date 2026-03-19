@@ -165,7 +165,7 @@ const OnboardingItem = ({
         index * screenWidth,
         (index + 1) * screenWidth,
       ],
-      [-26, 0, 26],
+      [-screenWidth * 0.5, 0, -screenWidth * 0.5],
       Extrapolation.CLAMP,
     );
 
@@ -193,7 +193,7 @@ const OnboardingItem = ({
         index * screenWidth,
         (index + 1) * screenWidth,
       ],
-      [26, 0, -26],
+      [screenWidth * 0.5, 0, screenWidth * 0.5],
       Extrapolation.CLAMP,
     );
 
