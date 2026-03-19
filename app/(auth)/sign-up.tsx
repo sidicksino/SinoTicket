@@ -36,6 +36,22 @@ const SignUp = () => {
     if (!signUp) return;
     setApiError("");
 
+    if (!fullName) {
+      setApiError("Full name is required.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailAddress)) {
+      setApiError("Please enter a valid email address.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setApiError("Password must be at least 8 characters.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       setApiError("Passwords do not match.");
       return;
@@ -54,8 +70,7 @@ const SignUp = () => {
         lastName,
       });
 
-      // @ts-ignore - Supressing TS error because this method is no longer officially typed in this SDK version
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      await signUp.verifications.sendEmailCode();
       setPendingVerification(true);
     } catch (err: any) {
       setApiError(
@@ -72,17 +87,25 @@ const SignUp = () => {
     if (!signUp) return;
     setApiError("");
     try {
-      // @ts-ignore - Supressing TS error because this method is no longer officially typed in this SDK version
-      const result = await signUp.attemptEmailAddressVerification({ code });
+      const { error } = await signUp.verifications.verifyEmailCode({
+        code,
+      });
 
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
+      if (error) {
+        setApiError((error as any).errors?.[0]?.longMessage || (error as any).errors?.[0]?.message || "Verification failed.");
+        return;
+      }
+
+      if (signUp.status === "complete") {
+        if (signUp.createdSessionId) {
+          await setActive({ session: signUp.createdSessionId });
+        }
         router.replace("/(root)/(tabs)/home");
       } else {
         setApiError(
-          "Sign-up incomplete. Missing: " + result.missingFields?.join(", ")
+          "Sign-up incomplete. Missing: " + signUp.missingFields?.join(", ")
         );
-        console.error("Missing fields:", result.missingFields);
+        console.error("Missing fields:", signUp.missingFields);
       }
     } catch (err: any) {
       setApiError(
@@ -229,6 +252,7 @@ const SignUp = () => {
                 <TouchableOpacity
                   onPress={handleSubmit}
                   disabled={
+                    !fullName ||
                     !emailAddress ||
                     !password ||
                     !confirmPassword ||
@@ -236,7 +260,8 @@ const SignUp = () => {
                   }
                   className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"
                   style={
-                    !emailAddress ||
+                    !fullName ||
+                      !emailAddress ||
                       !password ||
                       !confirmPassword ||
                       fetchStatus === "fetching"

@@ -35,7 +35,6 @@ const SignIn = () => {
       });
       if (error) {
         setApiError((error as any).errors?.[0]?.longMessage || (error as any).errors?.[0]?.message || "Log in failed.");
-        console.error(JSON.stringify(error, null, 2));
         return;
       }
       if (signIn.status === 'complete') {
