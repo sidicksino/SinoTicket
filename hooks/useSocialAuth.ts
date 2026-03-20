@@ -13,28 +13,39 @@ const useSocialAuth = () => {
     setLoading(true);
 
     try {
-      const { createdSessionId, setActive, signUp } = await startSSOFlow({
+      const { createdSessionId, setActive, signUp, signIn } = await startSSOFlow({
         strategy: "oauth_google",
       });
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
 
-        // Only sync new users — and only when all required fields are present
-        if (
-          signUp &&
-          signUp.createdUserId &&
-          signUp.emailAddress &&
-          (signUp.firstName || signUp.lastName)
-        ) {
+        // Identify the user data for sync (from either signUp or signIn result)
+        // If it's a new user, signUp is populated. If returning, signIn is populated.
+        const syncData = signUp || (signIn as any);
+
+        if (syncData && (syncData.createdUserId || syncData.userData?.id || (signIn as any)?.id)) {
           try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), BACKEND_TIMEOUT_MS);
 
-            const name = [signUp.firstName, signUp.lastName]
-              .filter(Boolean)
-              .join(" ")
-              .trim();
+            // Robust name & email extraction
+            const firstName = syncData.firstName || syncData.userData?.firstName || "";
+            const lastName = syncData.lastName || syncData.userData?.lastName || "";
+            const name = [firstName, lastName].filter(Boolean).join(" ").trim();
+            const email = syncData.emailAddress || syncData.userData?.emailAddress || "";
+            const clerkId = syncData.createdUserId || syncData.userData?.id || (signIn as any)?.id;
+
+            // Robust profile photo extraction
+            const profilePhoto =
+              (syncData as any).imageUrl ||
+              (syncData as any).publicUserData?.imageUrl ||
+              (syncData as any).externalAccounts?.[0]?.imageUrl ||
+              (syncData as any).externalAccounts?.[0]?.avatarUrl ||
+              (syncData as any).userData?.imageUrl ||
+              null;
+
+            console.log("📤 Syncing user to backend:", { name, email, clerkId, profilePhoto });
 
             const response = await fetch(
               `${process.env.EXPO_PUBLIC_API_URL}/api/users`,
@@ -43,9 +54,9 @@ const useSocialAuth = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   name,
-                  email: signUp.emailAddress,
-                  clerkId: signUp.createdUserId,
-                  profilePhoto: (signUp as any).imageUrl || null,
+                  email,
+                  clerkId,
+                  profilePhoto,
                 }),
                 signal: controller.signal,
               },
@@ -54,15 +65,13 @@ const useSocialAuth = () => {
             clearTimeout(timeoutId);
 
             if (!response.ok) {
-              console.error("Backend sync failed with status:", response.status);
+              const errorText = await response.text();
+              console.error("Backend sync failed:", response.status, errorText);
+            } else {
+              console.log("✅ Backend sync successful");
             }
           } catch (backendError: any) {
-            if (backendError?.name === "AbortError") {
-              console.error("Backend sync timed out");
-            } else {
-              console.error("Backend sync error:", backendError);
-            }
-            // Do NOT block the user — auth succeeded, backend sync is best-effort
+            console.error("Backend sync error:", backendError);
           }
         }
       } else {

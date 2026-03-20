@@ -22,6 +22,10 @@ const registerUser = async (req, res) => {
         ${name},
         ${profilePhoto || null}
       )
+      ON CONFLICT (email) 
+      DO UPDATE SET 
+        name = EXCLUDED.name,
+        profile_photo = EXCLUDED.profile_photo
       RETURNING *;`;
 
     return res.status(201).json({ data: response });
