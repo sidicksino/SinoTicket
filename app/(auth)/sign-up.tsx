@@ -1,10 +1,12 @@
 import InputField from "@/components/InputField";
+import LoadingScreen from "@/components/LoadingScreen";
 import { useAuth, useClerk, useSignUp } from "@clerk/expo";
 import useSocialAuth from "@/hooks/useSocialAuth";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Redirect, useRouter } from "expo-router";
 import React from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -21,7 +23,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const AnimatedView = Animated.View;
 
 const SignUp = () => {
-  const { signUp, fetchStatus } = useSignUp();
+  // @ts-ignore — @clerk/expo v3 types useSignUp as SignalValue; signUp exists at runtime
+  const { signUp } = useSignUp();
   const { isLoaded: authLoaded } = useAuth();
   const { setActive } = useClerk();
   const router = useRouter();
@@ -34,29 +37,35 @@ const SignUp = () => {
   const [code, setCode] = React.useState("");
   const [pendingVerification, setPendingVerification] = React.useState(false);
   const [apiError, setApiError] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleSubmit = async () => {
-    if (!signUp) return;
+    if (!signUp || isSubmitting) return;
     setApiError("");
+    setIsSubmitting(true);
 
-    if (!fullName) {
+    if (!fullName.trim()) {
       setApiError("Full name is required.");
+      setIsSubmitting(false);
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(emailAddress)) {
       setApiError("Please enter a valid email address.");
+      setIsSubmitting(false);
       return;
     }
 
     if (password.length < 8) {
       setApiError("Password must be at least 8 characters.");
+      setIsSubmitting(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setApiError("Passwords do not match.");
+      setIsSubmitting(false);
       return;
     }
 
@@ -65,23 +74,23 @@ const SignUp = () => {
       const firstName = names[0] || "";
       const lastName = names.length > 1 ? names.slice(1).join(" ") : "";
 
-      const response = await signUp.create({
+      await signUp.create({
         emailAddress,
-        // @ts-ignore - Valid in Clerk runtime, typed differently in some versions
+        // @ts-ignore
         password,
         firstName,
         lastName,
       });
 
-      if ((response as any)?.error) {
-        throw (response as any).error;
-      }
-
       await signUp.verifications.sendEmailCode();
       setPendingVerification(true);
     } catch (err: any) {
       const clerkError = err.errors?.[0];
-      const msg = clerkError?.longMessage || clerkError?.message || err.message || "An error occurred during sign-up.";
+      const msg =
+        clerkError?.longMessage ||
+        clerkError?.message ||
+        err.message ||
+        "An error occurred during sign-up.";
 
       if (
         clerkError?.code === "form_identifier_exists" ||
@@ -93,26 +102,31 @@ const SignUp = () => {
           "An account with this email already exists. Would you like to sign in instead?",
           [
             { text: "Cancel", style: "cancel" },
-            { text: "Sign In", onPress: () => router.push("/(auth)/sign-in") }
-          ]
+            { text: "Sign In", onPress: () => router.push("/(auth)/sign-in") },
+          ],
         );
       } else {
         setApiError(msg);
         Alert.alert("Error", msg);
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleVerify = async () => {
-    if (!signUp) return;
+    if (!signUp || isSubmitting) return;
     setApiError("");
+    setIsSubmitting(true);
+
     try {
-      const { error } = await signUp.verifications.verifyEmailCode({
-        code,
-      });
+      const { error } = await signUp.verifications.verifyEmailCode({ code });
 
       if (error) {
-        setApiError((error as any).errors?.[0]?.longMessage || (error as any).errors?.[0]?.message || "Verification failed.");
+        const msg = (error as any).errors?.[0]?.longMessage ||
+          (error as any).errors?.[0]?.message ||
+          "Verification failed.";
+        setApiError(msg);
         return;
       }
 
@@ -122,20 +136,28 @@ const SignUp = () => {
         }
         router.replace("/(root)/(tabs)/home");
       } else {
-        const msg = "Sign-up incomplete. Missing: " + (signUp.missingFields?.join(", ") || "Unknown fields");
+        const msg =
+          "Sign-up incomplete. Missing: " +
+          ((signUp as any).missingFields?.join(", ") || "Unknown fields");
         setApiError(msg);
         Alert.alert("Incomplete", msg);
-        console.error("Missing fields:", signUp.missingFields);
+        console.error("Missing fields:", (signUp as any).missingFields);
       }
     } catch (err: any) {
-      const msg = err.errors?.[0]?.longMessage || err.errors?.[0]?.message || err.message || "An error occurred during verification.";
+      const msg =
+        err.errors?.[0]?.longMessage ||
+        err.errors?.[0]?.message ||
+        err.message ||
+        "An error occurred during verification.";
       setApiError(msg);
       Alert.alert("Error", msg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (!authLoaded) {
-    return null;
+    return <LoadingScreen />;
   }
 
   if (signUp?.status === "complete") {
@@ -164,17 +186,25 @@ const SignUp = () => {
           ) : null}
           <TouchableOpacity
             onPress={handleVerify}
-            disabled={fetchStatus === "fetching"}
+            disabled={isSubmitting || !code}
             className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 mt-4 active:opacity-80"
+            style={isSubmitting || !code ? { opacity: 0.6 } : {}}
           >
-            <Text className="text-white font-syne font-bold text-[18px]">
-              Verify
-            </Text>
+            {isSubmitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-white font-syne font-bold text-[18px]">
+                Verify
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
+
+  const canSubmit =
+    !!fullName && !!emailAddress && !!password && !!confirmPassword && !isSubmitting;
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -204,8 +234,7 @@ const SignUp = () => {
                   Account.
                 </Text>
                 <Text className="text-[16px] font-medium text-[#64748B] leading-relaxed">
-                  Join SinoTicket today and unlock access to the best events in
-                  town.
+                  Join SinoTicket today and unlock access to the best events in town.
                 </Text>
               </View>
             </AnimatedView>
@@ -271,27 +300,17 @@ const SignUp = () => {
               >
                 <TouchableOpacity
                   onPress={handleSubmit}
-                  disabled={
-                    !fullName ||
-                    !emailAddress ||
-                    !password ||
-                    !confirmPassword ||
-                    fetchStatus === "fetching"
-                  }
+                  disabled={!canSubmit}
                   className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"
-                  style={
-                    !fullName ||
-                      !emailAddress ||
-                      !password ||
-                      !confirmPassword ||
-                      fetchStatus === "fetching"
-                      ? { opacity: 0.5 }
-                      : {}
-                  }
+                  style={!canSubmit ? { opacity: 0.6 } : {}}
                 >
-                  <Text className="text-white font-syne font-bold text-[18px]">
-                    Sign Up
-                  </Text>
+                  {isSubmitting ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text className="text-white font-syne font-bold text-[18px]">
+                      Sign Up
+                    </Text>
+                  )}
                 </TouchableOpacity>
                 {apiError ? (
                   <Text className="text-red-500 font-medium text-[14px] mt-4 text-center">
@@ -328,16 +347,21 @@ const SignUp = () => {
                   gap: 16,
                 }}
               >
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={handleGoogleAuth}
                   disabled={googleLoading}
                   className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]"
+                  style={googleLoading ? { opacity: 0.6 } : {}}
                 >
-                  <Image
-                    source={require("@/assets/icons/google-icon.png")}
-                    style={{ width: 24, height: 24 }}
-                    resizeMode="contain"
-                  />
+                  {googleLoading ? (
+                    <ActivityIndicator color="#0286FF" />
+                  ) : (
+                    <Image
+                      source={require("@/assets/icons/google-icon.png")}
+                      style={{ width: 24, height: 24 }}
+                      resizeMode="contain"
+                    />
+                  )}
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => router.push("/(auth)/sign-up-phone")}

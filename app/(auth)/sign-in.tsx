@@ -1,10 +1,11 @@
 import InputField from "@/components/InputField";
-import { useAuth, useClerk, useSignIn } from "@clerk/expo";
+import { useClerk, useSignIn } from "@clerk/expo";
 import useSocialAuth from "@/hooks/useSocialAuth";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import React from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   KeyboardAvoidingView,
@@ -19,9 +20,9 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const SignIn = () => {
-  const { signIn, errors, fetchStatus } = useSignIn();
+  // @ts-ignore — @clerk/expo v3 types are stricter than runtime; signIn IS a full resource
+  const { signIn, fetchStatus } = useSignIn();
   const { setActive } = useClerk();
-  const { isLoaded } = useAuth();
   const router = useRouter();
   const { handleGoogleAuth, loading: googleLoading } = useSocialAuth();
 
@@ -29,94 +30,114 @@ const SignIn = () => {
   const [password, setPassword] = React.useState("");
   const [code, setCode] = React.useState("");
   const [apiError, setApiError] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isMfaPending, setIsMfaPending] = React.useState(false);
 
   const handleSubmit = async () => {
-    if (!isLoaded || !signIn) return;
+    if (!signIn || isSubmitting) return;
     setApiError("");
+    setIsSubmitting(true);
 
     if (!emailAddress) {
-      const msg = "Email or phone number is required.";
-      setApiError(msg);
-      Alert.alert("Error", msg);
+      setApiError("Email or phone number is required.");
+      setIsSubmitting(false);
       return;
     }
 
-    if (emailAddress.includes('@')) {
+    if (emailAddress.includes("@")) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(emailAddress)) {
-        const msg = "Please enter a valid email address.";
-        setApiError(msg);
-        Alert.alert("Error", msg);
+        setApiError("Please enter a valid email address.");
+        setIsSubmitting(false);
         return;
       }
     }
 
     try {
-      const { error } = await signIn.create({
+      const { error } = await (signIn as any).create({
         identifier: emailAddress,
-        // @ts-ignore
         password,
       });
 
       if (error) {
-        const msg = (error as any).errors?.[0]?.longMessage || (error as any).errors?.[0]?.message || "Log in failed.";
+        const msg =
+          (error as any).errors?.[0]?.longMessage ||
+          (error as any).errors?.[0]?.message ||
+          "Log in failed.";
         Alert.alert("Error", msg);
         setApiError(msg);
         return;
       }
 
-      if ((signIn as any).status === 'complete') {
+      if ((signIn as any).status === "complete") {
         if ((signIn as any).createdSessionId) {
           await setActive({ session: (signIn as any).createdSessionId });
         }
-        router.replace('/(root)/(tabs)/home');
-      } else if ((signIn as any).status === 'needs_client_trust') {
-        const emailCodeFactor = (signIn as any).supportedSecondFactors?.find(
-          (factor: any) => factor.strategy === 'email_code',
-        );
-        if (emailCodeFactor) {
-          await signIn.mfa.sendEmailCode();
+        router.replace("/(root)/(tabs)/home");
+      } else if ((signIn as any).status === "needs_second_factor") {
+        try {
+          await (signIn as any).prepareSecondFactor({ strategy: "email_code" });
+          setIsMfaPending(true);
+        } catch (mfaErr: any) {
+          const msg =
+            mfaErr.errors?.[0]?.longMessage || "Failed to send verification code.";
+          Alert.alert("Error", msg);
+          setApiError(msg);
         }
       } else {
         Alert.alert("Error", "Log in failed. Please try again.");
         setApiError("Log in failed.");
       }
     } catch (err: any) {
-      console.error(JSON.stringify(err, null, 2));
-      const msg = err.errors?.[0]?.longMessage || err.message || "An error occurred.";
+      console.error("Sign in error:", JSON.stringify(err, null, 2));
+      const msg =
+        err.errors?.[0]?.longMessage ||
+        err.errors?.[0]?.message ||
+        err.message ||
+        "An error occurred.";
       Alert.alert("Error", msg);
       setApiError(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleVerify = async () => {
-    if (!isLoaded || !signIn) return;
+    if (!signIn || isSubmitting) return;
     setApiError("");
+    setIsSubmitting(true);
     try {
-      // @ts-ignore
-      await signIn.mfa.verifyEmailCode({ code });
+      await (signIn as any).mfa?.verifyEmailCode({ code });
 
-      if ((signIn as any).status === 'complete') {
+      if ((signIn as any).status === "complete") {
         if ((signIn as any).createdSessionId) {
           await setActive({ session: (signIn as any).createdSessionId });
         }
-        router.replace('/(root)/(tabs)/home');
+        router.replace("/(root)/(tabs)/home");
       } else {
         Alert.alert("Error", "Verification attempt not complete.");
       }
     } catch (err: any) {
-      console.error(JSON.stringify(err, null, 2));
-      const msg = err.errors?.[0]?.longMessage || err.message || "An error occurred.";
+      console.error("Verify error:", JSON.stringify(err, null, 2));
+      const msg =
+        err.errors?.[0]?.longMessage ||
+        err.errors?.[0]?.message ||
+        err.message ||
+        "An error occurred.";
       Alert.alert("Error", msg);
       setApiError(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (signIn?.status === 'needs_client_trust') {
+  if (isMfaPending) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 px-8 pt-16">
-          <Text className="font-syne text-[32px] font-black text-[#0F172A] mb-4">Verify Account</Text>
+          <Text className="font-syne text-[32px] font-black text-[#0F172A] mb-4">
+            Verify Account
+          </Text>
           <InputField
             label="Verification Code"
             placeholder="Enter your verification code"
@@ -125,19 +146,27 @@ const SignIn = () => {
             value={code}
             onChangeText={setCode}
           />
-          {errors?.fields?.code && <Text className="text-red-500 mb-2">{errors.fields.code.message}</Text>}
-          {apiError ? <Text className="text-red-500 font-medium mb-4 text-center">{apiError}</Text> : null}
+          {apiError ? (
+            <Text className="text-red-500 font-medium mb-4 text-center">{apiError}</Text>
+          ) : null}
           <TouchableOpacity
             onPress={handleVerify}
-            disabled={fetchStatus === 'fetching'}
+            disabled={isSubmitting || !code}
             className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 mt-4 active:opacity-80"
+            style={isSubmitting || !code ? { opacity: 0.6 } : {}}
           >
-            <Text className="text-white font-syne font-bold text-[18px]">Verify</Text>
+            {isSubmitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-white font-syne font-bold text-[18px]">Verify</Text>
+            )}
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
+
+  const isLoading = fetchStatus === "fetching" || isSubmitting;
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -198,8 +227,6 @@ const SignIn = () => {
                 />
               </Animated.View>
 
-              {/* FORGOT PASSWORD — style prop instead of className so the
-                  view has a real height and the Link is tappable */}
               <Animated.View
                 entering={FadeInDown.duration(800).delay(400).springify().damping(18)}
                 style={styles.forgotPassword}
@@ -216,13 +243,15 @@ const SignIn = () => {
               >
                 <TouchableOpacity
                   onPress={handleSubmit}
-                  disabled={!emailAddress || !password || fetchStatus === 'fetching'}
+                  disabled={!emailAddress || !password || isLoading}
                   className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"
-                  style={(!emailAddress || !password || fetchStatus === 'fetching') ? { opacity: 0.5 } : {}}
+                  style={!emailAddress || !password || isLoading ? { opacity: 0.6 } : {}}
                 >
-                  <Text className="text-white font-syne font-bold text-[18px]">
-                    Log In
-                  </Text>
+                  {isLoading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text className="text-white font-syne font-bold text-[18px]">Log In</Text>
+                  )}
                 </TouchableOpacity>
                 {apiError ? (
                   <Text className="text-red-500 font-medium text-[14px] mt-4 text-center">
@@ -249,16 +278,21 @@ const SignIn = () => {
               entering={FadeInDown.duration(800).delay(700).springify().damping(18)}
               style={styles.socialRow}
             >
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={handleGoogleAuth}
                 disabled={googleLoading}
                 className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]"
+                style={googleLoading ? { opacity: 0.6 } : {}}
               >
-                <Image
-                  source={require("@/assets/icons/google-icon.png")}
-                  style={{ width: 24, height: 24 }}
-                  resizeMode="contain"
-                />
+                {googleLoading ? (
+                  <ActivityIndicator color="#0286FF" />
+                ) : (
+                  <Image
+                    source={require("@/assets/icons/google-icon.png")}
+                    style={{ width: 24, height: 24 }}
+                    resizeMode="contain"
+                  />
+                )}
               </TouchableOpacity>
             </Animated.View>
 

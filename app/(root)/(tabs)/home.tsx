@@ -73,7 +73,10 @@ export default function Home() {
             <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28 }}>{user?.firstName || "Guest"} 👋</Text>
           </Animated.View>
           <TouchableOpacity style={{ height: 56, width: 56, borderRadius: 999, borderWidth: 2, borderColor: colors.border, overflow: "hidden" }}>
-            <Image source={{ uri: user?.imageUrl || "https://avatar.iran.liara.run/public/32" }} style={{ width: "100%", height: "100%" }} />
+            <Image
+              source={{ uri: user?.imageUrl || "https://avatar.iran.liara.run/public/32" }}
+              style={{ width: "100%", height: "100%" }}
+            />
           </TouchableOpacity>
         </View>
 

@@ -2,44 +2,66 @@ import { useSSO } from "@clerk/expo";
 import { useState } from "react";
 import { Alert } from "react-native";
 
+const BACKEND_TIMEOUT_MS = 8000;
+
 const useSocialAuth = () => {
   const [loading, setLoading] = useState(false);
   const { startSSOFlow } = useSSO();
 
   const handleGoogleAuth = async () => {
     if (loading) return;
-
     setLoading(true);
 
     try {
-      const { createdSessionId, setActive, signUp } = await startSSOFlow({ 
+      const { createdSessionId, setActive, signUp } = await startSSOFlow({
         strategy: "oauth_google",
-        // Redirect to a specific route if needed, or Clerk handles it
       });
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
 
-        // If it's a new user (sign up), we might want to sync with our backend
-        if (signUp && signUp.createdUserId) {
+        // Only sync new users — and only when all required fields are present
+        if (
+          signUp &&
+          signUp.createdUserId &&
+          signUp.emailAddress &&
+          (signUp.firstName || signUp.lastName)
+        ) {
           try {
-            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/users`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), BACKEND_TIMEOUT_MS);
+
+            const name = [signUp.firstName, signUp.lastName]
+              .filter(Boolean)
+              .join(" ")
+              .trim();
+
+            const response = await fetch(
+              `${process.env.EXPO_PUBLIC_API_URL}/api/users`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  name,
+                  email: signUp.emailAddress,
+                  clerkId: signUp.createdUserId,
+                }),
+                signal: controller.signal,
               },
-              body: JSON.stringify({
-                name: `${signUp.firstName} ${signUp.lastName}`,
-                email: signUp.emailAddress,
-                clerkId: signUp.createdUserId,
-              }),
-            });
+            );
+
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
-              console.error("Failed to sync user to backend");
+              console.error("Backend sync failed with status:", response.status);
             }
-          } catch (backendError) {
-            console.error("Backend sync error:", backendError);
+          } catch (backendError: any) {
+            if (backendError?.name === "AbortError") {
+              console.error("Backend sync timed out");
+            } else {
+              console.error("Backend sync error:", backendError);
+            }
+            // Do NOT block the user — auth succeeded, backend sync is best-effort
           }
         }
       } else {
@@ -48,8 +70,8 @@ const useSocialAuth = () => {
           "Google sign-in did not complete. Please try again.",
         );
       }
-    } catch (error) {
-      console.log("💥 Error in Google auth:", error);
+    } catch (error: any) {
+      console.error("💥 Error in Google auth:", error);
       Alert.alert("Error", "Failed to sign in with Google. Please try again.");
     } finally {
       setLoading(false);
@@ -58,7 +80,5 @@ const useSocialAuth = () => {
 
   return { handleGoogleAuth, loading };
 };
-
-
 
 export default useSocialAuth;
