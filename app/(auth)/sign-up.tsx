@@ -1,5 +1,6 @@
 import InputField from "@/components/InputField";
 import { useAuth, useClerk, useSignUp } from "@clerk/expo";
+import useSocialAuth from "@/hooks/useSocialAuth";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Redirect, useRouter } from "expo-router";
 import React from "react";
@@ -24,6 +25,7 @@ const SignUp = () => {
   const { isLoaded: authLoaded } = useAuth();
   const { setActive } = useClerk();
   const router = useRouter();
+  const { handleGoogleAuth, loading: googleLoading } = useSocialAuth();
 
   const [fullName, setFullName] = React.useState("");
   const [emailAddress, setEmailAddress] = React.useState("");
@@ -326,7 +328,11 @@ const SignUp = () => {
                   gap: 16,
                 }}
               >
-                <TouchableOpacity className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]">
+                <TouchableOpacity 
+                  onPress={handleGoogleAuth}
+                  disabled={googleLoading}
+                  className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]"
+                >
                   <Image
                     source={require("@/assets/icons/google-icon.png")}
                     style={{ width: 24, height: 24 }}
