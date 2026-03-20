@@ -41,6 +41,36 @@ const SignUp = () => {
   const [apiError, setApiError] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
+  /**
+   * Probes whether an account already exists for the given email
+   * by attempting a sign-in. Returns:
+   *   true  → account exists (sign-in succeeded)
+   *   false → account does NOT exist (sign-in threw, as expected)
+   *   null  → network / unexpected error (caller should abort)
+   */
+  const checkIfUserExists = async (
+    email: string,
+    pwd: string,
+  ): Promise<boolean | null> => {
+    if (!signIn) return false;
+    try {
+      // Use typed Clerk API — no `as any` cast needed here since
+      // we call it on the raw signIn ref which is typed at runtime.
+      // @ts-ignore — signIn.create() exists at runtime; TS types it as SignalValue
+      await signIn.create({ identifier: email, password: pwd });
+      return true; // sign-in succeeded → user exists
+    } catch (err: any) {
+      const code: string = err?.errors?.[0]?.code ?? "";
+      // Network / unexpected errors — distinguish from "wrong credentials"
+      const isNetworkError =
+        err?.message?.toLowerCase().includes("network") ||
+        err?.message?.toLowerCase().includes("fetch") ||
+        code === "network_error";
+      if (isNetworkError) return null; // signal caller to abort
+      return false; // Clerk threw because user doesn't exist → proceed
+    }
+  };
+
   const handleSubmit = async () => {
     if (!signUp || isSubmitting) return;
     setApiError("");
@@ -72,50 +102,56 @@ const SignUp = () => {
     }
 
     try {
-      // STEP 1: Probe for existing account by attempting sign-in.
-      // If it succeeds → user already exists → block and redirect.
-      if (signIn) {
-        try {
-          await (signIn as any).create({
-            identifier: emailAddress,
-            password,
-          });
+      // STEP 1: Check if account already exists — cleanly separated
+      const userExists = await checkIfUserExists(emailAddress, password);
 
-          // signIn.create() succeeded → account already exists
-          const inlineMsg = "Account already exists. Please log in.";
-          setApiError(inlineMsg);
-          Alert.alert(
-            "Account Already Exists",
-            "This email is already registered. Please log in instead.",
-            [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "Log In",
-                onPress: () => router.push("/(auth)/sign-in"),
-              },
-            ],
-          );
-          setIsSubmitting(false);
-          return;
-        } catch {
-          // Expected: user does NOT exist → continue with sign-up
-        }
+      if (userExists === null) {
+        // Network failure during the probe
+        setApiError("Unable to check account. Please check your connection and try again.");
+        setIsSubmitting(false);
+        return;
       }
 
-      // STEP 2: Proceed with real sign-up
+      if (userExists) {
+        // Account found → block sign-up and offer Log In
+        const inlineMsg = "Account already exists. Please log in.";
+        setApiError(inlineMsg);
+        Alert.alert(
+          "Account Already Exists",
+          "This email is already registered. Please log in instead.",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Log In", onPress: () => router.push("/(auth)/sign-in") },
+          ],
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      // STEP 2: Create the new account
       const names = fullName.trim().split(" ");
       const firstName = names[0] || "";
       const lastName = names.length > 1 ? names.slice(1).join(" ") : "";
 
       await signUp.create({
         emailAddress,
-        // @ts-ignore
+        // @ts-ignore — password is valid at runtime, typed differently in some versions
         password,
         firstName,
         lastName,
       });
 
-      // STEP 3: Send OTP only for genuinely new accounts
+      // STEP 3: Double-check status before sending OTP
+      if (signUp.status === "complete") {
+        // Rare edge: Clerk auto-completed without verification
+        if (signUp.createdSessionId) {
+          await setActive({ session: signUp.createdSessionId });
+        }
+        router.replace("/(root)/(tabs)/home");
+        return;
+      }
+
+      // Normal path: send OTP for new account
       await signUp.verifications.sendEmailCode();
       setPendingVerification(true);
     } catch (err: any) {
@@ -124,7 +160,6 @@ const SignUp = () => {
         err.errors?.[0]?.message ||
         err.message ||
         "An error occurred.";
-
       setApiError(msg);
       Alert.alert("Sign-up Error", msg);
     } finally {
