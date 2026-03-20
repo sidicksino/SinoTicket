@@ -3,7 +3,7 @@ const { neon } = require('@neondatabase/serverless');
 const registerUser = async (req, res) => {
   try {
     const sql = neon(process.env.DATABASE_URL);
-    const { name, email, clerkId } = req.body;
+    const { name, email, clerkId, profilePhoto } = req.body;
 
     if (!name || !email || !clerkId) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -11,14 +11,16 @@ const registerUser = async (req, res) => {
 
     const response = await sql`
       INSERT INTO users (
-        name, 
+        user_id,
         email, 
-        clerk_id
+        name,
+        profile_photo
       ) 
       VALUES (
-        ${name}, 
+        ${clerkId}, 
         ${email},
-        ${clerkId}
+        ${name},
+        ${profilePhoto || null}
       )
       RETURNING *;`;
 

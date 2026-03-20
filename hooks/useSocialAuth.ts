@@ -45,6 +45,7 @@ const useSocialAuth = () => {
                   name,
                   email: signUp.emailAddress,
                   clerkId: signUp.createdUserId,
+                  profilePhoto: (signUp as any).imageUrl || null,
                 }),
                 signal: controller.signal,
               },
