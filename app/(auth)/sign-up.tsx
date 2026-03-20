@@ -1,7 +1,7 @@
 import InputField from "@/components/InputField";
 import LoadingScreen from "@/components/LoadingScreen";
-import { useAuth, useClerk, useSignUp } from "@clerk/expo";
 import useSocialAuth from "@/hooks/useSocialAuth";
+import { useAuth, useClerk, useSignIn, useSignUp } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Redirect, useRouter } from "expo-router";
 import React from "react";
@@ -25,6 +25,8 @@ const AnimatedView = Animated.View;
 const SignUp = () => {
   // @ts-ignore — @clerk/expo v3 types useSignUp as SignalValue; signUp exists at runtime
   const { signUp } = useSignUp();
+  // @ts-ignore
+  const { signIn } = useSignIn();
   const { isLoaded: authLoaded } = useAuth();
   const { setActive } = useClerk();
   const router = useRouter();
@@ -70,6 +72,37 @@ const SignUp = () => {
     }
 
     try {
+      // STEP 1: Probe for existing account by attempting sign-in.
+      // If it succeeds → user already exists → block and redirect.
+      if (signIn) {
+        try {
+          await (signIn as any).create({
+            identifier: emailAddress,
+            password,
+          });
+
+          // signIn.create() succeeded → account already exists
+          const inlineMsg = "Account already exists. Please log in.";
+          setApiError(inlineMsg);
+          Alert.alert(
+            "Account Already Exists",
+            "This email is already registered. Please log in instead.",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Log In",
+                onPress: () => router.push("/(auth)/sign-in"),
+              },
+            ],
+          );
+          setIsSubmitting(false);
+          return;
+        } catch {
+          // Expected: user does NOT exist → continue with sign-up
+        }
+      }
+
+      // STEP 2: Proceed with real sign-up
       const names = fullName.trim().split(" ");
       const firstName = names[0] || "";
       const lastName = names.length > 1 ? names.slice(1).join(" ") : "";
@@ -82,37 +115,23 @@ const SignUp = () => {
         lastName,
       });
 
+      // STEP 3: Send OTP only for genuinely new accounts
       await signUp.verifications.sendEmailCode();
       setPendingVerification(true);
     } catch (err: any) {
-      const clerkError = err.errors?.[0];
       const msg =
-        clerkError?.longMessage ||
-        clerkError?.message ||
+        err.errors?.[0]?.longMessage ||
+        err.errors?.[0]?.message ||
         err.message ||
-        "An error occurred during sign-up.";
+        "An error occurred.";
 
-      if (
-        clerkError?.code === "form_identifier_exists" ||
-        msg.toLowerCase().includes("email address is taken") ||
-        msg.toLowerCase().includes("already exists")
-      ) {
-        Alert.alert(
-          "Account Exists",
-          "An account with this email already exists. Would you like to sign in instead?",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Sign In", onPress: () => router.push("/(auth)/sign-in") },
-          ],
-        );
-      } else {
-        setApiError(msg);
-        Alert.alert("Error", msg);
-      }
+      setApiError(msg);
+      Alert.alert("Sign-up Error", msg);
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   const handleVerify = async () => {
     if (!signUp || isSubmitting) return;
