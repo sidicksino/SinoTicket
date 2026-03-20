@@ -7,8 +7,8 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import "../global.css";
-
 import { tokenCache } from "../lib/auth";
+import { ThemeProvider, useTheme } from "../context/ThemeContext";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -23,6 +23,20 @@ if (!publishableKey) {
 
 // LogBox.ignoreLogs(["Clerk:"]);
 
+function AppShell() {
+  const { isDark } = useTheme();
+  return (
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+      <StatusBar style={isDark ? "light" : "dark"} />
+    </>
+  );
+}
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Syne_700Bold,
@@ -32,8 +46,7 @@ export default function RootLayout() {
     if (fontsLoaded) {
       const timer = setTimeout(async () => {
         await SplashScreen.hideAsync();
-      }, 2000); // wait 2 seconds
-
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [fontsLoaded]);
@@ -41,15 +54,12 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-      <ClerkLoaded>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="dark" />
-      </ClerkLoaded>
-    </ClerkProvider>
+    <ThemeProvider>
+      <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
+        <ClerkLoaded>
+          <AppShell />
+        </ClerkLoaded>
+      </ClerkProvider>
+    </ThemeProvider>
   );
 }

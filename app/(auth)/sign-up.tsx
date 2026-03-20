@@ -80,10 +80,10 @@ const SignUp = () => {
     } catch (err: any) {
       const clerkError = err.errors?.[0];
       const msg = clerkError?.longMessage || clerkError?.message || err.message || "An error occurred during sign-up.";
-      
+
       if (
-        clerkError?.code === "form_identifier_exists" || 
-        msg.toLowerCase().includes("email address is taken") || 
+        clerkError?.code === "form_identifier_exists" ||
+        msg.toLowerCase().includes("email address is taken") ||
         msg.toLowerCase().includes("already exists")
       ) {
         Alert.alert(

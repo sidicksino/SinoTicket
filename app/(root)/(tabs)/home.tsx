@@ -11,173 +11,100 @@ import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// width was unused, removed to satisfy lints
+import { useTheme } from "@/context/ThemeContext";
 
 const FeaturedCard = ({ item, index }: { item: any; index: number }) => (
   <Animated.View
     entering={FadeInRight.delay(index * 200).duration(800).springify()}
-    className="mr-5 w-[280px] h-[350px] rounded-[32px] overflow-hidden bg-white shadow-xl shadow-black/10"
+    style={{ marginRight: 20, width: 280, height: 350, borderRadius: 32, overflow: "hidden", backgroundColor: "#fff" }}
   >
-    <Image
-      source={{ uri: item.image }}
-      className="w-full h-full absolute"
-      resizeMode="cover"
-    />
-    <View className="absolute inset-0 bg-black/30" />
-    <View className="absolute bottom-0 left-0 right-0 p-6">
-      <View className="bg-white/20 backdrop-blur-md self-start px-3 py-1 rounded-full mb-3 border border-white/30">
-        <Text className="text-white text-[12px] font-bold uppercase tracking-wider">
-          {item.category}
-        </Text>
+    <Image source={{ uri: item.image }} style={{ width: "100%", height: "100%", position: "absolute" }} resizeMode="cover" />
+    <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.30)" }} />
+    <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 24 }}>
+      <View style={{ backgroundColor: "rgba(255,255,255,0.20)", alignSelf: "flex-start", paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, marginBottom: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.3)" }}>
+        <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 }}>{item.category}</Text>
       </View>
-      <Text className="text-white font-syne text-[22px] font-black leading-tight mb-2">
-        {item.title}
-      </Text>
-      <View className="flex-row items-center">
+      <Text style={{ color: "#fff", fontFamily: "Syne_700Bold", fontSize: 22, lineHeight: 28, marginBottom: 8 }}>{item.title}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
         <Ionicons name="location" size={16} color="#0286FF" />
-        <Text className="text-white/80 text-[14px] ml-1 font-medium">
-          {item.location}
-        </Text>
+        <Text style={{ color: "rgba(255,255,255,0.80)", fontSize: 14, marginLeft: 4 }}>{item.location}</Text>
       </View>
     </View>
   </Animated.View>
 );
 
-const EventListItem = ({ item, index }: { item: any; index: number }) => (
+const EventListItem = ({ item, index, colors }: { item: any; index: number; colors: any }) => (
   <Animated.View
     entering={FadeInDown.delay(400 + index * 100).duration(800).springify()}
-    className="flex-row items-center mb-4 bg-white p-4 rounded-3xl border border-[#F1F5F9]"
+    style={{ flexDirection: "row", alignItems: "center", marginBottom: 16, backgroundColor: colors.card, padding: 16, borderRadius: 24, borderWidth: 1, borderColor: colors.cardBorder }}
   >
-    <Image
-      source={{ uri: item.image }}
-      className="w-20 h-20 rounded-2xl"
-    />
-    <View className="flex-1 ml-4 text-left">
-      <Text className="text-[#0F172A] font-syne font-bold text-[17px] mb-1">
-        {item.title}
-      </Text>
-      <Text className="text-[#64748B] text-[14px] font-medium">
-        {item.date} • {item.price}
-      </Text>
+    <Image source={{ uri: item.image }} style={{ width: 80, height: 80, borderRadius: 16 }} />
+    <View style={{ flex: 1, marginLeft: 16 }}>
+      <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 17, marginBottom: 4 }}>{item.title}</Text>
+      <Text style={{ color: colors.subtext, fontSize: 14 }}>{item.date} • {item.price}</Text>
     </View>
-    <TouchableOpacity className="h-10 w-10 bg-[#0286FF]/10 rounded-full items-center justify-center">
-      <Ionicons name="chevron-forward" size={20} color="#0286FF" />
+    <TouchableOpacity style={{ height: 40, width: 40, backgroundColor: colors.primaryLight, borderRadius: 999, alignItems: "center", justifyContent: "center" }}>
+      <Ionicons name="chevron-forward" size={20} color={colors.primary} />
     </TouchableOpacity>
   </Animated.View>
 );
 
 const featuredEvents = [
-  {
-    id: "1",
-    title: "N'Djamena Tech Summit 2025",
-    location: "Radisson Blu, N'Djamena",
-    category: "Technology",
-    image: "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=2070&auto=format&fit=crop",
-  },
-  {
-    id: "2",
-    title: "Sahara Music Festival",
-    location: "Goz Beida Arena",
-    category: "Music",
-    image: "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=2070&auto=format&fit=crop",
-  },
+  { id: "1", title: "N'Djamena Tech Summit 2025", location: "Radisson Blu, N'Djamena", category: "Technology", image: "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=2070&auto=format&fit=crop" },
+  { id: "2", title: "Sahara Music Festival", location: "Goz Beida Arena", category: "Music", image: "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=2070&auto=format&fit=crop" },
 ];
 
 const nearbyEvents = [
-  {
-    id: "3",
-    title: "Digital Art Exhibition",
-    date: "Oct 12",
-    price: "Free",
-    image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop",
-  },
-  {
-    id: "4",
-    title: "Startup Weekend Chad",
-    date: "Nov 05",
-    price: "$15",
-    image: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?q=80&w=2070&auto=format&fit=crop",
-  },
+  { id: "3", title: "Digital Art Exhibition", date: "Oct 12", price: "Free", image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop" },
+  { id: "4", title: "Startup Weekend Chad", date: "Nov 05", price: "$15", image: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?q=80&w=2070&auto=format&fit=crop" },
 ];
 
 export default function Home() {
   const { user } = useUser();
+  const { colors } = useTheme();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120 }}
-      >
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* HEADER */}
-        <View className="px-6 pt-4 flex-row items-center justify-between">
+        <View style={{ paddingHorizontal: 24, paddingTop: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <Animated.View entering={FadeInDown.duration(800).springify()}>
-            <Text className="text-[#64748B] text-[16px] font-medium">
-              Welcome back,
-            </Text>
-            <Text className="text-[#0F172A] font-syne text-[28px] font-black">
-              {user?.firstName || "Guest"} 👋
-            </Text>
+            <Text style={{ color: colors.subtext, fontSize: 16, fontWeight: "500" }}>Welcome back,</Text>
+            <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28 }}>{user?.firstName || "Guest"} 👋</Text>
           </Animated.View>
-          <TouchableOpacity className="h-14 w-14 rounded-full border-2 border-[#F1F5F9] overflow-hidden">
-            <Image
-              source={{ uri: user?.imageUrl || "https://avatar.iran.liara.run/public/32" }}
-              className="w-full h-full"
-            />
+          <TouchableOpacity style={{ height: 56, width: 56, borderRadius: 999, borderWidth: 2, borderColor: colors.border, overflow: "hidden" }}>
+            <Image source={{ uri: user?.imageUrl || "https://avatar.iran.liara.run/public/32" }} style={{ width: "100%", height: "100%" }} />
           </TouchableOpacity>
         </View>
 
         {/* SEARCH BAR */}
-        <Animated.View
-          entering={FadeInDown.delay(200).duration(800).springify()}
-          className="px-6 mt-8"
-        >
-          <View className="flex-row items-center bg-[#F8FAFC] px-5 py-4 rounded-[24px] border border-[#F1F5F9]">
-            <Ionicons name="search" size={22} color="#94A3B8" />
-            <TextInput
-              placeholder="Search for events..."
-              placeholderTextColor="#94A3B8"
-              className="flex-1 ml-3 text-[16px] font-medium text-[#0F172A]"
-            />
-            <TouchableOpacity className="bg-[#0286FF] p-2 rounded-xl">
+        <Animated.View entering={FadeInDown.delay(200).duration(800).springify()} style={{ paddingHorizontal: 24, marginTop: 32 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: colors.inputBg, paddingHorizontal: 20, paddingVertical: 16, borderRadius: 24, borderWidth: 1, borderColor: colors.border }}>
+            <Ionicons name="search" size={22} color={colors.subtext} />
+            <TextInput placeholder="Search for events..." placeholderTextColor={colors.subtext} style={{ flex: 1, marginLeft: 12, fontSize: 16, color: colors.text }} />
+            <TouchableOpacity style={{ backgroundColor: colors.primary, padding: 8, borderRadius: 12 }}>
               <Ionicons name="options-outline" size={20} color="white" />
             </TouchableOpacity>
           </View>
         </Animated.View>
 
-        {/* FEATURED SECTION */}
-        <View className="mt-8">
-          <View className="px-6 flex-row items-center justify-between mb-5">
-            <Text className="font-syne text-[22px] font-black text-[#0F172A]">
-              Featured Events
-            </Text>
-            <TouchableOpacity>
-              <Text className="text-[#0286FF] font-bold">See All</Text>
-            </TouchableOpacity>
+        {/* FEATURED */}
+        <View style={{ marginTop: 32 }}>
+          <View style={{ paddingHorizontal: 24, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+            <Text style={{ fontFamily: "Syne_700Bold", fontSize: 22, color: colors.text }}>Featured Events</Text>
+            <TouchableOpacity><Text style={{ color: colors.primary, fontWeight: "700" }}>See All</Text></TouchableOpacity>
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingLeft: 24, paddingRight: 4 }}
-          >
-            {featuredEvents.map((item, index) => (
-              <FeaturedCard key={item.id} item={item} index={index} />
-            ))}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 24, paddingRight: 4 }}>
+            {featuredEvents.map((item, index) => <FeaturedCard key={item.id} item={item} index={index} />)}
           </ScrollView>
         </View>
 
-        {/* NEARBY SECTION */}
-        <View className="mt-10 px-6">
-          <Text className="font-syne text-[22px] font-black text-[#0F172A] mb-5">
-            Happening Soon
-          </Text>
-          {nearbyEvents.map((item, index) => (
-            <EventListItem key={item.id} item={item} index={index} />
-          ))}
+        {/* HAPPENING SOON */}
+        <View style={{ marginTop: 40, paddingHorizontal: 24 }}>
+          <Text style={{ fontFamily: "Syne_700Bold", fontSize: 22, color: colors.text, marginBottom: 20 }}>Happening Soon</Text>
+          {nearbyEvents.map((item, index) => <EventListItem key={item.id} item={item} index={index} colors={colors} />)}
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-

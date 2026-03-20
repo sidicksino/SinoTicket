@@ -1,6 +1,6 @@
 import InputField from "@/components/InputField";
+import { useAuth, useClerk, useSignIn } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
-import { useSignIn, useAuth, useClerk } from "@clerk/expo";
 import { Link, useRouter } from "expo-router";
 import React from "react";
 import {
@@ -38,7 +38,7 @@ const SignIn = () => {
       Alert.alert("Error", msg);
       return;
     }
-    
+
     if (emailAddress.includes('@')) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(emailAddress)) {
@@ -125,7 +125,7 @@ const SignIn = () => {
           />
           {errors?.fields?.code && <Text className="text-red-500 mb-2">{errors.fields.code.message}</Text>}
           {apiError ? <Text className="text-red-500 font-medium mb-4 text-center">{apiError}</Text> : null}
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={handleVerify}
             disabled={fetchStatus === 'fetching'}
             className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 mt-4 active:opacity-80"
@@ -212,7 +212,7 @@ const SignIn = () => {
               <Animated.View
                 entering={FadeInDown.duration(800).delay(500).springify().damping(18)}
               >
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={handleSubmit}
                   disabled={!emailAddress || !password || fetchStatus === 'fetching'}
                   className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"

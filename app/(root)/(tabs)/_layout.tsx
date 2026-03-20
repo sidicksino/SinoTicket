@@ -1,20 +1,22 @@
 import { Tabs } from "expo-router";
 import { View, Text, TouchableOpacity, Dimensions, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Animated, { 
-  useAnimatedStyle, 
-  withSpring, 
-  useSharedValue 
+import Animated, {
+  useAnimatedStyle,
+  withSpring,
+  useSharedValue,
 } from "react-native-reanimated";
 import React, { useEffect } from "react";
+import { useTheme } from "@/context/ThemeContext";
 
 // Removed unused TabIcon component
 
 function CustomTabBar({ state, descriptors, navigation }: any) {
+  const { colors } = useTheme();
   const { width } = Dimensions.get("window");
-  const containerWidth = width - 48; // 24px horizontal margin
+  const containerWidth = width - 48;
   const tabWidth = containerWidth / state.routes.length;
-  
+
   const translateX = useSharedValue(0);
 
   useEffect(() => {
@@ -29,19 +31,33 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
   }));
 
   return (
-    <View 
-      className="absolute bottom-10 left-6 right-6 h-[76px] bg-[#F1F5F9] rounded-[38px] flex-row items-center px-1.5 shadow-2xl shadow-black/10"
+    <View
       style={{
+        position: "absolute",
+        bottom: 40,
+        left: 24,
+        right: 24,
+        height: 76,
+        backgroundColor: colors.tabBar,
+        borderRadius: 38,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 6,
         ...Platform.select({
-          ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 20 },
-          android: { elevation: 8 }
-        })
+          ios: { shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.12, shadowRadius: 20 },
+          android: { elevation: 8 },
+        }),
       }}
     >
-      {/* Background Animated Pill */}
-      <Animated.View 
-        style={[pillStyle, { width: tabWidth - 4 }]} 
-        className="absolute h-[64px] bg-white rounded-[32px] shadow-sm ml-1"
+      <Animated.View
+        style={[pillStyle, {
+          width: tabWidth - 4,
+          height: 64,
+          backgroundColor: colors.tabBarPill,
+          borderRadius: 32,
+          position: "absolute",
+          marginLeft: 4,
+        }]}
       />
 
       {state.routes.map((route: any, index: number) => {
@@ -54,7 +70,6 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
             target: route.key,
             canPreventDefault: true,
           });
-
           if (!isFocused && !event.defaultPrevented) {
             navigation.navigate(route.name);
           }
@@ -65,15 +80,15 @@ function CustomTabBar({ state, descriptors, navigation }: any) {
             key={route.key}
             onPress={onPress}
             activeOpacity={0.7}
-            className="flex-1 h-full items-center justify-center"
+            style={{ flex: 1, height: "100%", alignItems: "center", justifyContent: "center" }}
           >
-            <Ionicons 
-              name={options.tabBarIconName} 
-              size={24} 
-              color={isFocused ? "#0286FF" : "#64748B"} 
+            <Ionicons
+              name={options.tabBarIconName}
+              size={24}
+              color={isFocused ? colors.primary : colors.tabBarIcon}
             />
             {isFocused && (
-              <Text className="font-syne font-bold text-[#0286FF] text-[12px] mt-1">
+              <Text style={{ color: colors.primary, fontFamily: "Syne_700Bold", fontSize: 12, marginTop: 4 }}>
                 {options.title}
               </Text>
             )}
