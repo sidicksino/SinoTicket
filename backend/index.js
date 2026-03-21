@@ -1,7 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config({ override: true });
+
+// Import Routes
+const userRoutes = require('./routes/userRoutes');
 const venueRouters = require('./routes/venueRoutes');
+const eventRouters = require('./routes/eventRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -11,8 +15,6 @@ const connectDB = require('./config/db');
 // Connect Database
 connectDB();
 
-// Import Routes
-const userRoutes = require('./routes/userRoutes');
 
 // Middleware
 app.use(cors());
@@ -20,8 +22,12 @@ app.use(express.json());
 
 // Use Routes
 app.use('/api/users', userRoutes);
+
 // Venue
 app.use('/api/venue', venueRouters);
+
+// Event
+app.use('/api/events', eventRouters);
 
 // Swagger Documentation
 const setupSwagger = require('./swagger/swaggerConfig');
