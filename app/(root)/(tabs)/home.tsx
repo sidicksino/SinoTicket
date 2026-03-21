@@ -1,17 +1,18 @@
+import { useTheme } from "@/context/ThemeContext";
+import { useAuth, useUser } from "@clerk/expo";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
-  Text,
-  View,
-  TouchableOpacity,
-  ScrollView,
+  Button,
   Image,
+  ScrollView,
+  Text,
   TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useUser } from "@clerk/expo";
-import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "@/context/ThemeContext";
 
 const FeaturedCard = ({ item, index }: { item: any; index: number }) => (
   <Animated.View
@@ -61,7 +62,13 @@ const nearbyEvents = [
 
 export default function Home() {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const { colors } = useTheme();
+
+  const printMyToken = async () => {
+    const token = await getToken();
+    console.log("MON SUPER TOKEN CLERK:", token);
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -71,6 +78,7 @@ export default function Home() {
           <Animated.View entering={FadeInDown.duration(800).springify()}>
             <Text style={{ color: colors.subtext, fontSize: 16, fontWeight: "500" }}>Welcome back,</Text>
             <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28 }}>{user?.firstName || "Guest"} 👋</Text>
+            <Button title="Get Token" onPress={printMyToken} />
           </Animated.View>
           <TouchableOpacity style={{ height: 56, width: 56, borderRadius: 999, borderWidth: 2, borderColor: colors.border, overflow: "hidden" }}>
             <Image

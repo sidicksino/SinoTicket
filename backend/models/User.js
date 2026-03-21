@@ -293,12 +293,6 @@ ReservationSchema.index(
   { expireAfterSeconds: 0 }
 );
 
-/* =========================
-   INDEXES (PERFORMANCE)
-========================= */
-UserSchema.index({ email: 1 });
-UserSchema.index({ user_id: 1 });
-
 EventSchema.index({ date: 1 });
 
 TicketSchema.index({ attendee_id: 1 });

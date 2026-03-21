@@ -1,4 +1,53 @@
-const User = require('../models/User');
+const { User } = require('../models/User');
+const { clerkClient } = require('@clerk/clerk-sdk-node');
+
+const getMe = async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized: No valid Clerk token' });
+    }
+
+    let user = await User.findOne({ user_id: userId });
+
+    if (!user) {
+      const clerkUser = await clerkClient.users.getUser(userId);
+
+      user = await User.create({
+        user_id: userId,
+        email: clerkUser.emailAddresses[0].emailAddress,
+        name: clerkUser.firstName || clerkUser.emailAddresses[0].emailAddress.split('@')[0],
+        profile_photo: clerkUser.imageUrl,
+      });
+    }
+
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error('💥 Error in getMe:', error.message || error);
+    res.status(500).json({ error: 'Internal Server Error', details: error.message });
+  }
+};
+
+const makeMeAdmin = async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const updatedUser = await User.findOneAndUpdate(
+      { user_id: userId },
+      { role: 'Admin' },
+      { new: true }
+    );
+
+    res.json({ success: true, message: 'You are now an Admin!', user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
 const registerUser = async (req, res) => {
   try {
@@ -48,6 +97,8 @@ const checkUserExists = async (req, res) => {
 };
 
 module.exports = {
+  getMe,
+  makeMeAdmin,
   registerUser,
   checkUserExists,
 };
