@@ -5,6 +5,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { LogBox } from "react-native";
 import "react-native-reanimated";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import "../global.css";
@@ -21,7 +22,7 @@ if (!publishableKey) {
   );
 }
 
-// LogBox.ignoreLogs(["Clerk:"]);
+LogBox.ignoreLogs(["Clerk:"]);
 
 function AppShell() {
   const { isDark } = useTheme();
