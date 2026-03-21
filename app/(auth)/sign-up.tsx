@@ -1,7 +1,7 @@
 import InputField from "@/components/InputField";
 import LoadingScreen from "@/components/LoadingScreen";
 import useSocialAuth from "@/hooks/useSocialAuth";
-import { useAuth, useClerk, useSignIn, useSignUp } from "@clerk/expo";
+import { useAuth, useClerk, useSignUp } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Redirect, useRouter } from "expo-router";
 import React from "react";
@@ -16,17 +16,19 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const AnimatedView = Animated.View;
 
+const CLERK_ERRORS = {
+  EMAIL_EXISTS: "form_identifier_exists",
+  INVALID_EMAIL: "form_param_format_invalid",
+  WEAK_PASSWORD: "form_password_pwned",
+} as const;
+
 const SignUp = () => {
-  // @ts-ignore — @clerk/expo v3 types useSignUp as SignalValue; signUp exists at runtime
   const { signUp } = useSignUp();
-  // @ts-ignore
-  const { signIn } = useSignIn();
   const { isLoaded: authLoaded } = useAuth();
   const { setActive } = useClerk();
   const router = useRouter();
@@ -41,216 +43,194 @@ const SignUp = () => {
   const [apiError, setApiError] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  /**
-   * Probes whether an account already exists for the given email
-   * by attempting a sign-in. Returns:
-   *   true  → account exists (sign-in succeeded)
-   *   false → account does NOT exist (sign-in threw, as expected)
-   *   null  → network / unexpected error (caller should abort)
-   */
-  const checkIfUserExists = async (
-    email: string,
-    pwd: string,
-  ): Promise<boolean | null> => {
-    if (!signIn) return false;
-    try {
-      // Use typed Clerk API — no `as any` cast needed here since
-      // we call it on the raw signIn ref which is typed at runtime.
-      // @ts-ignore — signIn.create() exists at runtime; TS types it as SignalValue
-      await signIn.create({ identifier: email, password: pwd });
-      return true; // sign-in succeeded → user exists
-    } catch (err: any) {
-      const code: string = err?.errors?.[0]?.code ?? "";
-      // Network / unexpected errors — distinguish from "wrong credentials"
-      const isNetworkError =
-        err?.message?.toLowerCase().includes("network") ||
-        err?.message?.toLowerCase().includes("fetch") ||
-        code === "network_error";
-      if (isNetworkError) return null; // signal caller to abort
-      return false; // Clerk threw because user doesn't exist → proceed
+  const validate = (): string | null => {
+    if (!fullName.trim()) return "Full name is required.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress))
+      return "Please enter a valid email address.";
+    if (password.length < 8)
+      return "Password must be at least 8 characters.";
+    if (password !== confirmPassword)
+      return "Passwords do not match.";
+    return null;
+  };
+
+  const resolveClerkError = (err: any): string => {
+    const code = err?.errors?.[0]?.code ?? "";
+    switch (code) {
+      case CLERK_ERRORS.EMAIL_EXISTS:
+        return "An account with this email already exists.";
+      case CLERK_ERRORS.INVALID_EMAIL:
+        return "Please enter a valid email address.";
+      case CLERK_ERRORS.WEAK_PASSWORD:
+        return "This password is too common. Please choose a stronger one.";
+      default:
+        return (
+          err?.errors?.[0]?.longMessage ||
+          err?.errors?.[0]?.message ||
+          err?.message ||
+          "Something went wrong. Please try again."
+        );
     }
   };
 
+  // ─── Step 1: Create account + send OTP ───────────────────────────────────
   const handleSubmit = async () => {
     if (!signUp || isSubmitting) return;
+
     setApiError("");
+
+    const validationError = validate();
+    if (validationError) {
+      setApiError(validationError);
+      return;
+    }
+
     setIsSubmitting(true);
 
-    if (!fullName.trim()) {
-      setApiError("Full name is required.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailAddress)) {
-      setApiError("Please enter a valid email address.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (password.length < 8) {
-      setApiError("Password must be at least 8 characters.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setApiError("Passwords do not match.");
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
-      // STEP 1: Check if account already exists — cleanly separated
-      const userExists = await checkIfUserExists(emailAddress, password);
-
-      if (userExists === null) {
-        // Network failure during the probe
-        setApiError("Unable to check account. Please check your connection and try again.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (userExists) {
-        // Account found → block sign-up and offer Log In
-        const inlineMsg = "Account already exists. Please log in.";
-        setApiError(inlineMsg);
-        Alert.alert(
-          "Account Already Exists",
-          "This email is already registered. Please log in instead.",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Log In", onPress: () => router.push("/(auth)/sign-in") },
-          ],
-        );
-        setIsSubmitting(false);
-        return;
-      }
-
-      // STEP 2: Create the new account
       const names = fullName.trim().split(" ");
       const firstName = names[0] || "";
       const lastName = names.length > 1 ? names.slice(1).join(" ") : "";
 
-      await signUp.create({
+      // 1️⃣ Create account
+      await (signUp as any).create({
         emailAddress,
-        // @ts-ignore — password is valid at runtime, typed differently in some versions
         password,
         firstName,
         lastName,
       });
 
-      // STEP 3: Double-check status before sending OTP
-      if (signUp.status === "complete") {
-        // Rare edge: Clerk auto-completed without verification
-        if (signUp.createdSessionId) {
-          await setActive({ session: signUp.createdSessionId });
-        }
-        router.replace("/(root)/(tabs)/home");
-        return;
-      }
-
-      // Normal path: send OTP for new account
-      await signUp.verifications.sendEmailCode();
+      // 2️⃣ Send OTP
+      await (signUp as any).verifications.sendEmailCode();
       setPendingVerification(true);
+
     } catch (err: any) {
-      const msg =
-        err.errors?.[0]?.longMessage ||
-        err.errors?.[0]?.message ||
-        err.message ||
-        "An error occurred.";
-      setApiError(msg);
-      Alert.alert("Sign-up Error", msg);
+      const errorCode = err?.errors?.[0]?.code ?? "";
+      const message = resolveClerkError(err);
+      setApiError(message);
+
+      if (errorCode === CLERK_ERRORS.EMAIL_EXISTS) {
+        Alert.alert(
+          "Account Already Exists",
+          "This email is already registered. Would you like to log in instead?",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Log In", onPress: () => router.push("/(auth)/sign-in") },
+          ]
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
   const handleVerify = async () => {
     if (!signUp || isSubmitting) return;
+
+    if (!code.trim()) {
+      setApiError("Please enter the verification code.");
+      return;
+    }
+
     setApiError("");
     setIsSubmitting(true);
 
     try {
-      const { error } = await signUp.verifications.verifyEmailCode({ code });
+      // 3️⃣ Verify OTP
+      const { error } = await (signUp as any).verifications.verifyEmailCode({ code });
 
       if (error) {
-        const msg = (error as any).errors?.[0]?.longMessage ||
-          (error as any).errors?.[0]?.message ||
-          "Verification failed.";
-        setApiError(msg);
+        setApiError(
+          (error as any)?.errors?.[0]?.longMessage ||
+          (error as any)?.errors?.[0]?.message ||
+          "Invalid verification code."
+        );
         return;
       }
 
-      if (signUp.status === "complete") {
-        if (signUp.createdSessionId) {
-          await setActive({ session: signUp.createdSessionId });
-        }
+      if ((signUp as any).status === "complete") {
+        await setActive({ session: (signUp as any).createdSessionId });
         router.replace("/(root)/(tabs)/home");
       } else {
-        const msg =
+        setApiError(
           "Sign-up incomplete. Missing: " +
-          ((signUp as any).missingFields?.join(", ") || "Unknown fields");
-        setApiError(msg);
-        Alert.alert("Incomplete", msg);
-        console.error("Missing fields:", (signUp as any).missingFields);
+          ((signUp as any).missingFields?.join(", ") || "unknown fields")
+        );
       }
     } catch (err: any) {
-      const msg =
-        err.errors?.[0]?.longMessage ||
-        err.errors?.[0]?.message ||
-        err.message ||
-        "An error occurred during verification.";
-      setApiError(msg);
-      Alert.alert("Error", msg);
+      setApiError(resolveClerkError(err));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!authLoaded) {
-    return <LoadingScreen />;
-  }
+  if (!authLoaded) return <LoadingScreen />;
 
-  if (signUp?.status === "complete") {
+  if ((signUp as any)?.status === "complete") {
     return <Redirect href="/(root)/(tabs)/home" />;
   }
 
+  // ─── OTP Screen ───────────────────────────────────────────────────────────
   if (pendingVerification) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 px-8 pt-16">
-          <Text className="font-syne text-[32px] font-black text-[#0F172A] mb-4">
-            Verify Email
-          </Text>
+          <View className="mb-8">
+            <View className="mb-5 h-14 w-14 items-center justify-center rounded-[20px] bg-[#0286FF]/10">
+              <Ionicons name="mail-unread-outline" size={28} color="#0286FF" />
+            </View>
+            <Text className="font-syne text-[32px] font-black text-[#0F172A] leading-tight">
+              Check Your
+            </Text>
+            <Text className="font-syne text-[32px] font-black text-[#0286FF] leading-tight mb-3">
+              Email.
+            </Text>
+            <Text className="text-[15px] font-medium text-[#64748B]">
+              We sent a 6-digit code to{" "}
+              <Text className="font-bold text-[#0F172A]">{emailAddress}</Text>
+            </Text>
+          </View>
+
           <InputField
             label="Verification Code"
-            placeholder="Enter your verification code"
+            placeholder="Enter 6-digit code"
             icon="key-outline"
             keyboardType="numeric"
             value={code}
-            onChangeText={setCode}
+            onChangeText={(val) => {
+              setCode(val);
+              setApiError("");
+            }}
           />
+
           {apiError ? (
-            <Text className="text-red-500 font-medium mb-4 text-center">
+            <Text className="text-red-500 font-medium mt-2 mb-2 text-center">
               {apiError}
             </Text>
           ) : null}
+
           <TouchableOpacity
             onPress={handleVerify}
             disabled={isSubmitting || !code}
-            className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 mt-4 active:opacity-80"
+            className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 mt-6 active:opacity-80"
             style={isSubmitting || !code ? { opacity: 0.6 } : {}}
           >
             {isSubmitting ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <Text className="text-white font-syne font-bold text-[18px]">
-                Verify
+                Verify Email
               </Text>
             )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setPendingVerification(false)}
+            className="mt-4 items-center"
+          >
+            <Text className="text-[14px] font-medium text-[#64748B]">
+              ← Go back and change email
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -260,6 +240,7 @@ const SignUp = () => {
   const canSubmit =
     !!fullName && !!emailAddress && !!password && !!confirmPassword && !isSubmitting;
 
+  // ─── Sign Up Screen ───────────────────────────────────────────────────────
   return (
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
@@ -304,7 +285,7 @@ const SignUp = () => {
                   icon="person-outline"
                   autoCapitalize="words"
                   value={fullName}
-                  onChangeText={setFullName}
+                  onChangeText={(val) => { setFullName(val); setApiError(""); }}
                 />
               </AnimatedView>
 
@@ -318,7 +299,7 @@ const SignUp = () => {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={emailAddress}
-                  onChangeText={setEmailAddress}
+                  onChangeText={(val) => { setEmailAddress(val); setApiError(""); }}
                 />
               </AnimatedView>
 
@@ -331,7 +312,7 @@ const SignUp = () => {
                   icon="lock-closed-outline"
                   secureTextEntry={true}
                   value={password}
-                  onChangeText={setPassword}
+                  onChangeText={(val) => { setPassword(val); setApiError(""); }}
                 />
               </AnimatedView>
 
@@ -344,7 +325,7 @@ const SignUp = () => {
                   icon="lock-closed-outline"
                   secureTextEntry={true}
                   value={confirmPassword}
-                  onChangeText={setConfirmPassword}
+                  onChangeText={(val) => { setConfirmPassword(val); setApiError(""); }}
                 />
               </AnimatedView>
 
@@ -366,10 +347,23 @@ const SignUp = () => {
                     </Text>
                   )}
                 </TouchableOpacity>
+
                 {apiError ? (
-                  <Text className="text-red-500 font-medium text-[14px] mt-4 text-center">
-                    {apiError}
-                  </Text>
+                  <View className="mt-4 px-4 py-3 bg-red-50 rounded-2xl border border-red-100">
+                    <Text className="text-red-500 font-medium text-[13px] text-center">
+                      {apiError}
+                    </Text>
+                    {apiError.includes("already exists") && (
+                      <TouchableOpacity
+                        onPress={() => router.push("/(auth)/sign-in")}
+                        className="mt-2 items-center"
+                      >
+                        <Text className="text-[#0286FF] font-bold text-[13px]">
+                          Log in instead →
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 ) : null}
               </AnimatedView>
 

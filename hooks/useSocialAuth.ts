@@ -40,9 +40,11 @@ const useSocialAuth = () => {
             const profilePhoto =
               (syncData as any).imageUrl ||
               (syncData as any).publicUserData?.imageUrl ||
+              (syncData as any).userData?.imageUrl ||
               (syncData as any).externalAccounts?.[0]?.imageUrl ||
               (syncData as any).externalAccounts?.[0]?.avatarUrl ||
-              (syncData as any).userData?.imageUrl ||
+              (syncData as any).externalAccounts?.[0]?.picture ||
+              (syncData as any).externalAccounts?.[0]?.external_metadata?.picture ||
               null;
 
             console.log("📤 Syncing user to backend:", { name, email, clerkId, profilePhoto });
