@@ -1,4 +1,4 @@
-import { useSSO } from "@clerk/expo";
+import { useSSO, useClerk } from "@clerk/expo";
 import { useState } from "react";
 import { Alert } from "react-native";
 
@@ -7,6 +7,7 @@ const BACKEND_TIMEOUT_MS = 8000;
 const useSocialAuth = () => {
   const [loading, setLoading] = useState(false);
   const { startSSOFlow } = useSSO();
+  const clerk = useClerk();
 
   const handleGoogleAuth = async () => {
     if (loading) return;
@@ -20,32 +21,25 @@ const useSocialAuth = () => {
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
 
-        // Identify the user data for sync (from either signUp or signIn result)
-        // If it's a new user, signUp is populated. If returning, signIn is populated.
-        const syncData = signUp || (signIn as any);
+        // Extract the user data directly from the fully-hydrated Clerk Client after activation!
+        const currentUser = clerk.user;
+        const fallbackSignUp = signUp as any;
+        const fallbackSignIn = signIn as any;
+        
+        const syncId = currentUser?.id || fallbackSignUp?.createdUserId || fallbackSignIn?.id;
 
-        if (syncData && (syncData.createdUserId || syncData.userData?.id || (signIn as any)?.id)) {
+        if (syncId) {
           try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), BACKEND_TIMEOUT_MS);
 
-            // Robust name & email extraction
-            const firstName = syncData.firstName || syncData.userData?.firstName || "";
-            const lastName = syncData.lastName || syncData.userData?.lastName || "";
-            const name = [firstName, lastName].filter(Boolean).join(" ").trim();
-            const email = syncData.emailAddress || syncData.userData?.emailAddress || "";
-            const clerkId = syncData.createdUserId || syncData.userData?.id || (signIn as any)?.id;
-
-            // Robust profile photo extraction
-            const profilePhoto =
-              (syncData as any).imageUrl ||
-              (syncData as any).publicUserData?.imageUrl ||
-              (syncData as any).userData?.imageUrl ||
-              (syncData as any).externalAccounts?.[0]?.imageUrl ||
-              (syncData as any).externalAccounts?.[0]?.avatarUrl ||
-              (syncData as any).externalAccounts?.[0]?.picture ||
-              (syncData as any).externalAccounts?.[0]?.external_metadata?.picture ||
-              null;
+            // First check the authoritative active user, then fallback to signUp objects
+            const firstName = currentUser?.firstName || fallbackSignUp?.firstName || "";
+            const lastName = currentUser?.lastName || fallbackSignUp?.lastName || "";
+            const name = currentUser?.fullName || [firstName, lastName].filter(Boolean).join(" ").trim();
+            const email = currentUser?.primaryEmailAddress?.emailAddress || fallbackSignUp?.emailAddress || fallbackSignIn?.identifier || "";
+            const clerkId = syncId;
+            const profilePhoto = currentUser?.imageUrl || fallbackSignUp?.imageUrl || null;
 
             console.log("📤 Syncing user to backend:", { name, email, clerkId, profilePhoto });
 

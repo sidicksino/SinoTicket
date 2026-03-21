@@ -5,6 +5,11 @@ require('dotenv').config({ override: true });
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const connectDB = require('./config/db');
+
+// Connect Database
+connectDB();
+
 // Import Routes
 const userRoutes = require('./routes/userRoutes');
 
