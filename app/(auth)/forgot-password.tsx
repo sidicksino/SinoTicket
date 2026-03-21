@@ -1,5 +1,5 @@
 import InputField from "@/components/InputField";
-import { useSignIn } from "@clerk/expo";
+import { useClerk } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import React from "react";
@@ -18,9 +18,11 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const ForgotPassword = () => {
-  // @ts-ignore
-  const { signIn } = useSignIn();
+  const { client, setActive } = useClerk();
+  const signIn = client.signIn;
   const [email, setEmail] = React.useState("");
+  const [code, setCode] = React.useState("");
+  const [newPassword, setNewPassword] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [error, setError] = React.useState("");
@@ -38,8 +40,7 @@ const ForgotPassword = () => {
     setIsSubmitting(true);
 
     try {
-      // @ts-ignore
-      await (signIn as any).create({
+      await signIn.create({
         strategy: "reset_password_email_code",
         identifier: email.trim(),
       });
@@ -50,6 +51,44 @@ const ForgotPassword = () => {
         err.errors?.[0]?.message ||
         err.message ||
         "Failed to send reset link. Please try again.";
+      setError(msg);
+      Alert.alert("Error", msg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!signIn || isSubmitting || !code.trim() || !newPassword.trim()) return;
+
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const result = await signIn.attemptFirstFactor({
+        strategy: "reset_password_email_code",
+        code: code.trim(),
+        password: newPassword,
+      });
+
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        Alert.alert("Success", "Password reset successfully!");
+        router.replace("/(auth)/sign-in");
+      } else {
+        setError("Password reset incomplete. Please try again.");
+      }
+    } catch (err: any) {
+      const msg =
+        err.errors?.[0]?.longMessage ||
+        err.errors?.[0]?.message ||
+        err.message ||
+        "Invalid reset code or password.";
       setError(msg);
       Alert.alert("Error", msg);
     } finally {
@@ -88,44 +127,57 @@ const ForgotPassword = () => {
                 <Ionicons name="lock-closed" size={32} color="#0286FF" />
               </View>
               <Text className="font-syne text-[42px] font-black text-[#0F172A] leading-tight">
-                Forgot
+                {isSuccess ? "Reset" : "Forgot"}
               </Text>
               <Text className="font-syne text-[42px] font-black text-[#0286FF] leading-tight mb-4">
                 Password?
               </Text>
               <Text className="mb-8 text-[16px] font-medium text-[#64748B] leading-relaxed">
-                No worries! Enter your email below and we&apos;ll send you a reset link.
+                {isSuccess 
+                  ? `We sent a 6-digit code to ${email}. Enter it below with your new password.`
+                  : "No worries! Enter your email below and we'll send you a reset code."}
               </Text>
             </Animated.View>
 
             {/* FORM SECTION */}
             <View className="w-full mt-2">
-              <Animated.View
-                entering={FadeInDown.duration(800).delay(200).springify().damping(18)}
-              >
-                <InputField
-                  label="Email Address"
-                  placeholder="Enter your email"
-                  icon="mail-outline"
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  value={email}
-                  onChangeText={setEmail}
-                />
-              </Animated.View>
+              {!isSuccess ? (
+                <Animated.View entering={FadeInDown.duration(800).delay(200).springify().damping(18)}>
+                  <InputField
+                    label="Email Address"
+                    placeholder="Enter your email"
+                    icon="mail-outline"
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    value={email}
+                    onChangeText={(val) => { setEmail(val); setError(""); }}
+                  />
+                </Animated.View>
+              ) : (
+                <Animated.View entering={FadeInDown.duration(800).delay(200).springify().damping(18)}>
+                  <InputField
+                    label="Reset Code"
+                    placeholder="Enter 6-digit code"
+                    icon="key-outline"
+                    keyboardType="numeric"
+                    value={code}
+                    onChangeText={(val) => { setCode(val); setError(""); }}
+                  />
+                  <InputField
+                    label="New Password"
+                    placeholder="Enter new password"
+                    icon="lock-closed-outline"
+                    secureTextEntry={true}
+                    value={newPassword}
+                    onChangeText={(val) => { setNewPassword(val); setError(""); }}
+                  />
+                </Animated.View>
+              )}
 
               {error ? (
-                <Text className="text-red-500 font-medium text-[14px] mb-4 text-center">
+                <Text className="text-red-500 font-medium text-[14px] mt-4 text-center">
                   {error}
                 </Text>
-              ) : null}
-
-              {isSuccess ? (
-                <View className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-4">
-                  <Text className="text-green-700 font-semibold text-center">
-                    ✅ Reset link sent! Check your email inbox.
-                  </Text>
-                </View>
               ) : null}
 
               {/* CALL TO ACTION BUTTON */}
@@ -133,20 +185,37 @@ const ForgotPassword = () => {
                 entering={FadeInDown.duration(800).delay(300).springify().damping(18)}
                 style={styles.button}
               >
-                <TouchableOpacity
-                  onPress={handleReset}
-                  disabled={isSubmitting || !email.trim() || isSuccess}
-                  className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"
-                  style={isSubmitting || !email.trim() || isSuccess ? { opacity: 0.6 } : {}}
-                >
-                  {isSubmitting ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text className="text-white font-syne font-bold text-[18px]">
-                      Send Reset Link
-                    </Text>
-                  )}
-                </TouchableOpacity>
+                {!isSuccess ? (
+                  <TouchableOpacity
+                    onPress={handleReset}
+                    disabled={isSubmitting || !email.trim()}
+                    className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"
+                    style={isSubmitting || !email.trim() ? { opacity: 0.6 } : {}}
+                  >
+                    {isSubmitting ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text className="text-white font-syne font-bold text-[18px]">
+                        Send Reset Code
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    onPress={handleVerify}
+                    disabled={isSubmitting || !code.trim() || !newPassword.trim()}
+                    className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"
+                    style={isSubmitting || !code.trim() || !newPassword.trim() ? { opacity: 0.6 } : {}}
+                  >
+                    {isSubmitting ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text className="text-white font-syne font-bold text-[18px]">
+                        Reset Password
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                )}
               </Animated.View>
             </View>
 
