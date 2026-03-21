@@ -96,20 +96,7 @@ const SignUp = () => {
       });
 
       if (dbCheck?.exists) {
-        setApiError("This email is already registered.");
-        Alert.alert(
-          "Account Already Exists",
-          "This email is already registered. Would you like to log in instead?",
-          [
-            { text: "Cancel", style: "cancel" },
-            {
-              text: "Log In",
-              style: "default",
-              onPress: () => router.replace("/(auth)/sign-in"),
-            },
-          ]
-        );
-        return; // Stop here, do not create Clerk account
+        throw new Error("EMAIL_EXISTS_IN_DB");
       }
 
       const names = fullName.trim().split(" ");
@@ -129,19 +116,21 @@ const SignUp = () => {
       setPendingVerification(true);
 
     } catch (err: any) {
-      const errorCode = err?.errors?.[0]?.code ?? "";
-      const message = resolveClerkError(err);
-      setApiError(message);
-
-      if (errorCode === CLERK_ERRORS.EMAIL_EXISTS) {
+      if (err.message === "EMAIL_EXISTS_IN_DB") {
+        setApiError("This email is already registered.");
         Alert.alert(
           "Account Already Exists",
           "This email is already registered. Would you like to log in instead?",
           [
             { text: "Cancel", style: "cancel" },
-            { text: "Log In", onPress: () => router.push("/(auth)/sign-in") },
+            { text: "Log In", onPress: () => router.replace("/(auth)/sign-in") },
           ]
         );
+      } else if (err?.errors?.[0]?.code === CLERK_ERRORS.EMAIL_EXISTS) {
+        // Fallback for race conditions if the email was created in Clerk but not our DB yet
+        setApiError("This email is already registered in Clerk.");
+      } else {
+        setApiError(resolveClerkError(err));
       }
     } finally {
       setIsSubmitting(false);

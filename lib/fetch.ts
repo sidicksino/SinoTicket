@@ -1,5 +1,5 @@
 export const fetchAPI = async (url: string, options?: RequestInit) => {
-  const baseUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000";
+  const baseUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:5001";
   try {
     const response = await fetch(`${baseUrl}${url}`, {
       ...options,

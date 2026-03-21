@@ -38,6 +38,32 @@ const registerUser = async (req, res) => {
   }
 };
 
+const checkUserExists = async (req, res) => {
+  try {
+    const sql = neon(process.env.DATABASE_URL);
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Missing email' });
+    }
+
+    const response = await sql`
+      SELECT user_id 
+      FROM users 
+      WHERE email = ${email} 
+      LIMIT 1;
+    `;
+
+    return res.status(200).json({ exists: response.length > 0 });
+  } catch (error) {
+    console.error('💥 Error in checkUserExists:', error.message || error);
+    return res.status(500).json({ 
+      error: 'Internal Server Error'
+    });
+  }
+};
+
 module.exports = {
   registerUser,
+  checkUserExists,
 };
