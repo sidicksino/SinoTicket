@@ -27,20 +27,55 @@ const authenticateToken = require('../middleware/auth');
  *             properties:
  *               title:
  *                 type: string
+ *                 example: SinoTicket Launch Party
  *               description:
  *                 type: string
+ *                 example: The biggest tech event of the year
  *               date:
  *                 type: string
  *                 format: date-time
+ *                 example: 2026-03-21T23:17:54.778Z
  *               venue_id:
  *                 type: string
+ *                 example: 69bf21a28054daabe7f0f297
  *               status:
  *                 type: string
  *                 enum: [Upcoming, Ongoing, Ended]
+ *                 example: Upcoming
  *               artist_lineup:
  *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name:
+ *                       type: string
+ *                       example: DJ Snake
+ *                     time:
+ *                       type: string
+ *                       example: "22:00"
  *               ticket_categories:
  *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     category_id:
+ *                       type: string
+ *                       example: 69bf21a28054daabecategoryxx
+ *                     name:
+ *                       type: string
+ *                       example: VIP Box
+ *                     price:
+ *                       type: number
+ *                       example: 15000
+ *                     section_id:
+ *                       type: string
+ *                       example: 69bf21a28054daabesectionxx
+ *                     quantity:
+ *                       type: number
+ *                       example: 50
+ *                     sold:
+ *                       type: number
+ *                       example: 0
  *     responses:
  *       201:
  *         description: Event created successfully
