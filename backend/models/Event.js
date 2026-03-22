@@ -8,7 +8,7 @@ const EventSchema = new Schema(
     date: { type: Date, index: true },
     venue_id: { type: Schema.Types.ObjectId, ref: 'Venue', index: true },
     admin_id: { type: Schema.Types.ObjectId, ref: 'User' },
-    status: { type: String, enum: ['Upcoming', 'Ongoing', 'Ended'], default: 'Upcoming' },
+    status: { type: String, enum: ['Upcoming', 'Ongoing', 'Ended'], default: 'Upcoming', index: true },
     artist_lineup: [{ name: String, time: String }],
     ticket_categories: [
       {
