@@ -5,6 +5,7 @@ require('dotenv').config({ override: true });
 // Import Routes
 const userRoutes = require('./routes/userRoutes');
 const venueRouters = require('./routes/venueRoutes');
+const sectionRouters = require('./routes/sectionRoutes');
 const eventRouters = require('./routes/eventRoutes');
 
 const app = express();
@@ -28,6 +29,9 @@ app.use('/api/venue', venueRouters);
 
 // Event
 app.use('/api/events', eventRouters);
+
+// Section
+app.use('/api/sections', sectionRouters);
 
 // Swagger Documentation
 const setupSwagger = require('./swagger/swaggerConfig');
