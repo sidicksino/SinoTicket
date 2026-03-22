@@ -110,7 +110,7 @@ router.get('/', eventControllers.getEvents);
  *       200:
  *         description: The requested event
  */
-router.get('/:id', eventControllers.getEvents);
+router.get('/:id', eventControllers.getEventById);
 
 /**
  * @swagger

@@ -1,12 +1,11 @@
-const { User, Venue } = require('../models/User');
+const User = require('../models/User');
+const Venue = require('../models/Venue');
 
-// Helper function to get MongoDB User from Clerk userId and verify Admin role
-const getAdminUser = async (clerkUserId) => {
-  if (!clerkUserId) return null;
-  const user = await User.findOne({ user_id: clerkUserId });
-  if (!user || user.role !== 'Admin') {
-    return null;
-  }
+// Helper function to get MongoDB User from Clerk auth and verify Admin role
+const getAdminUser = async (req) => {
+  if (!req.auth || !req.auth.userId) return null;
+  const user = await User.findOne({ user_id: req.auth.userId });
+  if (!user || user.role !== 'Admin') return null;
   return user;
 };
 
@@ -15,7 +14,7 @@ const getAdminUser = async (clerkUserId) => {
 // @access  Private (Admin only)
 const addVenue = async (req, res) => {
   try {
-    const adminUser = await getAdminUser(req.auth?.userId);
+    const adminUser = await getAdminUser(req);
     if (!adminUser) {
       return res.status(403).json({ success: false, message: 'Forbidden: Admins only' });
     }
@@ -62,7 +61,7 @@ const getVenue = async (req, res) => {
 // @access  Private (Admin only)
 const updateVenue = async (req, res) => {
   try {
-    const adminUser = await getAdminUser(req.auth?.userId);
+    const adminUser = await getAdminUser(req);
     if (!adminUser) {
       return res.status(403).json({ success: false, message: 'Forbidden: Admins only' });
     }
@@ -92,7 +91,7 @@ const updateVenue = async (req, res) => {
 // @access  Private (Admin only)
 const deleteVenue = async (req, res) => {
   try {
-    const adminUser = await getAdminUser(req.auth?.userId);
+    const adminUser = await getAdminUser(req);
     if (!adminUser) {
       return res.status(403).json({ success: false, message: 'Forbidden: Admins only' });
     }

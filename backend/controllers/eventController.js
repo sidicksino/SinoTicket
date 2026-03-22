@@ -1,9 +1,11 @@
-const { User, Event, Venue } = require('../models/User');
+const User = require('../models/User');
+const Event = require('../models/Event');
+const Venue = require('../models/Venue');
 
 // Helper to confirm admin
-const getAdminUser = async (clerkUserId) => {
-  if (!clerkUserId) return null;
-  const user = await User.findOne({ user_id: clerkUserId });
+const getAdminUser = async (req) => {
+  if (!req.auth || !req.auth.userId) return null;
+  const user = await User.findOne({ user_id: req.auth.userId });
   if (!user || user.role !== 'Admin') return null;
   return user;
 };
@@ -13,10 +15,15 @@ const getAdminUser = async (clerkUserId) => {
 // @access  Private (Admin only)
 const addEvent = async (req, res) => {
   try {
-    const adminUser = await getAdminUser(req.auth?.userId);
-    if (!adminUser) return res.status(403).json({ success: false, message: 'Forbidden: Admins only' });
-
     const { title, description, date, venue_id, artist_lineup, ticket_categories, status } = req.body;
+
+    // Explicit Validation Check
+    if (!title || !date) {
+      return res.status(400).json({ success: false, message: "Missing required fields: title, date" });
+    }
+
+    const adminUser = await getAdminUser(req);
+    if (!adminUser) return res.status(403).json({ success: false, message: 'Forbidden: Admins only' });
 
     // Optional Check: Confirm venue exists
     if (venue_id) {
@@ -42,15 +49,14 @@ const addEvent = async (req, res) => {
   }
 };
 
-// @desc    Get upcoming/all events or filter
-// @route   GET /api/events OR /api/events/:id
+// @desc    Get all events
+// @route   GET /api/events
 // @access  Public
 const getEvents = async (req, res) => {
   try {
     const query = {};
     if (req.query.venue_id) query.venue_id = req.query.venue_id;
     if (req.query.status) query.status = req.query.status;
-    if (req.params.id) query._id = req.params.id;
 
     const events = await Event.find(query)
       .populate('venue_id', 'name location capacity')
@@ -62,12 +68,31 @@ const getEvents = async (req, res) => {
   }
 };
 
+// @desc    Get a single event by ID
+// @route   GET /api/events/:id
+// @access  Public
+const getEventById = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate('venue_id', 'name location capacity')
+      .populate('admin_id', 'name email');
+
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+
+    res.status(200).json({ success: true, event });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  }
+};
+
 // @desc    Edit an existing event
 // @route   PUT /api/events/:id
 // @access  Private (Admin only)
 const updateEvent = async (req, res) => {
   try {
-    const adminUser = await getAdminUser(req.auth?.userId);
+    const adminUser = await getAdminUser(req);
     if (!adminUser) return res.status(403).json({ success: false, message: 'Forbidden: Admins only' });
 
     const updatedEvent = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
@@ -84,7 +109,7 @@ const updateEvent = async (req, res) => {
 // @access  Private (Admin only)
 const deleteEvent = async (req, res) => {
   try {
-    const adminUser = await getAdminUser(req.auth?.userId);
+    const adminUser = await getAdminUser(req);
     if (!adminUser) return res.status(403).json({ success: false, message: 'Forbidden: Admins only' });
 
     const deletedEvent = await Event.findByIdAndDelete(req.params.id);
@@ -96,4 +121,4 @@ const deleteEvent = async (req, res) => {
   }
 };
 
-module.exports = { addEvent, getEvents, updateEvent, deleteEvent };
+module.exports = { addEvent, getEvents, getEventById, updateEvent, deleteEvent };

@@ -1,4 +1,4 @@
-const { User } = require('../models/User');
+const User = require('../models/User');
 const { clerkClient } = require('@clerk/clerk-sdk-node');
 
 const getMe = async (req, res) => {
