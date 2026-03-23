@@ -1,8 +1,8 @@
+import PromoCarousel from "@/components/PromoCarousel";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import PromoCarousel from "@/components/PromoCarousel";
 import {
   Button,
   Image,
@@ -75,7 +75,7 @@ export default function Home() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* HEADER */}
-        <View style={{ paddingHorizontal: 24, paddingTop: 10, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <View style={{ paddingHorizontal: 24, paddingTop: 0, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <Animated.View entering={FadeInDown.duration(800).springify()}>
             <Text style={{ color: colors.subtext, fontSize: 16, fontWeight: "500" }}>Welcome back,</Text>
             <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28 }}>{user?.firstName ? user.firstName.split(' ')[0] : "Guest"}</Text>
