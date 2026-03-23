@@ -1,40 +1,80 @@
-import React, { useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, Animated } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 
 const { width } = Dimensions.get('window');
-// Card width relative to screen to allow side peeking (80% width)
-const CARD_WIDTH = width * 0.8; 
+// Card width relative to screen
+const CARD_WIDTH = width * 0.90;
 const SPACING = 16;
-// Distance to move to snap exactly to the next card
+// The distance the ScrollView must move to snap precisely to the next item
 const SNAP_INTERVAL = CARD_WIDTH + SPACING;
-// Padding to center the first and last cards perfectly
-const PADDING_HORIZONTAL = (width - CARD_WIDTH) / 2;
+// Use explicit spacer components instead of padding to beat alignment bugs on Android/iOS
+const SPACER_WIDTH = (width - CARD_WIDTH) / 2 - (SPACING / 2);
 
+// Premium default data with images for "Tech and Features" theme
 const promoData = [
-  { id: '1', title: 'Ticket', subtitle: 'Book the best seats' },
-  { id: '2', title: 'Tech', subtitle: 'Powered by cutting edge' },
-  { id: '3', title: 'Features', subtitle: 'Anti double-booking' },
+  {
+    id: '1',
+    title: 'Tech Innovation',
+    subtitle: 'Discover the latest features powering our new platform',
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: '2',
+    title: 'Seamless Experience',
+    subtitle: 'Zero double-booking guarantee with our real-time engine',
+    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: '3',
+    title: 'Premium Events',
+    subtitle: 'Book the best seats securely from anywhere in the world',
+    image: 'https://images.unsplash.com/photo-1540553016722-983e48a2cd10?auto=format&fit=crop&w=800&q=80'
+  },
 ];
 
 export default function PromoCarousel() {
   const scrollX = useRef(new Animated.Value(0)).current;
+  const flatListRef = useRef<Animated.FlatList<any>>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Auto-scroll mechanism
+  useEffect(() => {
+    let interval = setInterval(() => {
+      let nextIndex = currentIndex + 1;
+      if (nextIndex >= promoData.length) {
+        nextIndex = 0;
+      }
+      setCurrentIndex(nextIndex);
+      // scrollToOffset directly targets the exact absolute coordinate ignoring index layouts
+      flatListRef.current?.scrollToOffset({ offset: nextIndex * SNAP_INTERVAL, animated: true });
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, [currentIndex]);
+
+  // Update dots when swiped manually by user
+  const handleMomentumScrollEnd = (event: any) => {
+    const x = event.nativeEvent.contentOffset.x;
+    const index = Math.round(x / SNAP_INTERVAL);
+    setCurrentIndex(index);
+  };
 
   const renderItem = ({ item, index }: { item: any; index: number }) => {
-    // Determine the animation inputs relative to scroll position
+    // Interpolation inputs for the center, left, and right cards
     const inputRange = [
       (index - 1) * SNAP_INTERVAL,
       index * SNAP_INTERVAL,
       (index + 1) * SNAP_INTERVAL,
     ];
 
-    // Scale down the cards that are barely peeking
+    // Scale shrinks the cards down significantly when they are "behind/coming up"
     const scale = scrollX.interpolate({
       inputRange,
-      outputRange: [0.92, 1, 0.92],
+      outputRange: [0.85, 1, 0.85],
       extrapolate: 'clamp',
     });
-    
-    // Dim the unselected, peeking cards slightly
+
+    // Dim the unselected cards to enhance the 3D depth effect
     const opacity = scrollX.interpolate({
       inputRange,
       outputRange: [0.6, 1, 0.6],
@@ -45,15 +85,29 @@ export default function PromoCarousel() {
       <Animated.View
         style={{
           width: CARD_WIDTH,
-          marginRight: index === promoData.length - 1 ? 0 : SPACING,
+          marginHorizontal: SPACING / 2, // Total width allocated will equal exactly SNAP_INTERVAL
           transform: [{ scale }],
           opacity,
         }}
       >
-         <View style={styles.card}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.subtitle}>{item.subtitle}</Text>
-         </View>
+        <View style={styles.card}>
+          {/* Background Image */}
+          <Image source={{ uri: item.image }} style={styles.imageBackground} />
+
+          {/* Dark overlay proxy for readability */}
+          <View style={styles.overlay} />
+
+          {/* Top Right Logo/Badge */}
+          <View style={styles.logoContainer}>
+            <Text style={styles.logoText}>NEWS</Text>
+          </View>
+
+          {/* Bottom Text content */}
+          <View style={styles.textContainer}>
+            <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+            <Text style={styles.subtitle} numberOfLines={2}>{item.subtitle}</Text>
+          </View>
+        </View>
       </Animated.View>
     );
   };
@@ -61,53 +115,114 @@ export default function PromoCarousel() {
   return (
     <View style={styles.container}>
       <Animated.FlatList
+        ref={flatListRef}
         data={promoData}
         keyExtractor={(item) => item.id}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: PADDING_HORIZONTAL }}
+        // Instead of buggy paddingHorizontal, we inject invisible bounding boxes to center items
+        ListHeaderComponent={<View style={{ width: SPACER_WIDTH }} />}
+        ListFooterComponent={<View style={{ width: SPACER_WIDTH }} />}
         snapToInterval={SNAP_INTERVAL}
         decelerationRate="fast"
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
           { useNativeDriver: true }
         )}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
         scrollEventThrottle={16}
         renderItem={renderItem}
       />
+
+      {/* Pagination Dots beneath the Carousel */}
+      <View style={styles.paginationContainer}>
+        {promoData.map((_, index) => {
+          const dotColor = index === currentIndex ? '#FF1E1E' : '#A0A0A0'; // Bright red active dot, gray inactive
+          const dotWidth = index === currentIndex ? 10 : 8; // Active dot slightly larger
+          return (
+            <View
+              key={index}
+              style={[
+                styles.dot,
+                { backgroundColor: dotColor, width: dotWidth, height: dotWidth, borderRadius: dotWidth / 2 }
+              ]}
+            />
+          );
+        })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 32,
-    height: 180,
+    marginTop: 20,
+    marginBottom: 20,
   },
   card: {
-    flex: 1,
-    backgroundColor: '#3182CE', // Vibrant blue matching your screenshot
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    shadowColor: '#3182CE',
-    shadowOpacity: 0.4,
-    shadowOffset: { width: 0, height: 10 },
-    shadowRadius: 20,
-    elevation: 8,
+    width: '100%',
+    height: 220,
+    borderRadius: 24, // Matches typical modern app rounded card aesthetics
+    overflow: 'hidden',
+    backgroundColor: '#000',
+    // Soft shadow for depth
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  imageBackground: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  overlay: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)', // Smooth darkness over the image so white text pops
+  },
+  textContainer: {
+    position: 'absolute',
+    bottom: 24,
+    left: 20,
+    right: 20,
   },
   title: {
     color: '#FFFFFF',
-    fontSize: 48,
-    fontFamily: 'Syne_700Bold', // Uses project's existing bold font
-    textTransform: 'uppercase',
-    letterSpacing: 2,
+    fontSize: 24,
+    fontFamily: 'Syne_700Bold', // Project font
+    marginBottom: 6,
   },
   subtitle: {
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#F1F5F9', // Light grayish-white
     fontSize: 14,
+    lineHeight: 20,
     fontWeight: '500',
-    marginTop: 8,
+  },
+  logoContainer: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  logoText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#000',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 18,
+  },
+  dot: {
+    marginHorizontal: 5,
   }
 });
