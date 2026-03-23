@@ -7,6 +7,7 @@ const userRoutes = require('./routes/userRoutes');
 const venueRouters = require('./routes/venueRoutes');
 const sectionRouters = require('./routes/sectionRoutes');
 const eventRouters = require('./routes/eventRoutes');
+const seatRouters = require('./routes/seatRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -32,6 +33,9 @@ app.use('/api/events', eventRouters);
 
 // Section
 app.use('/api/sections', sectionRouters);
+
+// Seats
+app.use('/api/seats', seatRouters);
 
 // Swagger Documentation
 const setupSwagger = require('./swagger/swaggerConfig');

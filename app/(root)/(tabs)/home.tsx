@@ -2,6 +2,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAuth, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
+import PromoCarousel from "@/components/PromoCarousel";
 import {
   Button,
   Image,
@@ -74,11 +75,10 @@ export default function Home() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* HEADER */}
-        <View style={{ paddingHorizontal: 24, paddingTop: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <View style={{ paddingHorizontal: 24, paddingTop: 10, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <Animated.View entering={FadeInDown.duration(800).springify()}>
             <Text style={{ color: colors.subtext, fontSize: 16, fontWeight: "500" }}>Welcome back,</Text>
-            <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28 }}>{user?.firstName || "Guest"} 👋</Text>
-            <Button title="Get Token" onPress={printMyToken} />
+            <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28 }}>{user?.firstName ? user.firstName.split(' ')[0] : "Guest"}</Text>
           </Animated.View>
           <TouchableOpacity style={{ height: 56, width: 56, borderRadius: 999, borderWidth: 2, borderColor: colors.border, overflow: "hidden" }}>
             <Image
@@ -99,6 +99,11 @@ export default function Home() {
           </View>
         </Animated.View>
 
+        {/* PROMO CAROUSEL */}
+        <Animated.View entering={FadeInDown.delay(300).duration(800).springify()}>
+          <PromoCarousel />
+        </Animated.View>
+
         {/* FEATURED */}
         <View style={{ marginTop: 32 }}>
           <View style={{ paddingHorizontal: 24, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
@@ -109,7 +114,7 @@ export default function Home() {
             {featuredEvents.map((item, index) => <FeaturedCard key={item.id} item={item} index={index} />)}
           </ScrollView>
         </View>
-
+        <Button title="Get Token" onPress={printMyToken} />
         {/* HAPPENING SOON */}
         <View style={{ marginTop: 40, paddingHorizontal: 24 }}>
           <Text style={{ fontFamily: "Syne_700Bold", fontSize: 22, color: colors.text, marginBottom: 20 }}>Happening Soon</Text>
