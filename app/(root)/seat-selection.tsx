@@ -34,11 +34,12 @@ export default function SeatSelection() {
   const [reserving, setReserving] = useState(false);
 
   // Fetch seats for the chosen section
-  const { data, loading, error, refetch } = useFetch<{ seats: any[]; total: number }>(
-    `/api/seats?section_id=${section_id}&limit=200`
+  const { data, loading, error, refetch } = useFetch<any>(
+    `/api/seats?section_id=${section_id}&limit=200`,
+    false
   );
 
-  const seats: any[] = data?.seats ?? [];
+  const seats = data?.success && Array.isArray(data?.seats) ? data.seats : [];
 
   const handleReserve = async () => {
     if (!selectedSeat) return;

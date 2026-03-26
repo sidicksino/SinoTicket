@@ -18,14 +18,15 @@ export default function EventDetail() {
   const router = useRouter();
   const { colors } = useTheme();
 
-  const { data, loading, error } = useFetch<{ event: any }>(`/api/events/${id}`);
-  const event = data?.event;
+  const { data, loading, error } = useFetch<any>(`/api/events/${id}`, false);
+  const event = data?.success ? data.event : null;
 
   // Fetch sections for this venue so user can pick one
-  const { data: sectionsData } = useFetch<{ sections: any[] }>(
-    event?.venue_id ? `/api/sections?venue_id=${typeof event.venue_id === 'object' ? event.venue_id._id : event.venue_id}` : ''
+  const { data: sectionsData } = useFetch<any>(
+    event?.venue_id ? `/api/sections?venue_id=${typeof event.venue_id === 'object' ? event.venue_id._id : event.venue_id}` : '',
+    false
   );
-  const sections: any[] = sectionsData?.sections ?? [];
+  const sections = sectionsData?.success && Array.isArray(sectionsData?.sections) ? sectionsData.sections : [];
 
   if (loading) {
     return (
@@ -57,6 +58,7 @@ export default function EventDetail() {
         <View style={{ height: 320, backgroundColor: "#111" }}>
           <Image
             source={{ uri: event.imageUrl || "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800" }}
+            defaultSource={require("@/assets/images/icon.png")}
             style={{ width: "100%", height: "100%" }}
             resizeMode="cover"
           />

@@ -94,7 +94,7 @@ const getSections = async (req, res) => {
     res.status(200).json({ success: true, count: sections.length, sections });
   } catch (error) {
     console.error("Error in getSections:", error);
-    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    res.status(500).json({ success: false, sections: [], message: 'Server Error', error: error.message });
   }
 };
 

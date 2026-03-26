@@ -5,6 +5,7 @@ const EventSchema = new Schema(
   {
     title: String,
     description: String,
+    imageUrl: { type: String, default: null },
     date: { type: Date, index: true },
     venue_id: { type: Schema.Types.ObjectId, ref: 'Venue', index: true },
     admin_id: { type: Schema.Types.ObjectId, ref: 'User' },

@@ -52,7 +52,7 @@ const getVenue = async (req, res) => {
     return res.status(200).json({ success: true, venues });
   } catch (error) {
     console.error('Error fetching venues:', error);
-    return res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    return res.status(500).json({ success: false, venues: [], message: 'Server Error', error: error.message });
   }
 };
 
