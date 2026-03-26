@@ -4,7 +4,7 @@ import { useFetch } from "@/lib/fetch";
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -16,14 +16,35 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const CATEGORIES = ["All", "Music", "Sports", "Cultural", "Business", "Fashion"];
+
 export default function Home() {
   const { user } = useUser();
   const { colors } = useTheme();
   const router = useRouter();
 
-  const { data, loading, error } = useFetch<any>('/api/events?limit=10&page=1', false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const apiUrl = `/api/events?limit=20&page=1${
+    debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
+  }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
+
+  const { data, loading, error } = useFetch<any>(apiUrl, false);
   
   const events = data?.success && Array.isArray(data?.events) ? data.events : [];
+  
+  // For the "Featured" section, we take the top 3 upcoming
+  // For "Happening Soon", we take the rest
   const featuredEvents = events.slice(0, 3);
   const happeningSoon = events.slice(3);
 
@@ -73,32 +94,64 @@ export default function Home() {
         }}>
           <Ionicons name="search" size={20} color={colors.subtext} />
           <TextInput
-            placeholder="Search for events..."
+            placeholder="Search events, artists..."
             placeholderTextColor={colors.subtext}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
             style={{ flex: 1, marginLeft: 10, fontSize: 15, color: colors.text }}
           />
-          <TouchableOpacity style={{
-            backgroundColor: colors.primary, padding: 6, borderRadius: 10,
-          }}>
-            <Ionicons name="options-outline" size={18} color="white" />
-          </TouchableOpacity>
+          {searchQuery !== "" && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Ionicons name="close-circle" size={18} color={colors.subtext} />
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* ── PROMO CAROUSEL ── */}
-        <PromoCarousel />
+        {/* ── CATEGORIES ── */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 24, marginTop: 20, gap: 10 }}
+        >
+          {CATEGORIES.map((cat) => {
+            const isActive = selectedCategory === cat;
+            return (
+              <TouchableOpacity
+                key={cat}
+                onPress={() => setSelectedCategory(cat)}
+                style={{
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 99,
+                  backgroundColor: isActive ? colors.primary : colors.card,
+                  borderWidth: 1,
+                  borderColor: isActive ? colors.primary : colors.border,
+                }}
+              >
+                <Text style={{
+                  color: isActive ? "#fff" : colors.text,
+                  fontSize: 14,
+                  fontWeight: isActive ? "700" : "500"
+                }}>
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            )
+          })}
+        </ScrollView>
 
-        {/* ── FEATURED EVENTS ── */}
-        <View style={{ marginTop: 8 }}>
+        {/* ── PROMO CAROUSEL (Show only on 'All' category and no search) ── */}
+        {selectedCategory === "All" && !debouncedSearch && <PromoCarousel />}
+
+        {/* ── RESULTS ── */}
+        <View style={{ marginTop: 24 }}>
           <View style={{
             paddingHorizontal: 24, flexDirection: "row",
             justifyContent: "space-between", alignItems: "center", marginBottom: 16,
           }}>
             <Text style={{ fontFamily: "Syne_700Bold", fontSize: 20, color: colors.text }}>
-              Featured Events
+              {debouncedSearch || selectedCategory !== "All" ? "Results" : "Featured Events"}
             </Text>
-            <TouchableOpacity>
-              <Text style={{ color: colors.primary, fontWeight: "700", fontSize: 14 }}>See All</Text>
-            </TouchableOpacity>
           </View>
 
           {loading ? (
@@ -106,129 +159,121 @@ export default function Home() {
           ) : error ? (
             <View style={{ marginHorizontal: 24, padding: 20, backgroundColor: colors.card, borderRadius: 16 }}>
               <Text style={{ color: colors.subtext, textAlign: "center" }}>
-                Could not connect to server.{"\n"}Check your network connection.
+                Could not connect to server.
               </Text>
             </View>
-          ) : featuredEvents.length === 0 ? (
+          ) : events.length === 0 ? (
             <View style={{ marginHorizontal: 24, padding: 32, alignItems: "center" }}>
-              <Ionicons name="calendar-outline" size={48} color={colors.border} />
+              <Ionicons name="search-outline" size={48} color={colors.border} />
               <Text style={{ color: colors.subtext, marginTop: 12, textAlign: "center" }}>
-                No events yet.
+                No events found matching your criteria.
               </Text>
             </View>
           ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingLeft: 24, paddingRight: 8 }}
-              decelerationRate="fast"
-              snapToInterval={276} // card width (260) + marginRight (16)
-              scrollEventThrottle={16}
-            >
-              {featuredEvents.map((item: any) => (
-                <TouchableOpacity
-                  key={item._id}
-                  onPress={() => navigateToEvent(item._id)}
-                  activeOpacity={0.9}
-                  style={{
-                    marginRight: 16, width: 260, height: 320,
-                    borderRadius: 28, overflow: "hidden", backgroundColor: "#111",
-                  }}
+            <>
+              {/* Featured Horizontal List (if not searching) */}
+              {(!debouncedSearch && selectedCategory === "All") && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingLeft: 24, paddingRight: 8 }}
+                  decelerationRate="fast"
+                  snapToInterval={276}
                 >
-                  <Image
-                    source={{
-                      uri: item.imageUrl || "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800",
+                  {featuredEvents.map((item: any) => (
+                    <TouchableOpacity
+                      key={item._id}
+                      onPress={() => navigateToEvent(item._id)}
+                      activeOpacity={0.9}
+                      style={{
+                        marginRight: 16, width: 260, height: 320,
+                        borderRadius: 28, overflow: "hidden", backgroundColor: "#111",
+                      }}
+                    >
+                      <Image
+                        source={{ uri: item.imageUrl || "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800" }}
+                        style={{ width: "100%", height: "100%", position: "absolute" }}
+                        resizeMode="cover"
+                      />
+                      <View style={{
+                        position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: "rgba(0,0,0,0.40)",
+                      }} />
+                      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 20 }}>
+                        <View style={{
+                          alignSelf: "flex-start", backgroundColor: colors.primary,
+                          paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, marginBottom: 10,
+                        }}>
+                          <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700", textTransform: "uppercase" }}>
+                            {item.category}
+                          </Text>
+                        </View>
+                        <Text style={{
+                          color: "#fff", fontFamily: "Syne_700Bold",
+                          fontSize: 18, lineHeight: 24, marginBottom: 6,
+                        }} numberOfLines={2}>
+                          {item.title}
+                        </Text>
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                          <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.7)" />
+                          <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, marginLeft: 5 }}>
+                            {item.date ? new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "TBA"}
+                          </Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+
+              {/* Grid/List of Results */}
+              <View style={{ marginTop: (!debouncedSearch && selectedCategory === "All") ? 32 : 0, paddingHorizontal: 24 }}>
+                {(!debouncedSearch && selectedCategory === "All") && (
+                  <Text style={{ fontFamily: "Syne_700Bold", fontSize: 20, color: colors.text, marginBottom: 16 }}>
+                    Happening Soon
+                  </Text>
+                )}
+                {( (debouncedSearch || selectedCategory !== "All") ? events : happeningSoon).map((item: any) => (
+                  <TouchableOpacity
+                    key={item._id}
+                    onPress={() => navigateToEvent(item._id)}
+                    activeOpacity={0.85}
+                    style={{
+                      flexDirection: "row", alignItems: "center",
+                      marginBottom: 14, backgroundColor: colors.card,
+                      padding: 14, borderRadius: 20,
+                      borderWidth: 1, borderColor: colors.cardBorder,
                     }}
-                    defaultSource={require("@/assets/images/icon.png")}
-                    style={{ width: "100%", height: "100%", position: "absolute" }}
-                    resizeMode="cover"
-                  />
-                  <View style={{
-                    position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: "rgba(0,0,0,0.40)",
-                  }} />
-                  <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 20 }}>
-                    <View style={{
-                      alignSelf: "flex-start", backgroundColor: colors.primary,
-                      paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, marginBottom: 10,
-                    }}>
-                      <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700", textTransform: "uppercase" }}>
-                        {item.status || "Upcoming"}
+                  >
+                    <Image
+                      source={{ uri: item.imageUrl || "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400" }}
+                      style={{ width: 72, height: 72, borderRadius: 14 }}
+                    />
+                    <View style={{ flex: 1, marginLeft: 14 }}>
+                      <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 15, marginBottom: 4 }} numberOfLines={1}>
+                        {item.title}
+                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                         <View style={{ backgroundColor: colors.primaryLight, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, marginRight: 6 }}>
+                            <Text style={{ color: colors.primary, fontSize: 10, fontWeight: '700' }}>{item.category}</Text>
+                         </View>
+                         <Text style={{ color: colors.subtext, fontSize: 12 }}>
+                           {item.date ? new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBA"}
+                         </Text>
+                      </View>
+                      <Text style={{ color: colors.subtext, fontSize: 12 }}>
+                        {item.venue_id?.name || "Venue TBA"}
                       </Text>
                     </View>
-                    <Text style={{
-                      color: "#fff", fontFamily: "Syne_700Bold",
-                      fontSize: 18, lineHeight: 24, marginBottom: 6,
-                    }} numberOfLines={2}>
-                      {item.title}
-                    </Text>
-                    <View style={{ flexDirection: "row", alignItems: "center" }}>
-                      <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.7)" />
-                      <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, marginLeft: 5 }}>
-                        {item.date
-                          ? new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                          : "TBA"}
-                      </Text>
+                    <View style={{ width: 36, height: 36, borderRadius: 999, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" }}>
+                      <Ionicons name="chevron-forward" size={18} color={colors.primary} />
                     </View>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
           )}
         </View>
-
-        {/* ── HAPPENING SOON ── */}
-        {!loading && happeningSoon.length > 0 && (
-          <View style={{ marginTop: 32, paddingHorizontal: 24 }}>
-            <Text style={{ fontFamily: "Syne_700Bold", fontSize: 20, color: colors.text, marginBottom: 16 }}>
-              Happening Soon
-            </Text>
-            {happeningSoon.map((item: any) => (
-              <TouchableOpacity
-                key={item._id}
-                onPress={() => navigateToEvent(item._id)}
-                activeOpacity={0.85}
-                style={{
-                  flexDirection: "row", alignItems: "center",
-                  marginBottom: 14, backgroundColor: colors.card,
-                  padding: 14, borderRadius: 20,
-                  borderWidth: 1, borderColor: colors.cardBorder,
-                }}
-              >
-                <Image
-                  source={{
-                    uri: item.imageUrl || "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400",
-                  }}
-                  defaultSource={require("@/assets/images/icon.png")}
-                  style={{ width: 72, height: 72, borderRadius: 14 }}
-                />
-                <View style={{ flex: 1, marginLeft: 14 }}>
-                  <Text style={{
-                    color: colors.text, fontFamily: "Syne_700Bold",
-                    fontSize: 15, marginBottom: 4,
-                  }} numberOfLines={1}>
-                    {item.title}
-                  </Text>
-                  <Text style={{ color: colors.subtext, fontSize: 13 }}>
-                    {item.date
-                      ? new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                      : "TBA"}
-                    {item.ticket_categories?.[0]?.price != null
-                      ? ` • From ${item.ticket_categories[0].price} XAF`
-                      : " • Free Entry"}
-                  </Text>
-                </View>
-                <View style={{
-                  width: 36, height: 36, borderRadius: 999,
-                  backgroundColor: colors.primaryLight,
-                  alignItems: "center", justifyContent: "center",
-                }}>
-                  <Ionicons name="chevron-forward" size={18} color={colors.primary} />
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );

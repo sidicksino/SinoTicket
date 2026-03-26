@@ -77,12 +77,20 @@ const getEvents = async (req, res) => {
     const query = {};
     
     // Default to upcoming events unless specifically asked for 'all' or a specific status
-    if (req.query.upcoming === 'true' || !req.query.status) {
+    if (req.query.upcoming === 'true' || (!req.query.status && req.query.all !== 'true')) {
       query.date = { $gte: new Date() };
     }
 
     if (req.query.venue_id) query.venue_id = req.query.venue_id;
     if (req.query.status) query.status = req.query.status;
+    if (req.query.category && req.query.category !== 'All') query.category = req.query.category;
+    
+    if (req.query.search) {
+      query.$or = [
+        { title: { $regex: req.query.search, $options: 'i' } },
+        { description: { $regex: req.query.search, $options: 'i' } }
+      ];
+    }
 
     const total = await Event.countDocuments(query);
 

@@ -10,6 +10,7 @@ const EventSchema = new Schema(
     venue_id: { type: Schema.Types.ObjectId, ref: 'Venue', index: true },
     admin_id: { type: Schema.Types.ObjectId, ref: 'User' },
     status: { type: String, enum: ['Upcoming', 'Ongoing', 'Ended'], default: 'Upcoming', index: true },
+    category: { type: String, enum: ['Music', 'Sports', 'Cultural', 'Business', 'Fashion'], default: 'Music', index: true },
     artist_lineup: [{ name: String, time: String }],
     ticket_categories: [
       {
