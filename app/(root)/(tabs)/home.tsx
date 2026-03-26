@@ -1,10 +1,12 @@
 import PromoCarousel from "@/components/PromoCarousel";
 import { useTheme } from "@/context/ThemeContext";
-import { useAuth, useUser } from "@clerk/expo";
+import { useFetch } from "@/lib/fetch";
+import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React from "react";
 import {
-  Button,
+  ActivityIndicator,
   Image,
   ScrollView,
   Text,
@@ -15,61 +17,73 @@ import {
 import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const FeaturedCard = ({ item, index }: { item: any; index: number }) => (
-  <Animated.View
-    entering={FadeInRight.delay(index * 200).duration(800).springify()}
-    style={{ marginRight: 20, width: 280, height: 350, borderRadius: 32, overflow: "hidden", backgroundColor: "#fff" }}
-  >
-    <Image source={{ uri: item.image }} style={{ width: "100%", height: "100%", position: "absolute" }} resizeMode="cover" />
-    <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.30)" }} />
-    <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 24 }}>
-      <View style={{ backgroundColor: "rgba(255,255,255,0.20)", alignSelf: "flex-start", paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, marginBottom: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.3)" }}>
-        <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 }}>{item.category}</Text>
+// ─── Featured Event Card ──────────────────────────────────────────────────────
+const FeaturedCard = ({ item, index, onPress }: { item: any; index: number; onPress: () => void }) => (
+  <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+    <Animated.View
+      entering={FadeInRight.delay(index * 200).duration(800).springify()}
+      style={{ marginRight: 20, width: 280, height: 350, borderRadius: 32, overflow: "hidden", backgroundColor: "#111" }}
+    >
+      <Image
+        source={{ uri: item.imageUrl || "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800" }}
+        style={{ width: "100%", height: "100%", position: "absolute" }}
+        resizeMode="cover"
+      />
+      <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.35)" }} />
+      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 24 }}>
+        <View style={{ backgroundColor: "rgba(255,255,255,0.20)", alignSelf: "flex-start", paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, marginBottom: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.3)" }}>
+          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1 }}>{item.status || "Upcoming"}</Text>
+        </View>
+        <Text style={{ color: "#fff", fontFamily: "Syne_700Bold", fontSize: 22, lineHeight: 28, marginBottom: 8 }}>{item.title}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Ionicons name="calendar" size={14} color="#0286FF" />
+          <Text style={{ color: "rgba(255,255,255,0.80)", fontSize: 13, marginLeft: 6 }}>
+            {item.date ? new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "TBA"}
+          </Text>
+        </View>
       </View>
-      <Text style={{ color: "#fff", fontFamily: "Syne_700Bold", fontSize: 22, lineHeight: 28, marginBottom: 8 }}>{item.title}</Text>
-      <View style={{ flexDirection: "row", alignItems: "center" }}>
-        <Ionicons name="location" size={16} color="#0286FF" />
-        <Text style={{ color: "rgba(255,255,255,0.80)", fontSize: 14, marginLeft: 4 }}>{item.location}</Text>
-      </View>
-    </View>
-  </Animated.View>
+    </Animated.View>
+  </TouchableOpacity>
 );
 
-const EventListItem = ({ item, index, colors }: { item: any; index: number; colors: any }) => (
-  <Animated.View
-    entering={FadeInDown.delay(400 + index * 100).duration(800).springify()}
-    style={{ flexDirection: "row", alignItems: "center", marginBottom: 16, backgroundColor: colors.card, padding: 16, borderRadius: 24, borderWidth: 1, borderColor: colors.cardBorder }}
-  >
-    <Image source={{ uri: item.image }} style={{ width: 80, height: 80, borderRadius: 16 }} />
-    <View style={{ flex: 1, marginLeft: 16 }}>
-      <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 17, marginBottom: 4 }}>{item.title}</Text>
-      <Text style={{ color: colors.subtext, fontSize: 14 }}>{item.date} • {item.price}</Text>
-    </View>
-    <TouchableOpacity style={{ height: 40, width: 40, backgroundColor: colors.primaryLight, borderRadius: 999, alignItems: "center", justifyContent: "center" }}>
-      <Ionicons name="chevron-forward" size={20} color={colors.primary} />
-    </TouchableOpacity>
-  </Animated.View>
+// ─── List Event Row ───────────────────────────────────────────────────────────
+const EventListItem = ({ item, index, colors, onPress }: { item: any; index: number; colors: any; onPress: () => void }) => (
+  <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
+    <Animated.View
+      entering={FadeInDown.delay(400 + index * 100).duration(800).springify()}
+      style={{ flexDirection: "row", alignItems: "center", marginBottom: 16, backgroundColor: colors.card, padding: 16, borderRadius: 24, borderWidth: 1, borderColor: colors.cardBorder }}
+    >
+      <Image
+        source={{ uri: item.imageUrl || "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400" }}
+        style={{ width: 80, height: 80, borderRadius: 16 }}
+      />
+      <View style={{ flex: 1, marginLeft: 16 }}>
+        <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 17, marginBottom: 4 }}>{item.title}</Text>
+        <Text style={{ color: colors.subtext, fontSize: 14 }}>
+          {item.date ? new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBA"}
+          {item.ticket_categories?.[0] ? ` • From $${item.ticket_categories[0].price}` : " • Free"}
+        </Text>
+      </View>
+      <View style={{ height: 40, width: 40, backgroundColor: colors.primaryLight, borderRadius: 999, alignItems: "center", justifyContent: "center" }}>
+        <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+      </View>
+    </Animated.View>
+  </TouchableOpacity>
 );
 
-const featuredEvents = [
-  { id: "1", title: "N'Djamena Tech Summit 2025", location: "Radisson Blu, N'Djamena", category: "Technology", image: "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=2070&auto=format&fit=crop" },
-  { id: "2", title: "Sahara Music Festival", location: "Goz Beida Arena", category: "Music", image: "https://images.unsplash.com/photo-1459749411177-042180ce673c?q=80&w=2070&auto=format&fit=crop" },
-];
-
-const nearbyEvents = [
-  { id: "3", title: "Digital Art Exhibition", date: "Oct 12", price: "Free", image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop" },
-  { id: "4", title: "Startup Weekend Chad", date: "Nov 05", price: "$15", image: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?q=80&w=2070&auto=format&fit=crop" },
-];
-
+// ─── Home Screen ──────────────────────────────────────────────────────────────
 export default function Home() {
   const { user } = useUser();
-  const { getToken } = useAuth();
   const { colors } = useTheme();
+  const router = useRouter();
 
-  const printMyToken = async () => {
-    const token = await getToken();
-    console.log("MON SUPER TOKEN CLERK:", token);
-  };
+  // Fetch real events from backend (public route - no auth needed for listing)
+  const { data: eventsData, loading, error } = useFetch<{ events: any[]; total: number }>('/api/events?limit=10&page=1');
+
+  const events: any[] = eventsData?.events ?? [];
+  // Split: first 2 are "Featured" (horizontal big cards), rest are "Happening Soon" (list rows)
+  const featuredEvents = events.slice(0, 3);
+  const happeningSoon = events.slice(3);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -104,22 +118,52 @@ export default function Home() {
           <PromoCarousel />
         </Animated.View>
 
-        {/* FEATURED */}
+        {/* FEATURED EVENTS */}
         <View style={{ marginTop: 32 }}>
           <View style={{ paddingHorizontal: 24, flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
             <Text style={{ fontFamily: "Syne_700Bold", fontSize: 22, color: colors.text }}>Featured Events</Text>
             <TouchableOpacity><Text style={{ color: colors.primary, fontWeight: "700" }}>See All</Text></TouchableOpacity>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 24, paddingRight: 4 }}>
-            {featuredEvents.map((item, index) => <FeaturedCard key={item.id} item={item} index={index} />)}
-          </ScrollView>
+
+          {loading ? (
+            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+          ) : error ? (
+            <Text style={{ color: "red", textAlign: "center", marginHorizontal: 24 }}>
+              Could not load events. Check your connection.
+            </Text>
+          ) : featuredEvents.length === 0 ? (
+            <Text style={{ color: colors.subtext, textAlign: "center", marginHorizontal: 24 }}>
+              No events scheduled yet.
+            </Text>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingLeft: 24, paddingRight: 4 }}>
+              {featuredEvents.map((item, index) => (
+                <FeaturedCard
+                  key={item._id}
+                  item={item}
+                  index={index}
+                  onPress={() => (router as any).push({ pathname: '/event/[id]', params: { id: item._id } })}
+                />
+              ))}
+            </ScrollView>
+          )}
         </View>
-        <Button title="Get Token" onPress={printMyToken} />
+
         {/* HAPPENING SOON */}
-        <View style={{ marginTop: 40, paddingHorizontal: 24 }}>
-          <Text style={{ fontFamily: "Syne_700Bold", fontSize: 22, color: colors.text, marginBottom: 20 }}>Happening Soon</Text>
-          {nearbyEvents.map((item, index) => <EventListItem key={item.id} item={item} index={index} colors={colors} />)}
-        </View>
+        {happeningSoon.length > 0 && (
+          <View style={{ marginTop: 40, paddingHorizontal: 24 }}>
+            <Text style={{ fontFamily: "Syne_700Bold", fontSize: 22, color: colors.text, marginBottom: 20 }}>Happening Soon</Text>
+            {happeningSoon.map((item, index) => (
+              <EventListItem
+                key={item._id}
+                item={item}
+                index={index}
+                colors={colors}
+                onPress={() => (router as any).push({ pathname: '/event/[id]', params: { id: item._id } })}
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

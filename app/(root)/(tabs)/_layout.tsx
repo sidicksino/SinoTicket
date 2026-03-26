@@ -1,13 +1,13 @@
-import { Tabs } from "expo-router";
-import { View, Text, TouchableOpacity, Dimensions, Platform } from "react-native";
+import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
+import React, { useEffect } from "react";
+import { Dimensions, Platform, Text, TouchableOpacity, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
-  withSpring,
   useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
-import React, { useEffect } from "react";
-import { useTheme } from "@/context/ThemeContext";
 
 // Removed unused TabIcon component
 
