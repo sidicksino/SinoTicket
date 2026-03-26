@@ -75,6 +75,12 @@ const getEvents = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const query = {};
+    
+    // Default to upcoming events unless specifically asked for 'all' or a specific status
+    if (req.query.upcoming === 'true' || !req.query.status) {
+      query.date = { $gte: new Date() };
+    }
+
     if (req.query.venue_id) query.venue_id = req.query.venue_id;
     if (req.query.status) query.status = req.query.status;
 

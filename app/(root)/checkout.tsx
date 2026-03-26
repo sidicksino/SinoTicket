@@ -55,16 +55,16 @@ export default function Checkout() {
         )
       );
 
-      Alert.alert(
-        "🎉 Booking Confirmed!",
-        `Your tickets for ${params.event_title} have been issued successfully.`,
-        [
-          {
-            text: "View My Tickets",
-            onPress: () => router.replace("/(root)/(tabs)/ticket"),
-          },
-        ]
-      );
+      router.replace({
+        pathname: "/(root)/success",
+        params: {
+          event_title: params.event_title,
+          seat_numbers: params.seat_numbers,
+          total_price: params.total_price,
+          quantity: params.quantity,
+          category_name: params.category_name
+        }
+      } as any);
     } catch (err: any) {
       Alert.alert("Checkout Failed", err.message || "Something went wrong during payment.");
     } finally {

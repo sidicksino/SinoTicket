@@ -1,11 +1,12 @@
-import { useAuthFetch } from "@/lib/fetch";
-import { useTheme } from "@/context/ThemeContext";
-import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@clerk/expo";
+import { useTheme } from "@/context/ThemeContext";
+import { useAuthFetch } from "@/lib/fetch";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useState, useMemo } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Image,
   RefreshControl,
   Text,
   TouchableOpacity,
@@ -13,13 +14,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// Compact QR-code-style display using a hash string, Optimized with useMemo
+// Compact QR-code style display - Optimized
 const QRDisplay = React.memo(function QRDisplay({ code }: { code: string }) {
-  const { colors } = useTheme();
-  const rows = 6;
-  const cols = 12;
+  const rows = 8;
+  const cols = 8;
 
-  // Use memo because recalculating arrays constantly per render drops frames
   const cells = useMemo(() => {
     if (!code) return Array(rows * cols).fill(false);
     return Array.from({ length: rows * cols }, (_, i) =>
@@ -30,25 +29,17 @@ const QRDisplay = React.memo(function QRDisplay({ code }: { code: string }) {
   if (!code) return null;
 
   return (
-    <View style={{ alignItems: "center", marginVertical: 12 }}>
-      <View
-        style={{
-          backgroundColor: "#fff",
-          padding: 12,
-          borderRadius: 16,
-          borderWidth: 2,
-          borderColor: colors.border,
-        }}
-      >
+    <View style={{ alignItems: "center", paddingVertical: 24, backgroundColor: '#fff', borderRadius: 24, marginTop: 16 }}>
+      <View style={{ padding: 16, backgroundColor: "#fff" }}>
         {Array.from({ length: rows }).map((_, r) => (
           <View key={r} style={{ flexDirection: "row" }}>
             {Array.from({ length: cols }).map((_, c) => (
               <View
                 key={c}
                 style={{
-                  width: 10,
-                  height: 10,
-                  margin: 1,
+                  width: 14,
+                  height: 14,
+                  margin: 1.5,
                   borderRadius: 2,
                   backgroundColor: cells[r * cols + c] ? "#111" : "#fff",
                 }}
@@ -57,103 +48,84 @@ const QRDisplay = React.memo(function QRDisplay({ code }: { code: string }) {
           </View>
         ))}
       </View>
-      <Text style={{ color: colors.subtext, fontSize: 10, marginTop: 8, letterSpacing: 1 }}>
-        {code.slice(0, 16).toUpperCase()}
+      <Text style={{ color: "#64748B", fontSize: 11, marginTop: 12, fontWeight: '700', letterSpacing: 2 }}>
+        {code.toUpperCase()}
       </Text>
     </View>
   );
 });
 
-// Memoized Ticket Item ensures expanding one ticket doesn't completely re-render all others
-const TicketItem = React.memo(({ item, isExpanded, onToggle }: { item: any, isExpanded: boolean, onToggle: () => void }) => {
+const TicketItem = React.memo(({ item, isExpanded, onToggle }: { item: any; isExpanded: boolean; onToggle: () => void }) => {
   const { colors } = useTheme();
 
-  // Safeguard against unpopulated backend referenced data
-  const isEventPopulated = typeof item.event_id === "object" && item.event_id !== null;
-  const eventTitle = isEventPopulated && item.event_id.title ? item.event_id.title : "Event TBA";
-  
-  const eventDateRaw = isEventPopulated ? item.event_id.date : null;
-  const eventDate = eventDateRaw
-    ? new Date(eventDateRaw).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-    : "Date TBA";
+  const event = typeof item.event_id === "object" ? item.event_id : null;
+  const seat = typeof item.seat_id === "object" ? item.seat_id : null;
+  const section = seat && typeof seat.section_id === "object" ? seat.section_id : null;
 
-  const isSeatPopulated = typeof item.seat_id === "object" && item.seat_id !== null;
-  const isSectionPopulated = isSeatPopulated && typeof item.seat_id.section_id === "object" && item.seat_id.section_id !== null;
-  
-  const sectionName = isSectionPopulated && item.seat_id.section_id.name ? item.seat_id.section_id.name : "—";
-  const seatNumber = isSeatPopulated && item.seat_id.number ? item.seat_id.number : "—";
-  
-  // Ensures default visibility
-  const status = item.status || "Valid";
+  const eventTitle = event?.title || "Event TBA";
+  const eventImage = event?.imageUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=800";
+  const eventDate = event?.date ? new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBA";
+  const eventTime = event?.date ? new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "TBA";
 
   return (
-    <TouchableOpacity
-      onPress={onToggle}
-      activeOpacity={0.9}
-      style={{
-        backgroundColor: colors.card,
-        borderRadius: 24,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: colors.cardBorder,
-        overflow: "hidden",
-      }}
-    >
-      {/* Ticket top ribbon */}
-      <View style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 14 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Text style={{ color: "#ffffff", fontFamily: "Syne_700Bold", fontSize: 16, flex: 1 }} numberOfLines={1}>
-            {eventTitle}
-          </Text>
-          <View style={{ backgroundColor: "rgba(255,255,255,0.25)", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 }}>
-            <Text style={{ color: "#ffffff", fontSize: 11, fontWeight: "700", textTransform: "uppercase" }}>
-              {status}
-            </Text>
+    <View style={{ marginBottom: 20 }}>
+      <TouchableOpacity
+        onPress={onToggle}
+        activeOpacity={0.9}
+        style={{
+          backgroundColor: colors.card,
+          borderRadius: 28,
+          borderWidth: 1,
+          borderColor: colors.cardBorder,
+          overflow: "hidden",
+          elevation: 4,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+        }}
+      >
+        {/* Ticket Header Image */}
+        <View style={{ height: 140, width: '100%' }}>
+          <Image source={{ uri: eventImage }} style={{ width: '100%', height: '100%' }} />
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)' }} />
+          
+          <View style={{ position: 'absolute', top: 16, right: 16, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}>
+            <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}>{item.status?.toUpperCase() || "ACTIVE"}</Text>
           </View>
-        </View>
-        <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 13, marginTop: 4 }}>
-          📅 {eventDate}
-        </Text>
-      </View>
 
-      {/* Dashed divider */}
-      <View style={{ flexDirection: "row", marginHorizontal: 20 }}>
-        {Array.from({ length: 26 }).map((_, i) => (
-          <View key={i} style={{ flex: 1, height: 1.5, backgroundColor: i % 2 === 0 ? colors.border : "transparent" }} />
-        ))}
-      </View>
-
-      {/* Ticket body */}
-      <View style={{ padding: 20 }}>
-        <View style={{ flexDirection: "row", gap: 16 }}>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: colors.subtext, fontSize: 11, fontWeight: "700", letterSpacing: 1 }}>SECTION</Text>
-            <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700", marginTop: 4 }}>
-              {sectionName}
-            </Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: colors.subtext, fontSize: 11, fontWeight: "700", letterSpacing: 1 }}>SEAT</Text>
-            <Text style={{ color: colors.text, fontSize: 15, fontWeight: "700", marginTop: 4 }}>
-              #{seatNumber}
-            </Text>
-          </View>
-          <View style={{ flex: 1, alignItems: "flex-end", justifyContent: "center" }}>
-            <Ionicons
-              name={isExpanded ? "chevron-up" : "qr-code-outline"}
-              size={24}
-              color={colors.primary}
-            />
+          <View style={{ position: 'absolute', bottom: 16, left: 20 }}>
+            <Text style={{ color: '#fff', fontFamily: "Syne_700Bold", fontSize: 20, marginBottom: 4 }}>{eventTitle}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="calendar-outline" size={14} color="#fff" style={{ marginRight: 4 }} />
+              <Text style={{ color: '#fff', fontSize: 12, fontWeight: '600' }}>{eventDate} • {eventTime}</Text>
+            </View>
           </View>
         </View>
 
-        {isExpanded && item.qr_code && (
-          <QRDisplay code={item.qr_code} />
-        )}
-      </View>
-    </TouchableOpacity>
+        {/* Ticket Info Area */}
+        <View style={{ padding: 20, backgroundColor: colors.card }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <View>
+              <Text style={{ color: colors.subtext, fontSize: 10, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' }}>Section</Text>
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 4 }}>{section?.name || "Standard"}</Text>
+            </View>
+            <View>
+              <Text style={{ color: colors.subtext, fontSize: 10, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' }}>Seat</Text>
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 4 }}>Row {seat?.row || "0"} • #{seat?.number || "0"}</Text>
+            </View>
+            <TouchableOpacity onPress={onToggle} style={{ backgroundColor: colors.primaryLight, padding: 8, borderRadius: 12 }}>
+              <Ionicons name={isExpanded ? "chevron-up" : "qr-code-outline"} size={20} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {isExpanded && <QRDisplay code={item.qr_code || "SINOTICKET-PREMIUM"} />}
+        </View>
+      </TouchableOpacity>
+    </View>
   );
 });
+
 TicketItem.displayName = "TicketItem";
 
 export default function TicketWallet() {
@@ -163,114 +135,63 @@ export default function TicketWallet() {
   
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const loadTickets = useCallback(async () => {
-    if (!isLoaded) return;
-    if (!isSignedIn) {
-      setTickets([]);
-      setLoading(false);
-      setRefreshing(false);
-      return;
-    }
-    
-    setError(null);
+    if (!isSignedIn) return;
     try {
       const result = await authFetch("/api/tickets/me");
-      const safeTickets = result?.success && Array.isArray(result?.tickets) ? result.tickets : [];
-      setTickets(safeTickets);
-    } catch (err: any) {
-      setError(err.message || "Failed to load tickets.");
-      setTickets([]);
+      if (result?.success) setTickets(result.tickets);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [authFetch, isLoaded, isSignedIn]);
+  }, [authFetch, isSignedIn]);
 
-  useEffect(() => { 
-    loadTickets(); 
-  }, [loadTickets]);
+  useEffect(() => { loadTickets(); }, [loadTickets]);
 
-  const onRefresh = () => { 
-    setRefreshing(true); 
-    loadTickets(); 
-  };
-
-  const renderItem = useCallback(({ item }: { item: any }) => {
-    return (
-      <TicketItem 
-        item={item} 
-        isExpanded={expandedId === item._id} 
-        onToggle={() => setExpandedId(prev => prev === item._id ? null : item._id)} 
-      />
-    );
-  }, [expandedId]);
-
-  const renderEmptyState = () => {
-    if (loading) {
-      return (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingTop: 100 }}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      );
-    }
-
-    if (error) {
-      return (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40, paddingTop: 100 }}>
-          <Ionicons name="alert-circle-outline" size={64} color={colors.primary} />
-          <Text style={{ color: colors.text, fontSize: 18, fontFamily: "Syne_700Bold", marginTop: 16 }}>
-            Oops!
-          </Text>
-          <Text style={{ color: colors.subtext, fontSize: 15, textAlign: "center", marginTop: 8 }}>
-            {error}
-          </Text>
-          <TouchableOpacity 
-            onPress={loadTickets} 
-            activeOpacity={0.8}
-            style={{ marginTop: 24, paddingVertical: 12, paddingHorizontal: 24, backgroundColor: colors.primaryLight, borderRadius: 12 }}
-          >
-            <Text style={{ color: colors.primary, fontWeight: "700" }}>Try Again</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40, paddingTop: 100 }}>
-        <Ionicons name="ticket-outline" size={64} color={colors.border} />
-        <Text style={{ color: colors.subtext, fontSize: 16, textAlign: "center", marginTop: 16 }}>
-          No tickets yet.{"\n"}Book an event to get started!
-        </Text>
+  const renderEmpty = () => (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40, marginTop: 100 }}>
+      <View style={{ width: 80, height: 80, backgroundColor: colors.cardBorder, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+        <Ionicons name="ticket-outline" size={40} color={colors.subtext} />
       </View>
+      <Text style={{ color: colors.text, fontSize: 18, fontFamily: "Syne_700Bold", textAlign: 'center' }}>No tickets found</Text>
+      <Text style={{ color: colors.subtext, fontSize: 14, textAlign: 'center', marginTop: 8 }}>Your booked tickets will appear here for scanning at the venue.</Text>
+    </View>
+  );
+
+  if (!isLoaded || loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </SafeAreaView>
     );
-  };
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 16 }}>
-        <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28 }}>My Tickets</Text>
-        <Text style={{ color: colors.subtext, fontSize: 14, marginTop: 4 }}>Tap a ticket to reveal QR code</Text>
+      <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
+        <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28 }}>My Wallet</Text>
+        <Text style={{ color: colors.subtext, fontSize: 14, marginTop: 4 }}>Showing {tickets.length} available tickets</Text>
       </View>
 
       <FlatList
         data={tickets}
         keyExtractor={(t) => t._id}
-        renderItem={renderItem}
-        ListEmptyComponent={renderEmptyState}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120, flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            tintColor={colors.primary} 
-            colors={[colors.primary]} 
+        renderItem={({ item }) => (
+          <TicketItem 
+            item={item} 
+            isExpanded={expandedId === item._id} 
+            onToggle={() => setExpandedId(expandedId === item._id ? null : item._id)} 
           />
-        }
+        )}
+        ListEmptyComponent={renderEmpty}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadTickets(); }} tintColor={colors.primary} />}
       />
     </SafeAreaView>
   );

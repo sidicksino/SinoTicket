@@ -38,6 +38,7 @@ const authenticateToken = require('../middleware/auth');
  *         description: Unauthorized
  */
 router.post('/reserve', authenticateToken, reservationController.reserveSeat);
+router.post('/cancel', authenticateToken, reservationController.cancelReservations);
 
 /**
  * @swagger

@@ -3,7 +3,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAuthFetch, useFetch } from "@/lib/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -45,7 +45,28 @@ export default function SeatSelection() {
     false
   );
 
+  const { data: reservationsData } = useFetch<any>(
+    `/api/reservations/me`,
+    false
+  );
+
   const seats = data?.success && Array.isArray(data?.seats) ? data.seats : [];
+
+  // Pre-populate selections if user already has active reservations for this event
+  useEffect(() => {
+    if (reservationsData?.success && Array.isArray(reservationsData?.reservations)) {
+      const myReservations = reservationsData.reservations
+        .filter((r: any) => {
+          const resEventId = typeof r.event_id === 'object' ? r.event_id?._id : r.event_id;
+          return resEventId === params.event_id;
+        })
+        .map((r: any) => r.seat_id);
+      
+      if (myReservations.length > 0) {
+        setSelectedSeats(myReservations);
+      }
+    }
+  }, [reservationsData, params.event_id]);
 
   const handleSeatPress = (seat: any) => {
     const isSelected = selectedSeats.find(s => s._id === seat._id);
@@ -56,11 +77,10 @@ export default function SeatSelection() {
       if (selectedSeats.length < requiredQuantity) {
         setSelectedSeats(prev => [...prev, seat]);
       } else {
-        // If we already have the required amount, swap the first one out or just alert
         if (requiredQuantity === 1) {
           setSelectedSeats([seat]);
         } else {
-          Alert.alert("Limit Reached", `You can only select ${requiredQuantity} seats for this ticket type.`);
+          Alert.alert("Limit Reached", `You can only select ${requiredQuantity} seats.`);
         }
       }
     }
@@ -68,14 +88,12 @@ export default function SeatSelection() {
 
   const handleContinue = async () => {
     if (selectedSeats.length !== requiredQuantity) {
-      Alert.alert("Incomplete Selection", `Please select ${requiredQuantity} seats to continue.`);
+      Alert.alert("Incomplete Selection", `Please select ${requiredQuantity} seats.`);
       return;
     }
 
     setReserving(true);
     try {
-      // For now, we reserve seats one by one. 
-      // Optimization: Implement a bulk reservation endpoint in the backend.
       const reservations = await Promise.all(
         selectedSeats.map(seat => 
           authFetch("/api/reservations/reserve", {
@@ -85,7 +103,6 @@ export default function SeatSelection() {
         )
       );
 
-      // Take the first reservation ID or pass all of them
       const reservationIds = reservations.map(r => r.reservation._id);
       
       router.push({
@@ -100,7 +117,7 @@ export default function SeatSelection() {
         },
       } as any);
     } catch (err: any) {
-      Alert.alert("Reservation Failed", err.message || "Failed to reserve seats. They might have been taken.");
+      Alert.alert("Reservation Failed", err.message || "Failed to reserve seats.");
       refetch();
     } finally {
       setReserving(false);
@@ -118,7 +135,7 @@ export default function SeatSelection() {
     return (
       <TouchableOpacity
         onPress={() => handleSeatPress(item)}
-        disabled={isOccupied}
+        disabled={isOccupied && !isSelected}
         style={{
           width: 44,
           height: 44,
@@ -129,13 +146,11 @@ export default function SeatSelection() {
           justifyContent: "center",
           borderWidth: isSelected ? 2 : 1,
           borderColor: isSelected ? colors.primary : colors.border,
-          opacity: isOccupied ? 0.6 : 1,
+          opacity: isOccupied && !isSelected ? 0.6 : 1,
         }}
       >
         <Text style={{ 
-          color: isSelected || item.status === 'booked' || item.status === 'reserved' 
-            ? "#fff" 
-            : colors.text, 
+          color: isSelected || item.status === 'booked' || item.status === 'reserved' ? "#fff" : colors.text, 
           fontSize: 12, 
           fontWeight: "700" 
         }}>
@@ -149,7 +164,6 @@ export default function SeatSelection() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header */}
       <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 16 }}>
         <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 16 }}>
           <Ionicons name="close" size={24} color={colors.text} />
@@ -162,9 +176,7 @@ export default function SeatSelection() {
         </View>
       </View>
 
-      {/* Grid Content */}
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Legend */}
         <View style={{ flexDirection: "row", justifyContent: "center", gap: 15, marginVertical: 20 }}>
           {[
             { label: "Available", color: SEAT_COLORS.available },
@@ -178,15 +190,12 @@ export default function SeatSelection() {
           ))}
         </View>
 
-        {/* Stage */}
         <View style={{ marginHorizontal: 40, height: 40, backgroundColor: colors.border, borderBottomLeftRadius: 50, borderBottomRightRadius: 50, alignItems: 'center', justifyContent: 'center', marginBottom: 40 }}>
           <Text style={{ color: colors.subtext, fontSize: 10, fontWeight: '800', letterSpacing: 5 }}>STAGE</Text>
         </View>
 
         {loading ? (
           <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
-        ) : error ? (
-          <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>Failed to load seats.</Text>
         ) : (
           <View style={{ paddingHorizontal: 10, alignItems: 'center' }}>
             <FlatList
@@ -201,7 +210,6 @@ export default function SeatSelection() {
         )}
       </ScrollView>
 
-      {/* Sticky Summary Bar */}
       <SummaryBar
         title={`${currentTotal} XAF`}
         subtitle={`${selectedSeats.length}/${requiredQuantity} Seats Selected`}

@@ -56,8 +56,19 @@ const reserveSeat = async (req, res) => {
     
     // Lazy Evaluation: If reserved but timer expired, it's legally available.
     const now = new Date();
+    
+    // Check if the current user already has an active reservation for this seat
+    const existingReservation = await Reservation.findOne({
+        user_id: mongoUser._id,
+        event_id: event._id,
+        seat_id: seat._id,
+        status: 'Active',
+        expires_at: { $gt: now }
+    }).session(session);
+
     const isAvailable = seat.status === 'available' || 
-                        (seat.status === 'reserved' && seat.reserved_until && seat.reserved_until < now);
+                        (seat.status === 'reserved' && seat.reserved_until && seat.reserved_until < now) ||
+                        (existingReservation && seat.status === 'reserved');
 
     if (!isAvailable) {
         await session.abortTransaction();
@@ -78,15 +89,22 @@ const reserveSeat = async (req, res) => {
     seat.reserved_until = expirationTime;
     await seat.save({ session });
 
-    // 4. Create explicit Reservation Document
-    const reservation = new Reservation({
-        user_id: mongoUser._id,
-        event_id: event._id,
-        seat_id: seat._id,
-        expires_at: expirationTime,
-        status: 'Active'
-    });
-    await reservation.save({ session });
+    // 4. Create or Update implicit Reservation Document
+    let reservation;
+    if (existingReservation) {
+        existingReservation.expires_at = expirationTime;
+        await existingReservation.save({ session });
+        reservation = existingReservation;
+    } else {
+        reservation = new Reservation({
+            user_id: mongoUser._id,
+            event_id: event._id,
+            seat_id: seat._id,
+            expires_at: expirationTime,
+            status: 'Active'
+        });
+        await reservation.save({ session });
+    }
 
     await session.commitTransaction();
     session.endSession();
@@ -98,6 +116,63 @@ const reserveSeat = async (req, res) => {
     console.error("Error in reserveSeat:", error);
     res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
+};
+
+// @desc    Cancel/Release reservations
+// @route   POST /api/reservations/cancel
+// @access  Private
+const cancelReservations = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const { reservation_ids } = req.body;
+        if (!Array.isArray(reservation_ids) || reservation_ids.length === 0) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(400).json({ success: false, message: 'No reservation_ids provided' });
+        }
+
+        const mongoUser = await getMongoUser(req.auth?.userId);
+        if (!mongoUser) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const reservations = await Reservation.find({
+            _id: { $in: reservation_ids },
+            user_id: mongoUser._id
+        }).session(session);
+
+        if (reservations.length === 0) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({ success: false, message: 'No reservations found to cancel' });
+        }
+
+        const seatIds = reservations.map(r => r.seat_id);
+
+        // Update reservations
+        await Reservation.updateMany(
+            { _id: { $in: reservation_ids } },
+            { status: 'Expired' } // Or 'Cancelled' if you add it to enum
+        ).session(session);
+
+        // Update seats back to available IF they are still reserved
+        await Seat.updateMany(
+            { _id: { $in: seatIds }, status: 'reserved' },
+            { status: 'available', $unset: { reserved_until: "" } }
+        ).session(session);
+
+        await session.commitTransaction();
+        session.endSession();
+        res.status(200).json({ success: true, message: 'Reservations released successfully' });
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        console.error("Error in cancelReservations:", error);
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
 };
 
 // @desc    Get current user's active/pending reservations (Cart)
@@ -126,4 +201,4 @@ const getMyReservations = async (req, res) => {
   }
 };
 
-module.exports = { reserveSeat, getMyReservations };
+module.exports = { reserveSeat, cancelReservations, getMyReservations };
