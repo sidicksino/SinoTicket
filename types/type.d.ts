@@ -7,6 +7,7 @@ export interface ButtonProps extends TouchableOpacityProps {
     IconLeft?: React.ComponentType<any>;
     IconRight?: React.ComponentType<any>;
     className?: string;
+    loading?: boolean;
 }
 
 export interface InputFieldProps extends TextInputProps {

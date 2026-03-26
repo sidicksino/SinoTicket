@@ -12,6 +12,10 @@ export type ThemeColors = {
   tabBarPill: string;
   tabBarIcon: string;
   overlay: string;
+  seatAvailable: string;
+  seatSelected: string;
+  seatReserved: string;
+  seatBooked: string;
 };
 
 export const Colors: { light: ThemeColors; dark: ThemeColors } = {
@@ -29,6 +33,10 @@ export const Colors: { light: ThemeColors; dark: ThemeColors } = {
     tabBarPill: "#FFFFFF",
     tabBarIcon: "#64748B",
     overlay: "rgba(0,0,0,0.04)",
+    seatAvailable: "#E2E8F0",
+    seatSelected: "#0286FF",
+    seatReserved: "#F59E0B",
+    seatBooked: "#EF4444",
   },
   dark: {
     background: "#0F172A",
@@ -44,5 +52,9 @@ export const Colors: { light: ThemeColors; dark: ThemeColors } = {
     tabBarPill: "#0F172A",
     tabBarIcon: "#64748B",
     overlay: "rgba(0,0,0,0.30)",
+    seatAvailable: "#334155",
+    seatSelected: "#0286FF",
+    seatReserved: "#D97706",
+    seatBooked: "#DC2626",
   },
 };
