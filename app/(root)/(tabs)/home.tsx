@@ -26,6 +26,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [showFilters, setShowFilters] = useState(false);
 
   // Debounce search input
   useEffect(() => {
@@ -100,45 +101,55 @@ export default function Home() {
             onChangeText={setSearchQuery}
             style={{ flex: 1, marginLeft: 10, fontSize: 15, color: colors.text }}
           />
-          {searchQuery !== "" && (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
+          {searchQuery !== "" ? (
+            <TouchableOpacity onPress={() => setSearchQuery("")} style={{ marginRight: 10 }}>
               <Ionicons name="close-circle" size={18} color={colors.subtext} />
             </TouchableOpacity>
-          )}
+          ) : null}
+          <TouchableOpacity 
+            onPress={() => setShowFilters(!showFilters)}
+            style={{
+              backgroundColor: colors.primary, padding: 6, borderRadius: 10,
+            }}
+          >
+            <Ionicons name="options-outline" size={18} color="white" />
+          </TouchableOpacity>
         </View>
 
-        {/* ── CATEGORIES ── */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 24, marginTop: 20, gap: 10 }}
-        >
-          {CATEGORIES.map((cat) => {
-            const isActive = selectedCategory === cat;
-            return (
-              <TouchableOpacity
-                key={cat}
-                onPress={() => setSelectedCategory(cat)}
-                style={{
-                  paddingHorizontal: 20,
-                  paddingVertical: 10,
-                  borderRadius: 99,
-                  backgroundColor: isActive ? colors.primary : colors.card,
-                  borderWidth: 1,
-                  borderColor: isActive ? colors.primary : colors.border,
-                }}
-              >
-                <Text style={{
-                  color: isActive ? "#fff" : colors.text,
-                  fontSize: 14,
-                  fontWeight: isActive ? "700" : "500"
-                }}>
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            )
-          })}
-        </ScrollView>
+        {/* ── CATEGORIES (Conditional) ── */}
+        {showFilters && (
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 24, marginTop: 16, gap: 10 }}
+          >
+            {CATEGORIES.map((cat) => {
+              const isActive = selectedCategory === cat;
+              return (
+                <TouchableOpacity
+                  key={cat}
+                  onPress={() => setSelectedCategory(cat)}
+                  style={{
+                    paddingHorizontal: 18,
+                    paddingVertical: 8,
+                    borderRadius: 12,
+                    backgroundColor: isActive ? colors.primary : colors.card,
+                    borderWidth: 1,
+                    borderColor: isActive ? colors.primary : colors.border,
+                  }}
+                >
+                  <Text style={{
+                    color: isActive ? "#fff" : colors.text,
+                    fontSize: 13,
+                    fontWeight: isActive ? "700" : "500"
+                  }}>
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
+          </ScrollView>
+        )}
 
         {/* ── PROMO CAROUSEL (Show only on 'All' category and no search) ── */}
         {selectedCategory === "All" && !debouncedSearch && <PromoCarousel />}
