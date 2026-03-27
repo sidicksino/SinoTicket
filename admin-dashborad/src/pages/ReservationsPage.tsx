@@ -1,45 +1,59 @@
-import { Plus } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { EntityTable, type Column } from '../components/tables/EntityTable'
-import { ConfirmDialog } from '../components/ui/ConfirmDialog'
-import { EntityModal, type FieldDef } from '../components/ui/EntityModal'
-import { Panel } from '../components/ui/Panel'
-import { StatusBadge } from '../components/ui/StatusBadge'
-import { dashboardSeed } from '../data/seed'
-import { useCrud } from '../hooks/useCrud'
-import type { ReservationItem } from '../types'
+import { Plus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { EntityTable, type Column } from "../components/tables/EntityTable";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { EntityModal, type FieldDef } from "../components/ui/EntityModal";
+import { Panel } from "../components/ui/Panel";
+import { StatusBadge } from "../components/ui/StatusBadge";
+import { dashboardSeed } from "../data/seed";
+import { useCrud } from "../hooks/useCrud";
+import type { ReservationItem } from "../types";
 
 const fields: FieldDef[] = [
-  { key: 'ticketCode', label: 'Ticket Code' },
-  { key: 'event', label: 'Event' },
-  { key: 'customer', label: 'Customer' },
-  { key: 'seats', label: 'Seats', type: 'number' },
-  { key: 'total', label: 'Total ($)', type: 'number' },
-  { key: 'status', label: 'Status', type: 'select', options: ['active', 'draft', 'paused', 'archived'] },
-  { key: 'createdAt', label: 'Created At' },
-]
+  { key: "ticketCode", label: "Ticket Code" },
+  { key: "event", label: "Event" },
+  { key: "customer", label: "Customer" },
+  { key: "seats", label: "Seats", type: "number" },
+  { key: "total", label: "Total ($)", type: "number" },
+  {
+    key: "status",
+    label: "Status",
+    type: "select",
+    options: ["active", "draft", "paused", "archived"],
+  },
+  { key: "createdAt", label: "Created At" },
+];
 
 export function ReservationsPage() {
-  const { filteredItems, query, setQuery, create, update, remove } = useCrud<ReservationItem>(
-    dashboardSeed.reservations,
-  )
+  const { filteredItems, query, setQuery, create, update, remove } =
+    useCrud<ReservationItem>(dashboardSeed.reservations);
 
-  const [editing, setEditing] = useState<ReservationItem | null>(null)
-  const [deleting, setDeleting] = useState<ReservationItem | null>(null)
-  const [openCreate, setOpenCreate] = useState(false)
+  const [editing, setEditing] = useState<ReservationItem | null>(null);
+  const [deleting, setDeleting] = useState<ReservationItem | null>(null);
+  const [openCreate, setOpenCreate] = useState(false);
 
   const columns: Column<ReservationItem>[] = useMemo(
     () => [
-      { key: 'ticketCode', title: 'Ticket', render: (item) => <span className="font-medium">{item.ticketCode}</span> },
-      { key: 'event', title: 'Event', render: (item) => item.event },
-      { key: 'customer', title: 'Customer', render: (item) => item.customer },
-      { key: 'seats', title: 'Seats', render: (item) => item.seats },
-      { key: 'total', title: 'Total', render: (item) => `$${item.total}` },
-      { key: 'status', title: 'Status', render: (item) => <StatusBadge status={item.status} /> },
-      { key: 'createdAt', title: 'Created', render: (item) => item.createdAt },
+      {
+        key: "ticketCode",
+        title: "Ticket",
+        render: (item) => (
+          <span className="font-medium">{item.ticketCode}</span>
+        ),
+      },
+      { key: "event", title: "Event", render: (item) => item.event },
+      { key: "customer", title: "Customer", render: (item) => item.customer },
+      { key: "seats", title: "Seats", render: (item) => item.seats },
+      { key: "total", title: "Total", render: (item) => `$${item.total}` },
+      {
+        key: "status",
+        title: "Status",
+        render: (item) => <StatusBadge status={item.status} />,
+      },
+      { key: "createdAt", title: "Created", render: (item) => item.createdAt },
     ],
     [],
-  )
+  );
 
   return (
     <>
@@ -81,8 +95,8 @@ export function ReservationsPage() {
           fields={fields}
           onClose={() => setOpenCreate(false)}
           onSave={(values) => {
-            create(values)
-            setOpenCreate(false)
+            create(values);
+            setOpenCreate(false);
           }}
         />
       ) : null}
@@ -95,8 +109,8 @@ export function ReservationsPage() {
           initialValue={editing}
           onClose={() => setEditing(null)}
           onSave={(values) => {
-            update(editing.id, values)
-            setEditing(null)
+            update(editing.id, values);
+            setEditing(null);
           }}
         />
       ) : null}
@@ -107,11 +121,11 @@ export function ReservationsPage() {
           message={`This will remove ${deleting.ticketCode} permanently from this view.`}
           onCancel={() => setDeleting(null)}
           onConfirm={() => {
-            remove(deleting.id)
-            setDeleting(null)
+            remove(deleting.id);
+            setDeleting(null);
           }}
         />
       ) : null}
     </>
-  )
+  );
 }

@@ -1,17 +1,17 @@
-import { Pencil, Trash2 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { Pencil, Trash2 } from "lucide-react";
+import type { ReactNode } from "react";
 
 export interface Column<T> {
-  key: string
-  title: string
-  render: (item: T) => ReactNode
+  key: string;
+  title: string;
+  render: (item: T) => ReactNode;
 }
 
 interface EntityTableProps<T extends { id: string }> {
-  data: T[]
-  columns: Column<T>[]
-  onEdit: (item: T) => void
-  onDelete: (item: T) => void
+  data: T[];
+  columns: Column<T>[];
+  onEdit: (item: T) => void;
+  onDelete: (item: T) => void;
 }
 
 export function EntityTable<T extends { id: string }>({
@@ -42,7 +42,10 @@ export function EntityTable<T extends { id: string }>({
           <tbody className="divide-y divide-white/10 bg-slate-900/45">
             {data.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + 1} className="px-4 py-8 text-center text-sm text-slate-300">
+                <td
+                  colSpan={columns.length + 1}
+                  className="px-4 py-8 text-center text-sm text-slate-300"
+                >
                   No records found.
                 </td>
               </tr>
@@ -50,7 +53,10 @@ export function EntityTable<T extends { id: string }>({
               data.map((item) => (
                 <tr key={item.id} className="transition hover:bg-white/5">
                   {columns.map((column) => (
-                    <td key={column.key} className="whitespace-nowrap px-4 py-3 text-sm text-slate-100">
+                    <td
+                      key={column.key}
+                      className="whitespace-nowrap px-4 py-3 text-sm text-slate-100"
+                    >
                       {column.render(item)}
                     </td>
                   ))}
@@ -81,5 +87,5 @@ export function EntityTable<T extends { id: string }>({
         </table>
       </div>
     </div>
-  )
+  );
 }

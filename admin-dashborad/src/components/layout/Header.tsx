@@ -1,16 +1,20 @@
-import { Bell, Search } from 'lucide-react'
+import { Bell, Search } from "lucide-react";
 
 interface HeaderProps {
-  title: string
-  subtitle: string
+  title: string;
+  subtitle: string;
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
   return (
     <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
       <div>
-        <p className="text-xs uppercase tracking-[0.24em] text-slate-300">Operations Console</p>
-        <h2 className="text-2xl font-bold tracking-tight text-white">{title}</h2>
+        <p className="text-xs uppercase tracking-[0.24em] text-slate-300">
+          Operations Console
+        </p>
+        <h2 className="text-2xl font-bold tracking-tight text-white">
+          {title}
+        </h2>
         <p className="text-sm text-slate-300">{subtitle}</p>
       </div>
 
@@ -32,5 +36,5 @@ export function Header({ title, subtitle }: HeaderProps) {
         </button>
       </div>
     </header>
-  )
+  );
 }

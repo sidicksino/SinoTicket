@@ -1,26 +1,26 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from "react";
 
 export interface FieldDef {
-  key: string
-  label: string
-  type?: 'text' | 'number' | 'email' | 'select'
-  options?: string[]
+  key: string;
+  label: string;
+  type?: "text" | "number" | "email" | "select";
+  options?: string[];
 }
 
 interface EntityModalProps<T extends object> {
-  mode: 'create' | 'edit'
-  title: string
-  fields: FieldDef[]
-  initialValue?: T
-  onClose: () => void
-  onSave: (values: Omit<T, 'id'>) => void
+  mode: "create" | "edit";
+  title: string;
+  fields: FieldDef[];
+  initialValue?: T;
+  onClose: () => void;
+  onSave: (values: Omit<T, "id">) => void;
 }
 
-function serializeValue(raw: string, type: FieldDef['type']) {
-  if (type === 'number') {
-    return Number(raw)
+function serializeValue(raw: string, type: FieldDef["type"]) {
+  if (type === "number") {
+    return Number(raw);
   }
-  return raw
+  return raw;
 }
 
 export function EntityModal<T extends object>({
@@ -32,29 +32,32 @@ export function EntityModal<T extends object>({
   onSave,
 }: EntityModalProps<T>) {
   const defaultState = useMemo(() => {
-    const state: Record<string, string> = {}
+    const state: Record<string, string> = {};
     fields.forEach((field) => {
-      const value = initialValue ? (initialValue as Record<string, unknown>)[field.key] : undefined
-      state[field.key] = value === undefined || value === null ? '' : String(value)
-    })
-    return state
-  }, [fields, initialValue])
+      const value = initialValue
+        ? (initialValue as Record<string, unknown>)[field.key]
+        : undefined;
+      state[field.key] =
+        value === undefined || value === null ? "" : String(value);
+    });
+    return state;
+  }, [fields, initialValue]);
 
-  const [values, setValues] = useState<Record<string, string>>(defaultState)
+  const [values, setValues] = useState<Record<string, string>>(defaultState);
 
   useEffect(() => {
-    setValues(defaultState)
-  }, [defaultState])
+    setValues(defaultState);
+  }, [defaultState]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+    event.preventDefault();
 
     const payload = fields.reduce<Record<string, unknown>>((acc, field) => {
-      acc[field.key] = serializeValue(values[field.key], field.type)
-      return acc
-    }, {})
+      acc[field.key] = serializeValue(values[field.key], field.type);
+      return acc;
+    }, {});
 
-    onSave(payload as Omit<T, 'id'>)
+    onSave(payload as Omit<T, "id">);
   }
 
   return (
@@ -65,19 +68,22 @@ export function EntityModal<T extends object>({
       >
         <h3 className="text-lg font-semibold text-white">{title}</h3>
         <p className="mt-1 text-sm text-slate-300">
-          {mode === 'create' ? 'Add a new record' : 'Edit existing record'}
+          {mode === "create" ? "Add a new record" : "Edit existing record"}
         </p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {fields.map((field) => (
             <label key={field.key} className="text-sm">
               <span className="mb-1 block text-slate-200">{field.label}</span>
-              {field.type === 'select' ? (
+              {field.type === "select" ? (
                 <select
                   required
                   value={values[field.key]}
                   onChange={(event) =>
-                    setValues((current) => ({ ...current, [field.key]: event.target.value }))
+                    setValues((current) => ({
+                      ...current,
+                      [field.key]: event.target.value,
+                    }))
                   }
                   className="w-full rounded-xl border border-white/15 bg-slate-800 px-3 py-2 text-slate-100 outline-none ring-0 transition focus:border-cyan-400"
                 >
@@ -93,10 +99,13 @@ export function EntityModal<T extends object>({
               ) : (
                 <input
                   required
-                  type={field.type ?? 'text'}
+                  type={field.type ?? "text"}
                   value={values[field.key]}
                   onChange={(event) =>
-                    setValues((current) => ({ ...current, [field.key]: event.target.value }))
+                    setValues((current) => ({
+                      ...current,
+                      [field.key]: event.target.value,
+                    }))
                   }
                   className="w-full rounded-xl border border-white/15 bg-slate-800 px-3 py-2 text-slate-100 outline-none ring-0 transition focus:border-cyan-400"
                 />
@@ -122,5 +131,5 @@ export function EntityModal<T extends object>({
         </div>
       </form>
     </div>
-  )
+  );
 }

@@ -1,11 +1,11 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { AdminLayout } from './components/layout/AdminLayout'
-import { EventsPage } from './pages/EventsPage'
-import { InsightsPage } from './pages/InsightsPage'
-import { OverviewPage } from './pages/OverviewPage'
-import { ReservationsPage } from './pages/ReservationsPage'
-import { UsersPage } from './pages/UsersPage'
-import { VenuesPage } from './pages/VenuesPage'
+import { Navigate, Route, Routes } from "react-router-dom";
+import { AdminLayout } from "./components/layout/AdminLayout";
+import { EventsPage } from "./pages/EventsPage";
+import { InsightsPage } from "./pages/InsightsPage";
+import { OverviewPage } from "./pages/OverviewPage";
+import { ReservationsPage } from "./pages/ReservationsPage";
+import { UsersPage } from "./pages/UsersPage";
+import { VenuesPage } from "./pages/VenuesPage";
 
 function App() {
   return (
@@ -20,7 +20,7 @@ function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

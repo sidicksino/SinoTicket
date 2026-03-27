@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from "react";
 
 interface PanelProps {
-  title: string
-  subtitle?: string
-  action?: ReactNode
-  children: ReactNode
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+  children: ReactNode;
 }
 
 export function Panel({ title, subtitle, action, children }: PanelProps) {
@@ -13,11 +13,13 @@ export function Panel({ title, subtitle, action, children }: PanelProps) {
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">{title}</h2>
-          {subtitle ? <p className="text-sm text-slate-300">{subtitle}</p> : null}
+          {subtitle ? (
+            <p className="text-sm text-slate-300">{subtitle}</p>
+          ) : null}
         </div>
         {action}
       </header>
       {children}
     </section>
-  )
+  );
 }

@@ -1,37 +1,55 @@
-import { Plus } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { EntityTable, type Column } from '../components/tables/EntityTable'
-import { ConfirmDialog } from '../components/ui/ConfirmDialog'
-import { EntityModal, type FieldDef } from '../components/ui/EntityModal'
-import { Panel } from '../components/ui/Panel'
-import { StatusBadge } from '../components/ui/StatusBadge'
-import { dashboardSeed } from '../data/seed'
-import { useCrud } from '../hooks/useCrud'
-import type { VenueItem } from '../types'
+import { Plus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { EntityTable, type Column } from "../components/tables/EntityTable";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { EntityModal, type FieldDef } from "../components/ui/EntityModal";
+import { Panel } from "../components/ui/Panel";
+import { StatusBadge } from "../components/ui/StatusBadge";
+import { dashboardSeed } from "../data/seed";
+import { useCrud } from "../hooks/useCrud";
+import type { VenueItem } from "../types";
 
 const fields: FieldDef[] = [
-  { key: 'name', label: 'Venue Name' },
-  { key: 'city', label: 'City' },
-  { key: 'seats', label: 'Seat Count', type: 'number' },
-  { key: 'status', label: 'Status', type: 'select', options: ['active', 'draft', 'paused', 'archived'] },
-]
+  { key: "name", label: "Venue Name" },
+  { key: "city", label: "City" },
+  { key: "seats", label: "Seat Count", type: "number" },
+  {
+    key: "status",
+    label: "Status",
+    type: "select",
+    options: ["active", "draft", "paused", "archived"],
+  },
+];
 
 export function VenuesPage() {
-  const { filteredItems, query, setQuery, create, update, remove } = useCrud<VenueItem>(dashboardSeed.venues)
+  const { filteredItems, query, setQuery, create, update, remove } =
+    useCrud<VenueItem>(dashboardSeed.venues);
 
-  const [editing, setEditing] = useState<VenueItem | null>(null)
-  const [deleting, setDeleting] = useState<VenueItem | null>(null)
-  const [openCreate, setOpenCreate] = useState(false)
+  const [editing, setEditing] = useState<VenueItem | null>(null);
+  const [deleting, setDeleting] = useState<VenueItem | null>(null);
+  const [openCreate, setOpenCreate] = useState(false);
 
   const columns: Column<VenueItem>[] = useMemo(
     () => [
-      { key: 'name', title: 'Venue', render: (item) => <span className="font-medium">{item.name}</span> },
-      { key: 'city', title: 'City', render: (item) => item.city },
-      { key: 'seats', title: 'Seats', render: (item) => item.seats.toLocaleString() },
-      { key: 'status', title: 'Status', render: (item) => <StatusBadge status={item.status} /> },
+      {
+        key: "name",
+        title: "Venue",
+        render: (item) => <span className="font-medium">{item.name}</span>,
+      },
+      { key: "city", title: "City", render: (item) => item.city },
+      {
+        key: "seats",
+        title: "Seats",
+        render: (item) => item.seats.toLocaleString(),
+      },
+      {
+        key: "status",
+        title: "Status",
+        render: (item) => <StatusBadge status={item.status} />,
+      },
     ],
     [],
-  )
+  );
 
   return (
     <>
@@ -73,8 +91,8 @@ export function VenuesPage() {
           fields={fields}
           onClose={() => setOpenCreate(false)}
           onSave={(values) => {
-            create(values)
-            setOpenCreate(false)
+            create(values);
+            setOpenCreate(false);
           }}
         />
       ) : null}
@@ -87,8 +105,8 @@ export function VenuesPage() {
           initialValue={editing}
           onClose={() => setEditing(null)}
           onSave={(values) => {
-            update(editing.id, values)
-            setEditing(null)
+            update(editing.id, values);
+            setEditing(null);
           }}
         />
       ) : null}
@@ -99,11 +117,11 @@ export function VenuesPage() {
           message={`This will remove ${deleting.name} permanently from this view.`}
           onCancel={() => setDeleting(null)}
           onConfirm={() => {
-            remove(deleting.id)
-            setDeleting(null)
+            remove(deleting.id);
+            setDeleting(null);
           }}
         />
       ) : null}
     </>
-  )
+  );
 }

@@ -1,37 +1,60 @@
-import { Plus } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { EntityTable, type Column } from '../components/tables/EntityTable'
-import { ConfirmDialog } from '../components/ui/ConfirmDialog'
-import { EntityModal, type FieldDef } from '../components/ui/EntityModal'
-import { Panel } from '../components/ui/Panel'
-import { StatusBadge } from '../components/ui/StatusBadge'
-import { dashboardSeed } from '../data/seed'
-import { useCrud } from '../hooks/useCrud'
-import type { UserItem } from '../types'
+import { Plus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { EntityTable, type Column } from "../components/tables/EntityTable";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { EntityModal, type FieldDef } from "../components/ui/EntityModal";
+import { Panel } from "../components/ui/Panel";
+import { StatusBadge } from "../components/ui/StatusBadge";
+import { dashboardSeed } from "../data/seed";
+import { useCrud } from "../hooks/useCrud";
+import type { UserItem } from "../types";
 
 const fields: FieldDef[] = [
-  { key: 'name', label: 'Name' },
-  { key: 'email', label: 'Email', type: 'email' },
-  { key: 'role', label: 'Role', type: 'select', options: ['admin', 'manager', 'support'] },
-  { key: 'status', label: 'Status', type: 'select', options: ['active', 'draft', 'paused', 'archived'] },
-]
+  { key: "name", label: "Name" },
+  { key: "email", label: "Email", type: "email" },
+  {
+    key: "role",
+    label: "Role",
+    type: "select",
+    options: ["admin", "manager", "support"],
+  },
+  {
+    key: "status",
+    label: "Status",
+    type: "select",
+    options: ["active", "draft", "paused", "archived"],
+  },
+];
 
 export function UsersPage() {
-  const { filteredItems, query, setQuery, create, update, remove } = useCrud<UserItem>(dashboardSeed.users)
+  const { filteredItems, query, setQuery, create, update, remove } =
+    useCrud<UserItem>(dashboardSeed.users);
 
-  const [editing, setEditing] = useState<UserItem | null>(null)
-  const [deleting, setDeleting] = useState<UserItem | null>(null)
-  const [openCreate, setOpenCreate] = useState(false)
+  const [editing, setEditing] = useState<UserItem | null>(null);
+  const [deleting, setDeleting] = useState<UserItem | null>(null);
+  const [openCreate, setOpenCreate] = useState(false);
 
   const columns: Column<UserItem>[] = useMemo(
     () => [
-      { key: 'name', title: 'Name', render: (item) => <span className="font-medium">{item.name}</span> },
-      { key: 'email', title: 'Email', render: (item) => item.email },
-      { key: 'role', title: 'Role', render: (item) => <span className="capitalize">{item.role}</span> },
-      { key: 'status', title: 'Status', render: (item) => <StatusBadge status={item.status} /> },
+      {
+        key: "name",
+        title: "Name",
+        render: (item) => <span className="font-medium">{item.name}</span>,
+      },
+      { key: "email", title: "Email", render: (item) => item.email },
+      {
+        key: "role",
+        title: "Role",
+        render: (item) => <span className="capitalize">{item.role}</span>,
+      },
+      {
+        key: "status",
+        title: "Status",
+        render: (item) => <StatusBadge status={item.status} />,
+      },
     ],
     [],
-  )
+  );
 
   return (
     <>
@@ -73,8 +96,8 @@ export function UsersPage() {
           fields={fields}
           onClose={() => setOpenCreate(false)}
           onSave={(values) => {
-            create(values)
-            setOpenCreate(false)
+            create(values);
+            setOpenCreate(false);
           }}
         />
       ) : null}
@@ -87,8 +110,8 @@ export function UsersPage() {
           initialValue={editing}
           onClose={() => setEditing(null)}
           onSave={(values) => {
-            update(editing.id, values)
-            setEditing(null)
+            update(editing.id, values);
+            setEditing(null);
           }}
         />
       ) : null}
@@ -99,11 +122,11 @@ export function UsersPage() {
           message={`This will remove ${deleting.name} permanently from this view.`}
           onCancel={() => setDeleting(null)}
           onConfirm={() => {
-            remove(deleting.id)
-            setDeleting(null)
+            remove(deleting.id);
+            setDeleting(null);
           }}
         />
       ) : null}
     </>
-  )
+  );
 }

@@ -1,11 +1,16 @@
 interface ConfirmDialogProps {
-  title: string
-  message: string
-  onCancel: () => void
-  onConfirm: () => void
+  title: string;
+  message: string;
+  onCancel: () => void;
+  onConfirm: () => void;
 }
 
-export function ConfirmDialog({ title, message, onCancel, onConfirm }: ConfirmDialogProps) {
+export function ConfirmDialog({
+  title,
+  message,
+  onCancel,
+  onConfirm,
+}: ConfirmDialogProps) {
   return (
     <div className="fixed inset-0 z-50 grid place-content-center bg-black/65 p-4 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-5">
@@ -29,5 +34,5 @@ export function ConfirmDialog({ title, message, onCancel, onConfirm }: ConfirmDi
         </div>
       </div>
     </div>
-  )
+  );
 }
