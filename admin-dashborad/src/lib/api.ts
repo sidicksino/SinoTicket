@@ -4,6 +4,16 @@ interface RequestOptions extends RequestInit {
   token?: string | null;
 }
 
+type ApiListResponse = {
+  data?: Array<Record<string, unknown>>;
+  [key: string]: unknown;
+};
+
+type ApiItemResponse = {
+  data?: Record<string, unknown>;
+  [key: string]: unknown;
+};
+
 class ApiClient {
   private baseUrl: string;
 
@@ -19,10 +29,17 @@ class ApiClient {
     const url = `${this.baseUrl}${endpoint}`;
     const token = options?.token || localStorage.getItem("adminToken");
 
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      ...options?.headers,
     };
+
+    if (
+      options?.headers &&
+      !Array.isArray(options.headers) &&
+      !(options.headers instanceof Headers)
+    ) {
+      Object.assign(headers, options.headers);
+    }
 
     if (token) {
       headers.Authorization = `Bearer ${token}`;
@@ -44,15 +61,15 @@ class ApiClient {
 
   // ====== Events ======
   async getEvents() {
-    return this.request<any>("/events", "GET");
+    return this.request<ApiListResponse>("/events", "GET");
   }
 
   async getEventById(id: string) {
-    return this.request<any>(`/events/${id}`, "GET");
+    return this.request<ApiItemResponse>(`/events/${id}`, "GET");
   }
 
   async createEvent(data: Record<string, unknown>, token?: string | null) {
-    return this.request<any>("/events/add", "POST", {
+    return this.request<ApiItemResponse>("/events/add", "POST", {
       body: JSON.stringify(data),
       token: token || undefined,
     });
@@ -63,25 +80,25 @@ class ApiClient {
     data: Record<string, unknown>,
     token?: string | null,
   ) {
-    return this.request<any>(`/events/${id}`, "PUT", {
+    return this.request<ApiItemResponse>(`/events/${id}`, "PUT", {
       body: JSON.stringify(data),
       token: token || undefined,
     });
   }
 
   async deleteEvent(id: string, token?: string | null) {
-    return this.request<any>(`/events/${id}`, "DELETE", {
+    return this.request<Record<string, unknown>>(`/events/${id}`, "DELETE", {
       token: token || undefined,
     });
   }
 
   // ====== Venues ======
   async getVenues() {
-    return this.request<any>("/venue/getVenue", "GET");
+    return this.request<ApiListResponse>("/venue/getVenue", "GET");
   }
 
   async createVenue(data: Record<string, unknown>, token?: string | null) {
-    return this.request<any>("/venue/add", "POST", {
+    return this.request<ApiItemResponse>("/venue/add", "POST", {
       body: JSON.stringify(data),
       token: token || undefined,
     });
@@ -92,21 +109,25 @@ class ApiClient {
     data: Record<string, unknown>,
     token?: string | null,
   ) {
-    return this.request<any>(`/venue/updateVenue/${id}`, "PUT", {
+    return this.request<ApiItemResponse>(`/venue/updateVenue/${id}`, "PUT", {
       body: JSON.stringify(data),
       token: token || undefined,
     });
   }
 
   async deleteVenue(id: string, token?: string | null) {
-    return this.request<any>(`/venue/deleteVenue/${id}`, "DELETE", {
+    return this.request<Record<string, unknown>>(
+      `/venue/deleteVenue/${id}`,
+      "DELETE",
+      {
       token: token || undefined,
-    });
+      },
+    );
   }
 
   // ====== Reservations ======
   async getReservations(token?: string | null) {
-    return this.request<any>("/reservations/me", "GET", {
+    return this.request<ApiListResponse>("/reservations/me", "GET", {
       token: token || undefined,
     });
   }
@@ -115,14 +136,14 @@ class ApiClient {
     data: Record<string, unknown>,
     token?: string | null,
   ) {
-    return this.request<any>("/reservations/reserve", "POST", {
+    return this.request<ApiItemResponse>("/reservations/reserve", "POST", {
       body: JSON.stringify(data),
       token: token || undefined,
     });
   }
 
   async cancelReservation(id: string, token?: string | null) {
-    return this.request<any>("/reservations/cancel", "POST", {
+    return this.request<Record<string, unknown>>("/reservations/cancel", "POST", {
       body: JSON.stringify({ reservation_id: id }),
       token: token || undefined,
     });
@@ -130,11 +151,13 @@ class ApiClient {
 
   // ====== Users ======
   async getCurrentUser(token?: string | null) {
-    return this.request<any>("/users/me", "GET", { token: token || undefined });
+    return this.request<ApiItemResponse>("/users/me", "GET", {
+      token: token || undefined,
+    });
   }
 
   async checkUserExists(email: string) {
-    return this.request<any>("/users/check", "POST", {
+    return this.request<Record<string, unknown>>("/users/check", "POST", {
       body: JSON.stringify({ email }),
     });
   }

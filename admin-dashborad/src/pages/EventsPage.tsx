@@ -63,7 +63,7 @@ export function EventsPage() {
       apiClient
         .updateEvent(id, payload, token)
         .then((res) => mapEventFromApi(res.data)),
-    delete: (id) => apiClient.deleteEvent(id, token),
+      delete: (id) => apiClient.deleteEvent(id, token).then(() => undefined),
   });
 
   const [editing, setEditing] = useState<EventItem | null>(null);

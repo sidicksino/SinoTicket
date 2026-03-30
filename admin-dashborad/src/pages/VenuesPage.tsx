@@ -54,7 +54,7 @@ export function VenuesPage() {
       apiClient
         .updateVenue(id, payload, token)
         .then((res) => mapVenueFromApi(res.data)),
-    delete: (id) => apiClient.deleteVenue(id, token),
+      delete: (id) => apiClient.deleteVenue(id, token).then(() => undefined),
   });
 
   const [editing, setEditing] = useState<VenueItem | null>(null);
