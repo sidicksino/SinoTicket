@@ -1,38 +1,32 @@
-import { Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { useMemo } from "react";
+import { apiClient } from "../lib/api";
+import { authManager } from "../lib/auth";
+import { useApiCrud } from "../hooks/useApiCrud";
 import { EntityTable, type Column } from "../components/tables/EntityTable";
-import { ConfirmDialog } from "../components/ui/ConfirmDialog";
-import { EntityModal, type FieldDef } from "../components/ui/EntityModal";
 import { Panel } from "../components/ui/Panel";
 import { StatusBadge } from "../components/ui/StatusBadge";
-import { dashboardSeed } from "../data/seed";
-import { useCrud } from "../hooks/useCrud";
 import type { UserItem } from "../types";
 
-const fields: FieldDef[] = [
-  { key: "name", label: "Name" },
-  { key: "email", label: "Email", type: "email" },
-  {
-    key: "role",
-    label: "Role",
-    type: "select",
-    options: ["admin", "manager", "support"],
-  },
-  {
-    key: "status",
-    label: "Status",
-    type: "select",
-    options: ["active", "draft", "paused", "archived"],
-  },
-];
+function mapUserFromApi(data: any): UserItem {
+  return {
+    id: data._id || data.id,
+    name: data.name,
+    email: data.email,
+    role: data.role || "support",
+    status: "active",
+  };
+}
 
 export function UsersPage() {
-  const { filteredItems, query, setQuery, create, update, remove } =
-    useCrud<UserItem>(dashboardSeed.users);
-
-  const [editing, setEditing] = useState<UserItem | null>(null);
-  const [deleting, setDeleting] = useState<UserItem | null>(null);
-  const [openCreate, setOpenCreate] = useState(false);
+  const token = authManager.getToken();
+  const { filteredItems, query, setQuery, loading, error } =
+    useApiCrud<UserItem>({
+      getAll: () => apiClient.getCurrentUser(token).then((res) => [res.data || {}].map(mapUserFromApi)),
+      create: () => Promise.reject(new Error("Cannot create users from dashboard")),
+      update: () => Promise.reject(new Error("Cannot update users from dashboard")),
+      delete: () => Promise.reject(new Error("Cannot delete users from dashboard")),
+    });
 
   const columns: Column<UserItem>[] = useMemo(
     () => [
@@ -56,6 +50,16 @@ export function UsersPage() {
     [],
   );
 
+  if (!token) {
+    return (
+      <Panel title="User Management" subtitle="Manage admin users and permission-bearing team members">
+        <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 p-4 text-amber-100">
+          <p>⚠️ Authentication required. Please log in via the main app first.</p>
+        </div>
+      </Panel>
+    );
+  }
+
   return (
     <>
       <Panel
@@ -64,14 +68,20 @@ export function UsersPage() {
         action={
           <button
             type="button"
-            onClick={() => setOpenCreate(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+            disabled={true}
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-600 px-3 py-2 text-sm font-semibold text-slate-400 cursor-not-allowed"
           >
-            <Plus size={16} />
-            Add User
+            Add User (Read-only)
           </button>
         }
       >
+        {error && (
+          <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 p-3 text-rose-100 flex items-center gap-2">
+            <AlertCircle size={16} />
+            {error}
+          </div>
+        )}
+
         <div className="mb-4">
           <input
             value={query}
@@ -81,52 +91,20 @@ export function UsersPage() {
           />
         </div>
 
-        <EntityTable
-          data={filteredItems}
-          columns={columns}
-          onEdit={(item) => setEditing(item)}
-          onDelete={(item) => setDeleting(item)}
-        />
+        {loading && filteredItems.length === 0 ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="animate-spin" size={24} />
+          </div>
+        ) : (
+          <EntityTable
+            data={filteredItems}
+            columns={columns}
+            onEdit={() => alert("Users cannot be edited from dashboard")}
+            onDelete={() => alert("Users cannot be deleted from dashboard")}
+          />
+        )}
       </Panel>
 
-      {openCreate ? (
-        <EntityModal<UserItem>
-          mode="create"
-          title="Add User"
-          fields={fields}
-          onClose={() => setOpenCreate(false)}
-          onSave={(values) => {
-            create(values);
-            setOpenCreate(false);
-          }}
-        />
-      ) : null}
-
-      {editing ? (
-        <EntityModal<UserItem>
-          mode="edit"
-          title="Update User"
-          fields={fields}
-          initialValue={editing}
-          onClose={() => setEditing(null)}
-          onSave={(values) => {
-            update(editing.id, values);
-            setEditing(null);
-          }}
-        />
-      ) : null}
-
-      {deleting ? (
-        <ConfirmDialog
-          title="Delete User"
-          message={`This will remove ${deleting.name} permanently from this view.`}
-          onCancel={() => setDeleting(null)}
-          onConfirm={() => {
-            remove(deleting.id);
-            setDeleting(null);
-          }}
-        />
-      ) : null}
     </>
   );
 }

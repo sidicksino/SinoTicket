@@ -1,12 +1,13 @@
-import { Plus } from "lucide-react";
+import { AlertCircle, Loader2, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
+import { apiClient } from "../lib/api";
+import { authManager } from "../lib/auth";
+import { useApiCrud } from "../hooks/useApiCrud";
 import { EntityTable, type Column } from "../components/tables/EntityTable";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { EntityModal, type FieldDef } from "../components/ui/EntityModal";
 import { Panel } from "../components/ui/Panel";
 import { StatusBadge } from "../components/ui/StatusBadge";
-import { dashboardSeed } from "../data/seed";
-import { useCrud } from "../hooks/useCrud";
 import type { EventItem } from "../types";
 
 const fields: FieldDef[] = [
@@ -23,9 +24,27 @@ const fields: FieldDef[] = [
   },
 ];
 
+function mapEventFromApi(data: any): EventItem {
+  return {
+    id: data._id || data.id,
+    name: data.title || data.name,
+    date: data.date ? new Date(data.date).toLocaleString() : "N/A",
+    venue: data.venue_id || data.venue || "N/A",
+    capacity: data.capacity || 0,
+    price: data.price || 0,
+    status: data.status === "Upcoming" ? "active" : data.status === "Ongoing" ? "draft" : "paused",
+  };
+}
+
 export function EventsPage() {
-  const { filteredItems, query, setQuery, create, update, remove } =
-    useCrud<EventItem>(dashboardSeed.events);
+  const token = authManager.getToken();
+  const { filteredItems, query, setQuery, create, update, remove, loading, error } =
+    useApiCrud<EventItem>({
+      getAll: () => apiClient.getEvents().then((res) => res.data?.map(mapEventFromApi) || []),
+      create: (payload) => apiClient.createEvent(payload, token).then((res) => mapEventFromApi(res.data)),
+      update: (id, payload) => apiClient.updateEvent(id, payload, token).then((res) => mapEventFromApi(res.data)),
+      delete: (id) => apiClient.deleteEvent(id, token),
+    });
 
   const [editing, setEditing] = useState<EventItem | null>(null);
   const [deleting, setDeleting] = useState<EventItem | null>(null);
@@ -55,6 +74,16 @@ export function EventsPage() {
     [],
   );
 
+  if (!token) {
+    return (
+      <Panel title="Event Management" subtitle="Create, modify, and retire events from the catalogue">
+        <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 p-4 text-amber-100">
+          <p>⚠️ Authentication required. Please log in via the main app first.</p>
+        </div>
+      </Panel>
+    )
+  }
+
   return (
     <>
       <Panel
@@ -64,13 +93,21 @@ export function EventsPage() {
           <button
             type="button"
             onClick={() => setOpenCreate(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:opacity-50"
           >
-            <Plus size={16} />
-            Add Event
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+            {loading ? 'Loading...' : 'Add Event'}
           </button>
         }
       >
+        {error && (
+          <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 p-3 text-rose-100 flex items-center gap-2">
+            <AlertCircle size={16} />
+            {error}
+          </div>
+        )}
+
         <div className="mb-4">
           <input
             value={query}
@@ -80,12 +117,18 @@ export function EventsPage() {
           />
         </div>
 
-        <EntityTable
-          data={filteredItems}
-          columns={columns}
-          onEdit={(item) => setEditing(item)}
-          onDelete={(item) => setDeleting(item)}
-        />
+        {loading && filteredItems.length === 0 ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="animate-spin" size={24} />
+          </div>
+        ) : (
+          <EntityTable
+            data={filteredItems}
+            columns={columns}
+            onEdit={(item) => setEditing(item)}
+            onDelete={(item) => setDeleting(item)}
+          />
+        )}
       </Panel>
 
       {openCreate ? (
@@ -94,9 +137,15 @@ export function EventsPage() {
           title="Add Event"
           fields={fields}
           onClose={() => setOpenCreate(false)}
-          onSave={(values) => {
-            create(values);
-            setOpenCreate(false);
+          onSave={async (values) => {
+            try {
+              await create(values);
+              setOpenCreate(false);
+            } catch (err) {
+              alert(
+                `Failed to create event: ${err instanceof Error ? err.message : "Unknown error"}`
+              );
+            }
           }}
         />
       ) : null}
@@ -108,9 +157,15 @@ export function EventsPage() {
           fields={fields}
           initialValue={editing}
           onClose={() => setEditing(null)}
-          onSave={(values) => {
-            update(editing.id, values);
-            setEditing(null);
+          onSave={async (values) => {
+            try {
+              await update(editing.id, values);
+              setEditing(null);
+            } catch (err) {
+              alert(
+                `Failed to update event: ${err instanceof Error ? err.message : "Unknown error"}`
+              );
+            }
           }}
         />
       ) : null}
@@ -120,9 +175,15 @@ export function EventsPage() {
           title="Delete Event"
           message={`This will remove ${deleting.name} permanently from this view.`}
           onCancel={() => setDeleting(null)}
-          onConfirm={() => {
-            remove(deleting.id);
-            setDeleting(null);
+          onConfirm={async () => {
+            try {
+              await remove(deleting.id);
+              setDeleting(null);
+            } catch (err) {
+              alert(
+                `Failed to delete event: ${err instanceof Error ? err.message : "Unknown error"}`
+              );
+            }
           }}
         />
       ) : null}

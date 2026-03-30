@@ -1,4 +1,4 @@
-import { useSSO, useClerk } from "@clerk/expo";
+import { useClerk, useSSO } from "@clerk/expo";
 import { useState } from "react";
 import { Alert } from "react-native";
 
@@ -25,7 +25,7 @@ const useSocialAuth = () => {
         const currentUser = clerk.user;
         const fallbackSignUp = signUp as any;
         const fallbackSignIn = signIn as any;
-        
+
         const syncId = currentUser?.id || fallbackSignUp?.createdUserId || fallbackSignIn?.id;
 
         if (syncId) {

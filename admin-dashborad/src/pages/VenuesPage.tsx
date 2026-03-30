@@ -1,12 +1,13 @@
-import { Plus } from "lucide-react";
+import { AlertCircle, Loader2, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
+import { apiClient } from "../lib/api";
+import { authManager } from "../lib/auth";
+import { useApiCrud } from "../hooks/useApiCrud";
 import { EntityTable, type Column } from "../components/tables/EntityTable";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { EntityModal, type FieldDef } from "../components/ui/EntityModal";
 import { Panel } from "../components/ui/Panel";
 import { StatusBadge } from "../components/ui/StatusBadge";
-import { dashboardSeed } from "../data/seed";
-import { useCrud } from "../hooks/useCrud";
 import type { VenueItem } from "../types";
 
 const fields: FieldDef[] = [
@@ -21,9 +22,25 @@ const fields: FieldDef[] = [
   },
 ];
 
+function mapVenueFromApi(data: any): VenueItem {
+  return {
+    id: data._id || data.id,
+    name: data.name,
+    city: data.location || data.city || "N/A",
+    seats: data.capacity || data.seats || 0,
+    status: "active",
+  };
+}
+
 export function VenuesPage() {
-  const { filteredItems, query, setQuery, create, update, remove } =
-    useCrud<VenueItem>(dashboardSeed.venues);
+  const token = authManager.getToken();
+  const { filteredItems, query, setQuery, create, update, remove, loading, error } =
+    useApiCrud<VenueItem>({
+      getAll: () => apiClient.getVenues().then((res) => res.data?.map(mapVenueFromApi) || []),
+      create: (payload) => apiClient.createVenue(payload, token).then((res) => mapVenueFromApi(res.data)),
+      update: (id, payload) => apiClient.updateVenue(id, payload, token).then((res) => mapVenueFromApi(res.data)),
+      delete: (id) => apiClient.deleteVenue(id, token),
+    });
 
   const [editing, setEditing] = useState<VenueItem | null>(null);
   const [deleting, setDeleting] = useState<VenueItem | null>(null);
@@ -51,6 +68,16 @@ export function VenuesPage() {
     [],
   );
 
+  if (!token) {
+    return (
+      <Panel title="Venue Management" subtitle="Control inventory and operational availability">
+        <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 p-4 text-amber-100">
+          <p>⚠️ Authentication required. Please log in via the main app first.</p>
+        </div>
+      </Panel>
+    )
+  }
+
   return (
     <>
       <Panel
@@ -60,13 +87,21 @@ export function VenuesPage() {
           <button
             type="button"
             onClick={() => setOpenCreate(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+            disabled={loading}
+            className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:opacity-50"
           >
-            <Plus size={16} />
-            Add Venue
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+            {loading ? 'Loading...' : 'Add Venue'}
           </button>
         }
       >
+        {error && (
+          <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 p-3 text-rose-100 flex items-center gap-2">
+            <AlertCircle size={16} />
+            {error}
+          </div>
+        )}
+
         <div className="mb-4">
           <input
             value={query}
@@ -76,12 +111,18 @@ export function VenuesPage() {
           />
         </div>
 
-        <EntityTable
-          data={filteredItems}
-          columns={columns}
-          onEdit={(item) => setEditing(item)}
-          onDelete={(item) => setDeleting(item)}
-        />
+        {loading && filteredItems.length === 0 ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="animate-spin" size={24} />
+          </div>
+        ) : (
+          <EntityTable
+            data={filteredItems}
+            columns={columns}
+            onEdit={(item) => setEditing(item)}
+            onDelete={(item) => setDeleting(item)}
+          />
+        )}
       </Panel>
 
       {openCreate ? (
@@ -90,9 +131,15 @@ export function VenuesPage() {
           title="Add Venue"
           fields={fields}
           onClose={() => setOpenCreate(false)}
-          onSave={(values) => {
-            create(values);
-            setOpenCreate(false);
+          onSave={async (values) => {
+            try {
+              await create(values);
+              setOpenCreate(false);
+            } catch (err) {
+              alert(
+                `Failed to create venue: ${err instanceof Error ? err.message : "Unknown error"}`
+              );
+            }
           }}
         />
       ) : null}
@@ -104,9 +151,15 @@ export function VenuesPage() {
           fields={fields}
           initialValue={editing}
           onClose={() => setEditing(null)}
-          onSave={(values) => {
-            update(editing.id, values);
-            setEditing(null);
+          onSave={async (values) => {
+            try {
+              await update(editing.id, values);
+              setEditing(null);
+            } catch (err) {
+              alert(
+                `Failed to update venue: ${err instanceof Error ? err.message : "Unknown error"}`
+              );
+            }
           }}
         />
       ) : null}
@@ -116,9 +169,15 @@ export function VenuesPage() {
           title="Delete Venue"
           message={`This will remove ${deleting.name} permanently from this view.`}
           onCancel={() => setDeleting(null)}
-          onConfirm={() => {
-            remove(deleting.id);
-            setDeleting(null);
+          onConfirm={async () => {
+            try {
+              await remove(deleting.id);
+              setDeleting(null);
+            } catch (err) {
+              alert(
+                `Failed to delete venue: ${err instanceof Error ? err.message : "Unknown error"}`
+              );
+            }
           }}
         />
       ) : null}
