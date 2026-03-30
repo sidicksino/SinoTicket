@@ -1,13 +1,13 @@
 import { AlertCircle, Loader2, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
-import { apiClient } from "../lib/api";
-import { authManager } from "../lib/auth";
-import { useApiCrud } from "../hooks/useApiCrud";
 import { EntityTable, type Column } from "../components/tables/EntityTable";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { EntityModal, type FieldDef } from "../components/ui/EntityModal";
 import { Panel } from "../components/ui/Panel";
 import { StatusBadge } from "../components/ui/StatusBadge";
+import { useApiCrud } from "../hooks/useApiCrud";
+import { apiClient } from "../lib/api";
+import { authManager } from "../lib/auth";
 import type { VenueItem } from "../types";
 
 const fields: FieldDef[] = [
@@ -34,13 +34,28 @@ function mapVenueFromApi(data: any): VenueItem {
 
 export function VenuesPage() {
   const token = authManager.getToken();
-  const { filteredItems, query, setQuery, create, update, remove, loading, error } =
-    useApiCrud<VenueItem>({
-      getAll: () => apiClient.getVenues().then((res) => res.data?.map(mapVenueFromApi) || []),
-      create: (payload) => apiClient.createVenue(payload, token).then((res) => mapVenueFromApi(res.data)),
-      update: (id, payload) => apiClient.updateVenue(id, payload, token).then((res) => mapVenueFromApi(res.data)),
-      delete: (id) => apiClient.deleteVenue(id, token),
-    });
+  const {
+    filteredItems,
+    query,
+    setQuery,
+    create,
+    update,
+    remove,
+    loading,
+    error,
+  } = useApiCrud<VenueItem>({
+    getAll: () =>
+      apiClient.getVenues().then((res) => res.data?.map(mapVenueFromApi) || []),
+    create: (payload) =>
+      apiClient
+        .createVenue(payload, token)
+        .then((res) => mapVenueFromApi(res.data)),
+    update: (id, payload) =>
+      apiClient
+        .updateVenue(id, payload, token)
+        .then((res) => mapVenueFromApi(res.data)),
+    delete: (id) => apiClient.deleteVenue(id, token),
+  });
 
   const [editing, setEditing] = useState<VenueItem | null>(null);
   const [deleting, setDeleting] = useState<VenueItem | null>(null);
@@ -70,12 +85,17 @@ export function VenuesPage() {
 
   if (!token) {
     return (
-      <Panel title="Venue Management" subtitle="Control inventory and operational availability">
+      <Panel
+        title="Venue Management"
+        subtitle="Control inventory and operational availability"
+      >
         <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 p-4 text-amber-100">
-          <p>⚠️ Authentication required. Please log in via the main app first.</p>
+          <p>
+            ⚠️ Authentication required. Please log in via the main app first.
+          </p>
         </div>
       </Panel>
-    )
+    );
   }
 
   return (
@@ -90,8 +110,12 @@ export function VenuesPage() {
             disabled={loading}
             className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:opacity-50"
           >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-            {loading ? 'Loading...' : 'Add Venue'}
+            {loading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Plus size={16} />
+            )}
+            {loading ? "Loading..." : "Add Venue"}
           </button>
         }
       >
@@ -137,7 +161,7 @@ export function VenuesPage() {
               setOpenCreate(false);
             } catch (err) {
               alert(
-                `Failed to create venue: ${err instanceof Error ? err.message : "Unknown error"}`
+                `Failed to create venue: ${err instanceof Error ? err.message : "Unknown error"}`,
               );
             }
           }}
@@ -157,7 +181,7 @@ export function VenuesPage() {
               setEditing(null);
             } catch (err) {
               alert(
-                `Failed to update venue: ${err instanceof Error ? err.message : "Unknown error"}`
+                `Failed to update venue: ${err instanceof Error ? err.message : "Unknown error"}`,
               );
             }
           }}
@@ -175,7 +199,7 @@ export function VenuesPage() {
               setDeleting(null);
             } catch (err) {
               alert(
-                `Failed to delete venue: ${err instanceof Error ? err.message : "Unknown error"}`
+                `Failed to delete venue: ${err instanceof Error ? err.message : "Unknown error"}`,
               );
             }
           }}

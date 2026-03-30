@@ -1,11 +1,11 @@
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useMemo } from "react";
-import { apiClient } from "../lib/api";
-import { authManager } from "../lib/auth";
-import { useApiCrud } from "../hooks/useApiCrud";
 import { EntityTable, type Column } from "../components/tables/EntityTable";
 import { Panel } from "../components/ui/Panel";
 import { StatusBadge } from "../components/ui/StatusBadge";
+import { useApiCrud } from "../hooks/useApiCrud";
+import { apiClient } from "../lib/api";
+import { authManager } from "../lib/auth";
 import type { UserItem } from "../types";
 
 function mapUserFromApi(data: any): UserItem {
@@ -22,10 +22,16 @@ export function UsersPage() {
   const token = authManager.getToken();
   const { filteredItems, query, setQuery, loading, error } =
     useApiCrud<UserItem>({
-      getAll: () => apiClient.getCurrentUser(token).then((res) => [res.data || {}].map(mapUserFromApi)),
-      create: () => Promise.reject(new Error("Cannot create users from dashboard")),
-      update: () => Promise.reject(new Error("Cannot update users from dashboard")),
-      delete: () => Promise.reject(new Error("Cannot delete users from dashboard")),
+      getAll: () =>
+        apiClient
+          .getCurrentUser(token)
+          .then((res) => [res.data || {}].map(mapUserFromApi)),
+      create: () =>
+        Promise.reject(new Error("Cannot create users from dashboard")),
+      update: () =>
+        Promise.reject(new Error("Cannot update users from dashboard")),
+      delete: () =>
+        Promise.reject(new Error("Cannot delete users from dashboard")),
     });
 
   const columns: Column<UserItem>[] = useMemo(
@@ -52,9 +58,14 @@ export function UsersPage() {
 
   if (!token) {
     return (
-      <Panel title="User Management" subtitle="Manage admin users and permission-bearing team members">
+      <Panel
+        title="User Management"
+        subtitle="Manage admin users and permission-bearing team members"
+      >
         <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 p-4 text-amber-100">
-          <p>⚠️ Authentication required. Please log in via the main app first.</p>
+          <p>
+            ⚠️ Authentication required. Please log in via the main app first.
+          </p>
         </div>
       </Panel>
     );
@@ -104,7 +115,6 @@ export function UsersPage() {
           />
         )}
       </Panel>
-
     </>
   );
 }

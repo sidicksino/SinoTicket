@@ -1,13 +1,13 @@
 import { AlertCircle, Loader2, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
-import { apiClient } from "../lib/api";
-import { authManager } from "../lib/auth";
-import { useApiCrud } from "../hooks/useApiCrud";
 import { EntityTable, type Column } from "../components/tables/EntityTable";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { EntityModal, type FieldDef } from "../components/ui/EntityModal";
 import { Panel } from "../components/ui/Panel";
 import { StatusBadge } from "../components/ui/StatusBadge";
+import { useApiCrud } from "../hooks/useApiCrud";
+import { apiClient } from "../lib/api";
+import { authManager } from "../lib/auth";
 import type { ReservationItem } from "../types";
 
 const fields: FieldDef[] = [
@@ -33,20 +33,38 @@ function mapReservationFromApi(data: any): ReservationItem {
     customer: data.customerName || data.customer || "N/A",
     seats: data.numberOfSeats || data.seats || 0,
     total: data.totalPrice || data.total || 0,
-    status: data.status === "Cancelled" ? "paused" : (data.status ? "active" : "draft"),
-    createdAt: data.createdAt ? new Date(data.createdAt).toLocaleDateString() : new Date().toLocaleDateString(),
+    status:
+      data.status === "Cancelled" ? "paused" : data.status ? "active" : "draft",
+    createdAt: data.createdAt
+      ? new Date(data.createdAt).toLocaleDateString()
+      : new Date().toLocaleDateString(),
   };
 }
 
 export function ReservationsPage() {
   const token = authManager.getToken();
-  const { filteredItems, query, setQuery, create, update, remove, loading, error } =
-    useApiCrud<ReservationItem>({
-      getAll: () => apiClient.getReservations(token).then((res) => res.data?.map(mapReservationFromApi) || []),
-      create: (payload) => apiClient.createReservation(payload, token).then((res) => mapReservationFromApi(res.data)),
-      update: () => Promise.reject(new Error("Cannot update reservations from dashboard")),
-      delete: (id) => apiClient.cancelReservation(id, token),
-    });
+  const {
+    filteredItems,
+    query,
+    setQuery,
+    create,
+    update,
+    remove,
+    loading,
+    error,
+  } = useApiCrud<ReservationItem>({
+    getAll: () =>
+      apiClient
+        .getReservations(token)
+        .then((res) => res.data?.map(mapReservationFromApi) || []),
+    create: (payload) =>
+      apiClient
+        .createReservation(payload, token)
+        .then((res) => mapReservationFromApi(res.data)),
+    update: () =>
+      Promise.reject(new Error("Cannot update reservations from dashboard")),
+    delete: (id) => apiClient.cancelReservation(id, token),
+  });
 
   const [editing, setEditing] = useState<ReservationItem | null>(null);
   const [deleting, setDeleting] = useState<ReservationItem | null>(null);
@@ -75,12 +93,16 @@ export function ReservationsPage() {
     [],
   );
 
-
   if (!token) {
     return (
-      <Panel title="Reservation Management" subtitle="Handle active bookings and post-checkout operations">
+      <Panel
+        title="Reservation Management"
+        subtitle="Handle active bookings and post-checkout operations"
+      >
         <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 p-4 text-amber-100">
-          <p>⚠️ Authentication required. Please log in via the main app first.</p>
+          <p>
+            ⚠️ Authentication required. Please log in via the main app first.
+          </p>
         </div>
       </Panel>
     );
@@ -144,7 +166,7 @@ export function ReservationsPage() {
               setOpenCreate(false);
             } catch (err) {
               alert(
-                `Failed to create reservation: ${err instanceof Error ? err.message : "Unknown error"}`
+                `Failed to create reservation: ${err instanceof Error ? err.message : "Unknown error"}`,
               );
             }
           }}
@@ -164,7 +186,7 @@ export function ReservationsPage() {
               setEditing(null);
             } catch (err) {
               alert(
-                `Failed to update reservation: ${err instanceof Error ? err.message : "Unknown error"}`
+                `Failed to update reservation: ${err instanceof Error ? err.message : "Unknown error"}`,
               );
             }
           }}
@@ -182,7 +204,7 @@ export function ReservationsPage() {
               setDeleting(null);
             } catch (err) {
               alert(
-                `Failed to delete reservation: ${err instanceof Error ? err.message : "Unknown error"}`
+                `Failed to delete reservation: ${err instanceof Error ? err.message : "Unknown error"}`,
               );
             }
           }}

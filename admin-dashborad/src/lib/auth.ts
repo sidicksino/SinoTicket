@@ -3,18 +3,18 @@
 
 export const authManager = {
   setToken: (token: string) => {
-    localStorage.setItem('adminToken', token)
+    localStorage.setItem("adminToken", token);
   },
 
   getToken: () => {
-    return localStorage.getItem('adminToken')
+    return localStorage.getItem("adminToken");
   },
 
   clearToken: () => {
-    localStorage.removeItem('adminToken')
+    localStorage.removeItem("adminToken");
   },
 
   isAuthenticated: () => {
-    return !!localStorage.getItem('adminToken')
+    return !!localStorage.getItem("adminToken");
   },
-}
+};

@@ -1,102 +1,115 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export interface UseCrudOptions {
-  getAll: () => Promise<any[]>
-  create: (payload: Record<string, unknown>) => Promise<any>
-  update: (id: string, payload: Record<string, unknown>) => Promise<any>
-  delete: (id: string) => Promise<void>
+  getAll: () => Promise<any[]>;
+  create: (payload: Record<string, unknown>) => Promise<any>;
+  update: (id: string, payload: Record<string, unknown>) => Promise<any>;
+  delete: (id: string) => Promise<void>;
 }
 
 export function useApiCrud<T extends { id: string }>(options: UseCrudOptions) {
-  const [items, setItems] = useState<T[]>([])
-  const [query, setQuery] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [items, setItems] = useState<T[]>([]);
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const normalized = query.trim().toLowerCase()
+  const normalized = query.trim().toLowerCase();
 
   const filteredItems = useMemo(() => {
     if (!normalized) {
-      return items
+      return items;
     }
-    return items.filter((item) => JSON.stringify(item).toLowerCase().includes(normalized))
-  }, [items, normalized])
+    return items.filter((item) =>
+      JSON.stringify(item).toLowerCase().includes(normalized),
+    );
+  }, [items, normalized]);
 
   // Fetch all items
   const fetchItems = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
-      const data = await options.getAll()
-      setItems(data)
+      const data = await options.getAll();
+      setItems(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch items'
-      setError(message)
-      console.error(message)
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch items";
+      setError(message);
+      console.error(message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [options])
+  }, [options]);
 
   // Initial fetch
   useEffect(() => {
-    fetchItems()
-  }, [fetchItems])
+    fetchItems();
+  }, [fetchItems]);
 
   // Create item
   const create = useCallback(
-    async (payload: Omit<T, 'id'>) => {
+    async (payload: Omit<T, "id">) => {
       try {
-        setError(null)
-        const newItem = await options.create(payload as Record<string, unknown>)
-        setItems((current) => [newItem, ...current])
-        return newItem
+        setError(null);
+        const newItem = await options.create(
+          payload as Record<string, unknown>,
+        );
+        setItems((current) => [newItem, ...current]);
+        return newItem;
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to create item'
-        setError(message)
-        throw err
+        const message =
+          err instanceof Error ? err.message : "Failed to create item";
+        setError(message);
+        throw err;
       }
     },
     [options],
-  )
+  );
 
   // Update item
   const update = useCallback(
-    async (id: string, payload: Omit<T, 'id'>) => {
+    async (id: string, payload: Omit<T, "id">) => {
       try {
-        setError(null)
-        const updated = await options.update(id, payload as Record<string, unknown>)
-        setItems((current) => current.map((item) => (item.id === id ? updated : item)))
-        return updated
+        setError(null);
+        const updated = await options.update(
+          id,
+          payload as Record<string, unknown>,
+        );
+        setItems((current) =>
+          current.map((item) => (item.id === id ? updated : item)),
+        );
+        return updated;
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to update item'
-        setError(message)
-        throw err
+        const message =
+          err instanceof Error ? err.message : "Failed to update item";
+        setError(message);
+        throw err;
       }
     },
     [options],
-  )
+  );
 
   // Delete item
   const remove = useCallback(
     async (id: string) => {
       try {
-        setError(null)
-        await options.delete(id)
-        setItems((current) => current.filter((item) => item.id !== id))
+        setError(null);
+        await options.delete(id);
+        setItems((current) => current.filter((item) => item.id !== id));
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to delete item'
-        setError(message)
-        throw err
+        const message =
+          err instanceof Error ? err.message : "Failed to delete item";
+        setError(message);
+        throw err;
       }
     },
     [options],
-  )
+  );
 
   // Retry fetching
   const refetch = useCallback(() => {
-    fetchItems()
-  }, [fetchItems])
+    fetchItems();
+  }, [fetchItems]);
 
   return {
     items,
@@ -109,5 +122,5 @@ export function useApiCrud<T extends { id: string }>(options: UseCrudOptions) {
     loading,
     error,
     refetch,
-  }
+  };
 }
