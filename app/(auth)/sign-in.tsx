@@ -1,5 +1,6 @@
 import InputField from "@/components/InputField";
 import { useClerk, useSignIn } from "@clerk/expo";
+import { useTheme } from "@/context/ThemeContext";
 import useSocialAuth from "@/hooks/useSocialAuth";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
@@ -25,6 +26,7 @@ const SignIn = () => {
   const { setActive } = useClerk();
   const router = useRouter();
   const { handleGoogleAuth, loading: googleLoading } = useSocialAuth();
+  const { colors } = useTheme();
 
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -133,9 +135,9 @@ const SignIn = () => {
 
   if (isMfaPending) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
         <View className="flex-1 px-8 pt-16">
-          <Text className="font-syne text-[32px] font-black text-[#0F172A] mb-4">
+          <Text className="font-syne text-[32px] font-black mb-4" style={{ color: colors.text }}>
             Verify Account
           </Text>
           <InputField
@@ -147,18 +149,18 @@ const SignIn = () => {
             onChangeText={setCode}
           />
           {apiError ? (
-            <Text className="text-red-500 font-medium mb-4 text-center">{apiError}</Text>
+            <Text className="font-medium mb-4 text-center" style={{ color: colors.error }}>{apiError}</Text>
           ) : null}
           <TouchableOpacity
             onPress={handleVerify}
             disabled={isSubmitting || !code}
-            className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 mt-4 active:opacity-80"
-            style={isSubmitting || !code ? { opacity: 0.6 } : {}}
+            className="w-full h-[60px] rounded-full flex items-center justify-center shadow-lg active:opacity-80 mt-4"
+            style={[isSubmitting || !code ? { opacity: 0.6 } : {}, { backgroundColor: colors.primary, shadowColor: colors.primaryLight }]}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.white} />
             ) : (
-              <Text className="text-white font-syne font-bold text-[18px]">Verify</Text>
+              <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>Verify</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -169,7 +171,7 @@ const SignIn = () => {
   const isLoading = fetchStatus === "fetching" || isSubmitting;
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
@@ -185,16 +187,16 @@ const SignIn = () => {
             <Animated.View
               entering={FadeInDown.duration(800).delay(100).springify().damping(18)}
             >
-              <View className="mb-5 h-14 w-14 items-center justify-center rounded-[20px] bg-[#0286FF]/10">
-                <Ionicons name="log-in-outline" size={32} color="#0286FF" />
+              <View className="mb-5 h-14 w-14 items-center justify-center rounded-[20px]" style={{ backgroundColor: colors.primaryLight }}>
+                <Ionicons name="log-in-outline" size={32} color={colors.primary} />
               </View>
-              <Text className="font-syne text-[42px] font-black text-[#0F172A] leading-tight">
+              <Text className="font-syne text-[42px] font-black leading-tight" style={{ color: colors.text }}>
                 Welcome
               </Text>
-              <Text className="font-syne text-[42px] font-black text-[#0286FF] leading-tight mb-4">
+              <Text className="font-syne text-[42px] font-black leading-tight mb-4" style={{ color: colors.primary }}>
                 Back.
               </Text>
-              <Text className="mb-8 text-[16px] font-medium text-[#64748B] leading-relaxed">
+              <Text className="mb-8 text-[16px] font-medium leading-relaxed" style={{ color: colors.subtext }}>
                 Log in to SinoTicket to manage your tickets and discover fantastic events.
               </Text>
             </Animated.View>
@@ -232,7 +234,7 @@ const SignIn = () => {
                 style={styles.forgotPassword}
               >
                 <Link href="/(auth)/forgot-password">
-                  <Text className="text-[14px] font-bold text-[#0286FF]">
+                  <Text className="text-[14px] font-bold" style={{ color: colors.primary }}>
                     Forgot Password?
                   </Text>
                 </Link>
@@ -244,17 +246,17 @@ const SignIn = () => {
                 <TouchableOpacity
                   onPress={handleSubmit}
                   disabled={!emailAddress || !password || isLoading}
-                  className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"
-                  style={!emailAddress || !password || isLoading ? { opacity: 0.6 } : {}}
+                  className="w-full h-[60px] rounded-full flex items-center justify-center shadow-lg active:opacity-80"
+                  style={[!emailAddress || !password || isLoading ? { opacity: 0.6 } : {}, { backgroundColor: colors.primary, shadowColor: colors.primaryLight }]}
                 >
                   {isLoading ? (
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color={colors.white} />
                   ) : (
-                    <Text className="text-white font-syne font-bold text-[18px]">Log In</Text>
+                    <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>Log In</Text>
                   )}
                 </TouchableOpacity>
                 {apiError ? (
-                  <Text className="text-red-500 font-medium text-[14px] mt-4 text-center">
+                  <Text className="font-medium text-[14px] mt-4 text-center" style={{ color: colors.error }}>
                     {apiError}
                   </Text>
                 ) : null}
@@ -266,11 +268,11 @@ const SignIn = () => {
               entering={FadeInDown.duration(800).delay(600).springify().damping(18)}
               style={styles.divider}
             >
-              <View style={styles.dividerLine} />
-              <Text className="text-[13px] font-bold text-[#94A3B8] uppercase tracking-widest">
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+              <Text className="text-[13px] font-bold uppercase tracking-widest" style={{ color: colors.subtext }}>
                 Or continue with
               </Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
             </Animated.View>
 
             {/* SOCIAL LOGIN */}
@@ -281,8 +283,8 @@ const SignIn = () => {
               <TouchableOpacity
                 onPress={handleGoogleAuth}
                 disabled={googleLoading}
-                className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]"
-                style={googleLoading ? { opacity: 0.6 } : {}}
+                className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border"
+                style={[googleLoading ? { opacity: 0.6 } : {}, { backgroundColor: colors.card, borderColor: colors.border }]}
               >
                 {googleLoading ? (
                   <ActivityIndicator color="#0286FF" />
@@ -301,11 +303,11 @@ const SignIn = () => {
               entering={FadeInUp.duration(800).delay(800).springify().damping(18)}
               style={styles.footer}
             >
-              <Text className="text-[15px] font-medium text-[#64748B]">
+              <Text className="text-[15px] font-medium" style={{ color: colors.subtext }}>
                 Don&apos;t have an account?{" "}
               </Text>
               <Link href="/(auth)/sign-up">
-                <Text className="text-[15px] font-bold text-[#0286FF]">
+                <Text className="text-[15px] font-bold" style={{ color: colors.primary }}>
                   Sign Up
                 </Text>
               </Link>
@@ -334,7 +336,6 @@ const styles = StyleSheet.create({
   dividerLine: {
     height: 1,
     flex: 1,
-    backgroundColor: "#E2E8F0",
   },
   socialRow: {
     flexDirection: "row",

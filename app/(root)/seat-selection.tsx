@@ -150,7 +150,7 @@ export default function SeatSelection() {
         }}
       >
         <Text style={{ 
-          color: isSelected || item.status === 'booked' || item.status === 'reserved' ? "#fff" : colors.text, 
+          color: isSelected || item.status === 'booked' || item.status === 'reserved' ? colors.white : colors.text, 
           fontSize: 12, 
           fontWeight: "700" 
         }}>

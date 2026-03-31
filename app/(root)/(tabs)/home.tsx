@@ -138,7 +138,7 @@ export default function Home() {
                   }}
                 >
                   <Text style={{
-                    color: isActive ? "#fff" : colors.text,
+                    color: isActive ? colors.white : colors.text,
                     fontSize: 13,
                     fontWeight: isActive ? "700" : "500"
                   }}>
@@ -197,7 +197,7 @@ export default function Home() {
                       activeOpacity={0.9}
                       style={{
                         marginRight: 16, width: 260, height: 320,
-                        borderRadius: 28, overflow: "hidden", backgroundColor: "#111",
+                        borderRadius: 28, overflow: "hidden", backgroundColor: colors.black,
                       }}
                     >
                       <Image
@@ -207,26 +207,26 @@ export default function Home() {
                       />
                       <View style={{
                         position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
-                        backgroundColor: "rgba(0,0,0,0.40)",
+                        backgroundColor: colors.overlayMedium,
                       }} />
                       <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 20 }}>
                         <View style={{
                           alignSelf: "flex-start", backgroundColor: colors.primary,
                           paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, marginBottom: 10,
                         }}>
-                          <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700", textTransform: "uppercase" }}>
+                          <Text style={{ color: colors.white, fontSize: 11, fontWeight: "700", textTransform: "uppercase" }}>
                             {item.category}
                           </Text>
                         </View>
                         <Text style={{
-                          color: "#fff", fontFamily: "Syne_700Bold",
+                          color: colors.white, fontFamily: "Syne_700Bold",
                           fontSize: 18, lineHeight: 24, marginBottom: 6,
                         }} numberOfLines={2}>
                           {item.title}
                         </Text>
                         <View style={{ flexDirection: "row", alignItems: "center" }}>
-                          <Ionicons name="calendar-outline" size={13} color="rgba(255,255,255,0.7)" />
-                          <Text style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, marginLeft: 5 }}>
+                          <Ionicons name="calendar-outline" size={13} color={colors.white} style={{ opacity: 0.7 }} />
+                          <Text style={{ color: colors.white, opacity: 0.75, fontSize: 12, marginLeft: 5 }}>
                             {item.date ? new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "TBA"}
                           </Text>
                         </View>

@@ -38,7 +38,7 @@ export default function Profile() {
               value={isDark}
               onValueChange={toggleTheme}
               trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor="#fff"
+              thumbColor={colors.white}
             />
           </View>
         </View>
@@ -46,10 +46,10 @@ export default function Profile() {
         {/* Sign Out */}
         <TouchableOpacity
           onPress={() => signOut()}
-          style={{ backgroundColor: "rgba(239,68,68,0.10)", borderRadius: 24, padding: 20, borderWidth: 1, borderColor: "rgba(239,68,68,0.20)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}
+          style={{ backgroundColor: colors.card, borderRadius: 24, padding: 20, borderWidth: 1, borderColor: colors.error, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 }}
         >
-          <Ionicons name="log-out-outline" size={22} color="#EF4444" />
-          <Text style={{ color: "#EF4444", fontWeight: "700", fontSize: 16 }}>Sign Out</Text>
+          <Ionicons name="log-out-outline" size={22} color={colors.error} />
+          <Text style={{ color: colors.error, fontWeight: "700", fontSize: 16 }}>Sign Out</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

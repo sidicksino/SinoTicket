@@ -36,7 +36,7 @@ export const TicketCategoryCard = ({
         <Text style={[styles.name, { color: colors.text }]}>{name}</Text>
         {selected && (
           <View style={[styles.selectedBadge, { backgroundColor: colors.primary }]}>
-            <Text style={styles.selectedText}>SELECTED</Text>
+            <Text style={[styles.selectedText, { color: colors.white }]}>SELECTED</Text>
           </View>
         )}
       </View>
@@ -77,7 +77,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   selectedText: {
-    color: "#fff",
     fontSize: 10,
     fontWeight: "800",
   },

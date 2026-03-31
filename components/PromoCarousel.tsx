@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 // Card width relative to screen
@@ -33,6 +34,7 @@ const promoData = [
 ];
 
 export default function PromoCarousel() {
+  const { colors } = useTheme();
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef<Animated.FlatList<any>>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -90,22 +92,22 @@ export default function PromoCarousel() {
           opacity,
         }}
       >
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.black }]}>
           {/* Background Image */}
           <Image source={{ uri: item.image }} style={styles.imageBackground} />
 
           {/* Dark overlay proxy for readability */}
-          <View style={styles.overlay} />
+          <View style={[styles.overlay, { backgroundColor: colors.overlayMedium }]} />
 
           {/* Top Right Logo/Badge */}
-          <View style={styles.logoContainer}>
-            <Text style={styles.logoText}>NEWS</Text>
+          <View style={[styles.logoContainer, { backgroundColor: colors.white }]}>
+            <Text style={[styles.logoText, { color: colors.black }]}>NEWS</Text>
           </View>
 
           {/* Bottom Text content */}
           <View style={styles.textContainer}>
-            <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
-            <Text style={styles.subtitle} numberOfLines={2}>{item.subtitle}</Text>
+            <Text style={[styles.title, { color: colors.white }]} numberOfLines={1}>{item.title}</Text>
+            <Text style={[styles.subtitle, { color: colors.white }]} numberOfLines={2}>{item.subtitle}</Text>
           </View>
         </View>
       </Animated.View>
@@ -137,7 +139,7 @@ export default function PromoCarousel() {
       {/* Pagination Dots beneath the Carousel */}
       <View style={styles.paginationContainer}>
         {promoData.map((_, index) => {
-          const dotColor = index === currentIndex ? '#FF1E1E' : '#A0A0A0'; // Bright red active dot, gray inactive
+          const dotColor = index === currentIndex ? colors.error : colors.subtext; // Active dot colored, inactive subtext
           const dotWidth = index === currentIndex ? 10 : 8; // Active dot slightly larger
           return (
             <View
@@ -164,7 +166,6 @@ const styles = StyleSheet.create({
     height: 220,
     borderRadius: 24, // Matches typical modern app rounded card aesthetics
     overflow: 'hidden',
-    backgroundColor: '#000',
     // Soft shadow for depth
     shadowColor: '#000',
     shadowOpacity: 0.2,
@@ -182,7 +183,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.45)', // Smooth darkness over the image so white text pops
   },
   textContainer: {
     position: 'absolute',
@@ -191,13 +191,11 @@ const styles = StyleSheet.create({
     right: 20,
   },
   title: {
-    color: '#FFFFFF',
     fontSize: 24,
     fontFamily: 'Syne_700Bold', // Project font
     marginBottom: 6,
   },
   subtitle: {
-    color: '#F1F5F9', // Light grayish-white
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '500',
@@ -206,7 +204,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 20,
     right: 20,
-    backgroundColor: 'rgba(255,255,255,0.9)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
@@ -214,7 +211,6 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#000',
   },
   paginationContainer: {
     flexDirection: 'row',

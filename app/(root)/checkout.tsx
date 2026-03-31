@@ -128,7 +128,7 @@ export default function Checkout() {
                 }}
               >
                 <View style={{ backgroundColor: selected ? colors.primary : colors.cardBorder, padding: 10, borderRadius: 12 }}>
-                  <Ionicons name={method.icon as any} size={24} color={selected ? "#fff" : colors.subtext} />
+                  <Ionicons name={method.icon as any} size={24} color={selected ? colors.white : colors.subtext} />
                 </View>
                 <Text style={{ flex: 1, marginLeft: 16, fontSize: 16, fontWeight: "700", color: selected ? colors.text : colors.text }}>
                   {method.label}
@@ -141,7 +141,7 @@ export default function Checkout() {
           })}
           
           <View style={{ marginTop: 20, padding: 16, backgroundColor: colors.card, borderRadius: 16, flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="shield-checkmark-outline" size={20} color="#22C55E" />
+            <Ionicons name="shield-checkmark-outline" size={20} color={colors.success} />
             <Text style={{ marginLeft: 10, fontSize: 12, color: colors.subtext, flex: 1 }}>
               Your payment is encrypted and secure. By clicking Pay Now, you agree to the Terms of Service.
             </Text>

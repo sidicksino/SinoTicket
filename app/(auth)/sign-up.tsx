@@ -3,6 +3,7 @@ import LoadingScreen from "@/components/LoadingScreen";
 import useSocialAuth from "@/hooks/useSocialAuth";
 import { fetchAPI } from "@/lib/fetch";
 import { useAuth, useClerk, useSignUp } from "@clerk/expo";
+import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Redirect, useRouter } from "expo-router";
 import React from "react";
@@ -34,6 +35,7 @@ const SignUp = () => {
   const { setActive } = useClerk();
   const router = useRouter();
   const { handleGoogleAuth, loading: googleLoading } = useSocialAuth();
+  const { colors } = useTheme();
 
   const [fullName, setFullName] = React.useState("");
   const [emailAddress, setEmailAddress] = React.useState("");
@@ -201,21 +203,21 @@ const SignUp = () => {
   // ─── OTP Screen ───────────────────────────────────────────────────────────
   if (pendingVerification) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
         <View className="flex-1 px-8 pt-16">
           <View className="mb-8">
-            <View className="mb-5 h-14 w-14 items-center justify-center rounded-[20px] bg-[#0286FF]/10">
-              <Ionicons name="mail-unread-outline" size={28} color="#0286FF" />
+            <View className="mb-5 h-14 w-14 items-center justify-center rounded-[20px]" style={{ backgroundColor: colors.primaryLight }}>
+              <Ionicons name="mail-unread-outline" size={28} color={colors.primary} />
             </View>
-            <Text className="font-syne text-[32px] font-black text-[#0F172A] leading-tight">
+            <Text className="font-syne text-[32px] font-black leading-tight" style={{ color: colors.text }}>
               Check Your
             </Text>
-            <Text className="font-syne text-[32px] font-black text-[#0286FF] leading-tight mb-3">
+            <Text className="font-syne text-[32px] font-black leading-tight mb-3" style={{ color: colors.primary }}>
               Email.
             </Text>
-            <Text className="text-[15px] font-medium text-[#64748B]">
+            <Text className="text-[15px] font-medium" style={{ color: colors.subtext }}>
               We sent a 6-digit code to{" "}
-              <Text className="font-bold text-[#0F172A]">{emailAddress}</Text>
+              <Text className="font-bold" style={{ color: colors.text }}>{emailAddress}</Text>
             </Text>
           </View>
 
@@ -232,7 +234,7 @@ const SignUp = () => {
           />
 
           {apiError ? (
-            <Text className="text-red-500 font-medium mt-2 mb-2 text-center">
+            <Text className="font-medium mt-2 mb-2 text-center" style={{ color: colors.error }}>
               {apiError}
             </Text>
           ) : null}
@@ -240,13 +242,13 @@ const SignUp = () => {
           <TouchableOpacity
             onPress={handleVerify}
             disabled={isSubmitting || !code}
-            className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 mt-6 active:opacity-80"
-            style={isSubmitting || !code ? { opacity: 0.6 } : {}}
+            className="w-full h-[60px] rounded-full flex items-center justify-center shadow-lg active:opacity-80 mt-6"
+            style={[isSubmitting || !code ? { opacity: 0.6 } : {}, { backgroundColor: colors.primary, shadowColor: colors.primaryLight }]}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.white} />
             ) : (
-              <Text className="text-white font-syne font-bold text-[18px]">
+              <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>
                 Verify Email
               </Text>
             )}
@@ -256,7 +258,7 @@ const SignUp = () => {
             onPress={() => setPendingVerification(false)}
             className="mt-4 items-center"
           >
-            <Text className="text-[14px] font-medium text-[#64748B]">
+            <Text className="text-[14px] font-medium" style={{ color: colors.subtext }}>
               ← Go back and change email
             </Text>
           </TouchableOpacity>
@@ -270,7 +272,7 @@ const SignUp = () => {
 
   // ─── Sign Up Screen ───────────────────────────────────────────────────────
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -287,16 +289,16 @@ const SignUp = () => {
               entering={FadeInDown.duration(800).delay(100).springify().damping(18)}
             >
               <View className="mb-8">
-                <View className="mb-5 h-14 w-14 items-center justify-center rounded-[20px] bg-[#0286FF]/10">
-                  <Ionicons name="sparkles" size={28} color="#0286FF" />
+                <View className="mb-5 h-14 w-14 items-center justify-center rounded-[20px]" style={{ backgroundColor: colors.primaryLight }}>
+                  <Ionicons name="sparkles" size={28} color={colors.primary} />
                 </View>
-                <Text className="font-syne text-[42px] font-black text-[#0F172A] leading-tight">
+                <Text className="font-syne text-[42px] font-black leading-tight" style={{ color: colors.text }}>
                   Create
                 </Text>
-                <Text className="font-syne text-[42px] font-black text-[#0286FF] leading-tight mb-4">
+                <Text className="font-syne text-[42px] font-black leading-tight mb-4" style={{ color: colors.primary }}>
                   Account.
                 </Text>
-                <Text className="text-[16px] font-medium text-[#64748B] leading-relaxed">
+                <Text className="text-[16px] font-medium leading-relaxed" style={{ color: colors.subtext }}>
                   Join SinoTicket today and unlock access to the best events in town.
                 </Text>
               </View>
@@ -364,21 +366,21 @@ const SignUp = () => {
                 <TouchableOpacity
                   onPress={handleSubmit}
                   disabled={!canSubmit}
-                  className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"
-                  style={!canSubmit ? { opacity: 0.6 } : {}}
+                  className="w-full h-[60px] rounded-full flex items-center justify-center shadow-lg active:opacity-80"
+                  style={[!canSubmit ? { opacity: 0.6 } : {}, { backgroundColor: colors.primary, shadowColor: colors.primaryLight }]}
                 >
                   {isSubmitting ? (
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color={colors.white} />
                   ) : (
-                    <Text className="text-white font-syne font-bold text-[18px]">
+                    <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>
                       Sign Up
                     </Text>
                   )}
                 </TouchableOpacity>
 
                 {apiError ? (
-                  <View className="mt-4 px-4 py-3 bg-red-50 rounded-2xl border border-red-100">
-                    <Text className="text-red-500 font-medium text-[13px] text-center">
+                  <View className="mt-4 px-4 py-3 rounded-2xl border" style={{ backgroundColor: colors.card, borderColor: colors.error }}>
+                    <Text className="font-medium text-[13px] text-center" style={{ color: colors.error }}>
                       {apiError}
                     </Text>
                     {apiError.includes("already exists") && (
@@ -386,7 +388,7 @@ const SignUp = () => {
                         onPress={() => router.push("/(auth)/sign-in")}
                         className="mt-2 items-center"
                       >
-                        <Text className="text-[#0286FF] font-bold text-[13px]">
+                        <Text className="font-bold text-[13px]" style={{ color: colors.primary }}>
                           Log in instead →
                         </Text>
                       </TouchableOpacity>
@@ -406,11 +408,11 @@ const SignUp = () => {
                   gap: 16,
                 }}
               >
-                <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
-                <Text className="text-[13px] font-bold text-[#94A3B8] uppercase tracking-widest">
+                <View className="h-[1px] flex-1" style={{ backgroundColor: colors.border }} />
+                <Text className="text-[13px] font-bold uppercase tracking-widest" style={{ color: colors.subtext }}>
                   Or continue with
                 </Text>
-                <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
+                <View className="h-[1px] flex-1" style={{ backgroundColor: colors.border }} />
               </AnimatedView>
 
               {/* SOCIAL LOGIN */}
@@ -426,11 +428,11 @@ const SignUp = () => {
                 <TouchableOpacity
                   onPress={handleGoogleAuth}
                   disabled={googleLoading}
-                  className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]"
-                  style={googleLoading ? { opacity: 0.6 } : {}}
+                  className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border active:opacity-80"
+                  style={[googleLoading ? { opacity: 0.6 } : {}, { backgroundColor: colors.card, borderColor: colors.border }]}
                 >
                   {googleLoading ? (
-                    <ActivityIndicator color="#0286FF" />
+                    <ActivityIndicator color={colors.primary} />
                   ) : (
                     <Image
                       source={require("@/assets/icons/google-icon.png")}
@@ -441,7 +443,8 @@ const SignUp = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => router.push("/(auth)/sign-up-phone")}
-                  className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]"
+                  className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border active:opacity-80"
+                  style={{ backgroundColor: colors.card, borderColor: colors.border }}
                 >
                   <Image
                     source={require("@/assets/icons/phone-icon.png")}
@@ -461,11 +464,11 @@ const SignUp = () => {
                   alignItems: "center",
                 }}
               >
-                <Text className="text-[15px] font-medium text-[#64748B]">
+                <Text className="text-[15px] font-medium" style={{ color: colors.subtext }}>
                   Already have an account?{" "}
                 </Text>
                 <Link href="/(auth)/sign-in">
-                  <Text className="text-[15px] font-bold text-[#0286FF]">
+                  <Text className="text-[15px] font-bold" style={{ color: colors.primary }}>
                     Log In
                   </Text>
                 </Link>

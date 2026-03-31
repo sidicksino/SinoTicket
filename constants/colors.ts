@@ -11,11 +11,22 @@ export type ThemeColors = {
   tabBar: string;
   tabBarPill: string;
   tabBarIcon: string;
-  overlay: string;
+  overlay: string; // Deprecated, use specific overlays below
+  overlayLight: string;
+  overlayMedium: string;
+  overlayDark: string;
   seatAvailable: string;
   seatSelected: string;
   seatReserved: string;
   seatBooked: string;
+  // Feedback
+  success: string;
+  error: string;
+  warning: string;
+  // Base
+  white: string;
+  black: string;
+  transparent: string;
 };
 
 export const Colors: { light: ThemeColors; dark: ThemeColors } = {
@@ -33,10 +44,19 @@ export const Colors: { light: ThemeColors; dark: ThemeColors } = {
     tabBarPill: "#FFFFFF",
     tabBarIcon: "#64748B",
     overlay: "rgba(0,0,0,0.04)",
+    overlayLight: "rgba(0,0,0,0.1)",
+    overlayMedium: "rgba(0,0,0,0.4)",
+    overlayDark: "rgba(0,0,0,0.6)",
     seatAvailable: "#E2E8F0",
     seatSelected: "#0286FF",
     seatReserved: "#F59E0B",
     seatBooked: "#EF4444",
+    success: "#22C55E",
+    error: "#EF4444",
+    warning: "#F59E0B",
+    white: "#FFFFFF",
+    black: "#000000",
+    transparent: "transparent",
   },
   dark: {
     background: "#0F172A",
@@ -52,9 +72,18 @@ export const Colors: { light: ThemeColors; dark: ThemeColors } = {
     tabBarPill: "#0F172A",
     tabBarIcon: "#64748B",
     overlay: "rgba(0,0,0,0.30)",
+    overlayLight: "rgba(0,0,0,0.2)",
+    overlayMedium: "rgba(0,0,0,0.5)",
+    overlayDark: "rgba(0,0,0,0.8)",
     seatAvailable: "#334155",
     seatSelected: "#0286FF",
     seatReserved: "#D97706",
     seatBooked: "#DC2626",
+    success: "#22C55E",
+    error: "#EF4444",
+    warning: "#F59E0B",
+    white: "#FFFFFF",
+    black: "#000000",
+    transparent: "transparent",
   },
 };

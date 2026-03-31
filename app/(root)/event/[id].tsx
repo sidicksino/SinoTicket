@@ -77,21 +77,21 @@ export default function EventDetail() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Hero Image Section */}
-        <View style={{ height: 320, backgroundColor: "#111" }}>
+        <View style={{ height: 320, backgroundColor: colors.black }}>
           <Image
             source={{ uri: event.imageUrl || "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800" }}
             defaultSource={require("@/assets/images/icon.png")}
             style={{ width: "100%", height: "100%" }}
             resizeMode="cover"
           />
-          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.2)" }} />
+          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.overlayLight }} />
 
           {/* Back Button */}
           <TouchableOpacity
             onPress={() => router.back()}
-            style={{ position: "absolute", top: 20, left: 20, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 999, padding: 10 }}
+            style={{ position: "absolute", top: 20, left: 20, backgroundColor: colors.overlayDark, borderRadius: 999, padding: 10 }}
           >
-            <Ionicons name="arrow-back" size={22} color="#fff" />
+            <Ionicons name="arrow-back" size={22} color={colors.white} />
           </TouchableOpacity>
         </View>
 
@@ -129,7 +129,7 @@ export default function EventDetail() {
             </View>
             <View>
               <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: "700", marginBottom: 4 }}>STATUS</Text>
-              <Text style={{ color: "#22C55E", fontSize: 15, fontWeight: "800" }}>ACTIVE</Text>
+              <Text style={{ color: colors.success, fontSize: 15, fontWeight: "800" }}>ACTIVE</Text>
             </View>
           </View>
 
@@ -157,7 +157,7 @@ export default function EventDetail() {
         onRequestClose={() => setIsModalVisible(false)}
       >
         <TouchableOpacity
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }}
+          style={{ flex: 1, backgroundColor: colors.overlayDark }}
           activeOpacity={1}
           onPress={() => setIsModalVisible(false)}
         >
