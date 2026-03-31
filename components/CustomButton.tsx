@@ -1,36 +1,6 @@
 import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
-
 import { ButtonProps } from "@/types/type";
-
-const getBgVariantStyle = (variant: ButtonProps["bgVariant"]) => {
-    switch (variant) {
-        case "secondary":
-            return "bg-gray-500";
-        case "danger":
-            return "bg-red-500";
-        case "success":
-            return "bg-green-500";
-        case "outline":
-            return "bg-transparent border-neutral-300 border-[0.5px]";
-        default:
-            return "bg-[#0286FF]";
-    }
-};
-
-const getTextVariantStyle = (variant: ButtonProps["textVariant"]) => {
-    switch (variant) {
-        case "primary":
-            return "text-black";
-        case "secondary":
-            return "text-gray-100";
-        case "danger":
-            return "text-red-100";
-        case "success":
-            return "text-green-100";
-        default:
-            return "text-white";
-    }
-};
+import { useTheme } from "@/context/ThemeContext";
 
 const CustomButton = ({
     onPress,
@@ -43,19 +13,55 @@ const CustomButton = ({
     loading,
     ...props
 }: ButtonProps) => {
+    const { colors } = useTheme();
+
+    const getBgStyle = (variant: ButtonProps["bgVariant"]) => {
+        switch (variant) {
+            case "secondary":
+                return { backgroundColor: colors.subtext };
+            case "danger":
+                return { backgroundColor: colors.error };
+            case "success":
+                return { backgroundColor: colors.success };
+            case "outline":
+                return { backgroundColor: "transparent", borderColor: colors.border, borderWidth: 1 };
+            default:
+                return { backgroundColor: colors.primary };
+        }
+    };
+
+    const getTextStyle = (variant: ButtonProps["textVariant"]) => {
+        switch (variant) {
+            case "primary":
+                return { color: colors.primary };
+            case "secondary":
+                return { color: colors.subtext };
+            case "danger":
+                return { color: colors.error };
+            case "success":
+                return { color: colors.success };
+            default:
+                return { color: colors.white };
+        }
+    };
+
     return (
         <TouchableOpacity
             onPress={onPress}
             disabled={loading}
-            className={`w-full rounded-xl p-4 flex flex-row justify-center items-center shadow-md shadow-neutral-400/70 ${getBgVariantStyle(bgVariant)} ${className}`}
+            className={`w-full rounded-xl p-4 flex flex-row justify-center items-center shadow-sm ${className}`}
+            style={[
+                getBgStyle(bgVariant), 
+                { shadowColor: colors.text, shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }
+            ]}
             {...props}
         >
             {loading ? (
-                <ActivityIndicator color="white" />
+                <ActivityIndicator color={textVariant === "default" ? colors.white : colors.primary} />
             ) : (
                 <>
                     {IconLeft && <IconLeft />}
-                    <Text className={`text-lg font-bold ${getTextVariantStyle(textVariant)}`}>
+                    <Text className="text-lg font-bold" style={getTextStyle(textVariant)}>
                         {title}
                     </Text>
                     {IconRight && <IconRight />}

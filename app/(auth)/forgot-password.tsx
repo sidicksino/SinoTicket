@@ -1,5 +1,6 @@
 import InputField from "@/components/InputField";
 import { useClerk } from "@clerk/expo";
+import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import React from "react";
@@ -20,6 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const ForgotPassword = () => {
   const { client, setActive } = useClerk();
   const signIn = client.signIn;
+  const { colors } = useTheme();
   const [email, setEmail] = React.useState("");
   const [code, setCode] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
@@ -97,7 +99,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
@@ -112,9 +114,10 @@ const ForgotPassword = () => {
           <View className="px-5 pt-4">
             <TouchableOpacity
               onPress={() => router.back()}
-              className="h-12 w-12 items-center justify-center rounded-full bg-[#F8FAFC] border border-[#E2E8F0]"
+              className="h-12 w-12 items-center justify-center rounded-full border"
+              style={{ backgroundColor: colors.card, borderColor: colors.border }}
             >
-              <Ionicons name="arrow-back" size={24} color="#0F172A" />
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -123,16 +126,16 @@ const ForgotPassword = () => {
             <Animated.View
               entering={FadeInDown.duration(800).delay(100).springify().damping(18)}
             >
-              <View className="mb-5 h-14 w-14 items-center justify-center rounded-[20px] bg-[#0286FF]/10">
-                <Ionicons name="lock-closed" size={32} color="#0286FF" />
+              <View className="mb-5 h-14 w-14 items-center justify-center rounded-[20px]" style={{ backgroundColor: colors.primaryLight }}>
+                <Ionicons name="lock-closed" size={32} color={colors.primary} />
               </View>
-              <Text className="font-syne text-[42px] font-black text-[#0F172A] leading-tight">
+              <Text className="font-syne text-[42px] font-black leading-tight" style={{ color: colors.text }}>
                 {isSuccess ? "Reset" : "Forgot"}
               </Text>
-              <Text className="font-syne text-[42px] font-black text-[#0286FF] leading-tight mb-4">
+              <Text className="font-syne text-[42px] font-black leading-tight mb-4" style={{ color: colors.primary }}>
                 Password?
               </Text>
-              <Text className="mb-8 text-[16px] font-medium text-[#64748B] leading-relaxed">
+              <Text className="mb-8 text-[16px] font-medium leading-relaxed" style={{ color: colors.subtext }}>
                 {isSuccess 
                   ? `We sent a 6-digit code to ${email}. Enter it below with your new password.`
                   : "No worries! Enter your email below and we'll send you a reset code."}
@@ -175,7 +178,7 @@ const ForgotPassword = () => {
               )}
 
               {error ? (
-                <Text className="text-red-500 font-medium text-[14px] mt-4 text-center">
+                <Text className="font-medium text-[14px] mt-4 text-center" style={{ color: colors.error }}>
                   {error}
                 </Text>
               ) : null}
@@ -189,13 +192,13 @@ const ForgotPassword = () => {
                   <TouchableOpacity
                     onPress={handleReset}
                     disabled={isSubmitting || !email.trim()}
-                    className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"
-                    style={isSubmitting || !email.trim() ? { opacity: 0.6 } : {}}
+                    className="w-full h-[60px] rounded-full flex items-center justify-center shadow-lg active:opacity-80"
+                    style={[isSubmitting || !email.trim() ? { opacity: 0.6 } : {}, { backgroundColor: colors.primary, shadowColor: colors.primaryLight }]}
                   >
                     {isSubmitting ? (
-                      <ActivityIndicator color="#fff" />
+                      <ActivityIndicator color={colors.white} />
                     ) : (
-                      <Text className="text-white font-syne font-bold text-[18px]">
+                      <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>
                         Send Reset Code
                       </Text>
                     )}
@@ -204,13 +207,13 @@ const ForgotPassword = () => {
                   <TouchableOpacity
                     onPress={handleVerify}
                     disabled={isSubmitting || !code.trim() || !newPassword.trim()}
-                    className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80"
-                    style={isSubmitting || !code.trim() || !newPassword.trim() ? { opacity: 0.6 } : {}}
+                    className="w-full h-[60px] rounded-full flex items-center justify-center shadow-lg active:opacity-80"
+                    style={[isSubmitting || !code.trim() || !newPassword.trim() ? { opacity: 0.6 } : {}, { backgroundColor: colors.primary, shadowColor: colors.primaryLight }]}
                   >
                     {isSubmitting ? (
-                      <ActivityIndicator color="#fff" />
+                      <ActivityIndicator color={colors.white} />
                     ) : (
-                      <Text className="text-white font-syne font-bold text-[18px]">
+                      <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>
                         Reset Password
                       </Text>
                     )}
@@ -224,11 +227,11 @@ const ForgotPassword = () => {
               entering={FadeInUp.duration(800).delay(500).springify().damping(18)}
               style={styles.footer}
             >
-              <Text className="text-[15px] font-medium text-[#64748B]">
+              <Text className="text-[15px] font-medium" style={{ color: colors.subtext }}>
                 Remember your password?{" "}
               </Text>
               <Link href="/(auth)/sign-in">
-                <Text className="text-[15px] font-bold text-[#0286FF]">
+                <Text className="text-[15px] font-bold" style={{ color: colors.primary }}>
                   Log In
                 </Text>
               </Link>
