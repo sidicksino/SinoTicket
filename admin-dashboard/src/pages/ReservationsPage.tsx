@@ -63,7 +63,8 @@ export function ReservationsPage() {
         .then((res) => mapReservationFromApi(res.data)),
     update: () =>
       Promise.reject(new Error("Cannot update reservations from dashboard")),
-      delete: (id) => apiClient.cancelReservation(id, token).then(() => undefined),
+    delete: (id) =>
+      apiClient.cancelReservation(id, token).then(() => undefined),
   });
 
   const [editing, setEditing] = useState<ReservationItem | null>(null);

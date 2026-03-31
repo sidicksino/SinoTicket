@@ -120,7 +120,7 @@ class ApiClient {
       `/venue/deleteVenue/${id}`,
       "DELETE",
       {
-      token: token || undefined,
+        token: token || undefined,
       },
     );
   }
@@ -143,10 +143,14 @@ class ApiClient {
   }
 
   async cancelReservation(id: string, token?: string | null) {
-    return this.request<Record<string, unknown>>("/reservations/cancel", "POST", {
-      body: JSON.stringify({ reservation_id: id }),
-      token: token || undefined,
-    });
+    return this.request<Record<string, unknown>>(
+      "/reservations/cancel",
+      "POST",
+      {
+        body: JSON.stringify({ reservation_id: id }),
+        token: token || undefined,
+      },
+    );
   }
 
   // ====== Users ======

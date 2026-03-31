@@ -8,12 +8,14 @@ import { StatusBadge } from "../components/ui/StatusBadge";
 import { useApiCrud } from "../hooks/useApiCrud";
 import { apiClient } from "../lib/api";
 import { authManager } from "../lib/auth";
-import type { VenueItem } from "../types";
+import type { EventItem } from "../types";
 
 const fields: FieldDef[] = [
-  { key: "name", label: "Venue Name" },
-  { key: "city", label: "City" },
-  { key: "seats", label: "Seat Count", type: "number" },
+  { key: "name", label: "Event Name" },
+  { key: "date", label: "Date & Time" },
+  { key: "venue", label: "Venue" },
+  { key: "capacity", label: "Capacity", type: "number" },
+  { key: "price", label: "Ticket Price", type: "number" },
   {
     key: "status",
     label: "Status",
@@ -22,17 +24,24 @@ const fields: FieldDef[] = [
   },
 ];
 
-function mapVenueFromApi(data: any): VenueItem {
+function mapEventFromApi(data: any): EventItem {
   return {
     id: data._id || data.id,
-    name: data.name,
-    city: data.location || data.city || "N/A",
-    seats: data.capacity || data.seats || 0,
-    status: "active",
+    name: data.title || data.name,
+    date: data.date ? new Date(data.date).toLocaleString() : "N/A",
+    venue: data.venue_id || data.venue || "N/A",
+    capacity: data.capacity || 0,
+    price: data.price || 0,
+    status:
+      data.status === "Upcoming"
+        ? "active"
+        : data.status === "Ongoing"
+          ? "draft"
+          : "paused",
   };
 }
 
-export function VenuesPage() {
+export function EventsPage() {
   const token = authManager.getToken();
   const {
     filteredItems,
@@ -43,37 +52,39 @@ export function VenuesPage() {
     remove,
     loading,
     error,
-  } = useApiCrud<VenueItem>({
+  } = useApiCrud<EventItem>({
     getAll: () =>
-      apiClient.getVenues().then((res) => res.data?.map(mapVenueFromApi) || []),
+      apiClient.getEvents().then((res) => res.data?.map(mapEventFromApi) || []),
     create: (payload) =>
       apiClient
-        .createVenue(payload, token)
-        .then((res) => mapVenueFromApi(res.data)),
+        .createEvent(payload, token)
+        .then((res) => mapEventFromApi(res.data)),
     update: (id, payload) =>
       apiClient
-        .updateVenue(id, payload, token)
-        .then((res) => mapVenueFromApi(res.data)),
-      delete: (id) => apiClient.deleteVenue(id, token).then(() => undefined),
+        .updateEvent(id, payload, token)
+        .then((res) => mapEventFromApi(res.data)),
+    delete: (id) => apiClient.deleteEvent(id, token).then(() => undefined),
   });
 
-  const [editing, setEditing] = useState<VenueItem | null>(null);
-  const [deleting, setDeleting] = useState<VenueItem | null>(null);
+  const [editing, setEditing] = useState<EventItem | null>(null);
+  const [deleting, setDeleting] = useState<EventItem | null>(null);
   const [openCreate, setOpenCreate] = useState(false);
 
-  const columns: Column<VenueItem>[] = useMemo(
+  const columns: Column<EventItem>[] = useMemo(
     () => [
       {
         key: "name",
-        title: "Venue",
+        title: "Event",
         render: (item) => <span className="font-medium">{item.name}</span>,
       },
-      { key: "city", title: "City", render: (item) => item.city },
+      { key: "date", title: "Date", render: (item) => item.date },
+      { key: "venue", title: "Venue", render: (item) => item.venue },
       {
-        key: "seats",
-        title: "Seats",
-        render: (item) => item.seats.toLocaleString(),
+        key: "capacity",
+        title: "Capacity",
+        render: (item) => item.capacity.toLocaleString(),
       },
+      { key: "price", title: "Price", render: (item) => `$${item.price}` },
       {
         key: "status",
         title: "Status",
@@ -86,8 +97,8 @@ export function VenuesPage() {
   if (!token) {
     return (
       <Panel
-        title="Venue Management"
-        subtitle="Control inventory and operational availability"
+        title="Event Management"
+        subtitle="Create, modify, and retire events from the catalogue"
       >
         <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 p-4 text-amber-100">
           <p>
@@ -101,8 +112,8 @@ export function VenuesPage() {
   return (
     <>
       <Panel
-        title="Venue Management"
-        subtitle="Control inventory and operational availability"
+        title="Event Management"
+        subtitle="Create, modify, and retire events from the catalogue"
         action={
           <button
             type="button"
@@ -115,7 +126,7 @@ export function VenuesPage() {
             ) : (
               <Plus size={16} />
             )}
-            {loading ? "Loading..." : "Add Venue"}
+            {loading ? "Loading..." : "Add Event"}
           </button>
         }
       >
@@ -130,7 +141,7 @@ export function VenuesPage() {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search venues by name, city, or status"
+            placeholder="Search events by title, venue, or status"
             className="w-full rounded-xl border border-white/15 bg-slate-900 px-3 py-2 text-slate-100 outline-none transition focus:border-cyan-400"
           />
         </div>
@@ -150,9 +161,9 @@ export function VenuesPage() {
       </Panel>
 
       {openCreate ? (
-        <EntityModal<VenueItem>
+        <EntityModal<EventItem>
           mode="create"
-          title="Add Venue"
+          title="Add Event"
           fields={fields}
           onClose={() => setOpenCreate(false)}
           onSave={async (values) => {
@@ -161,7 +172,7 @@ export function VenuesPage() {
               setOpenCreate(false);
             } catch (err) {
               alert(
-                `Failed to create venue: ${err instanceof Error ? err.message : "Unknown error"}`,
+                `Failed to create event: ${err instanceof Error ? err.message : "Unknown error"}`,
               );
             }
           }}
@@ -169,9 +180,9 @@ export function VenuesPage() {
       ) : null}
 
       {editing ? (
-        <EntityModal<VenueItem>
+        <EntityModal<EventItem>
           mode="edit"
-          title="Update Venue"
+          title="Update Event"
           fields={fields}
           initialValue={editing}
           onClose={() => setEditing(null)}
@@ -181,7 +192,7 @@ export function VenuesPage() {
               setEditing(null);
             } catch (err) {
               alert(
-                `Failed to update venue: ${err instanceof Error ? err.message : "Unknown error"}`,
+                `Failed to update event: ${err instanceof Error ? err.message : "Unknown error"}`,
               );
             }
           }}
@@ -190,7 +201,7 @@ export function VenuesPage() {
 
       {deleting ? (
         <ConfirmDialog
-          title="Delete Venue"
+          title="Delete Event"
           message={`This will remove ${deleting.name} permanently from this view.`}
           onCancel={() => setDeleting(null)}
           onConfirm={async () => {
@@ -199,7 +210,7 @@ export function VenuesPage() {
               setDeleting(null);
             } catch (err) {
               alert(
-                `Failed to delete venue: ${err instanceof Error ? err.message : "Unknown error"}`,
+                `Failed to delete event: ${err instanceof Error ? err.message : "Unknown error"}`,
               );
             }
           }}
