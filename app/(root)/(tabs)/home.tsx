@@ -4,7 +4,7 @@ import { useFetch } from "@/lib/fetch";
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -36,14 +36,13 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const apiUrl = `/api/events?limit=20&page=1${
-    debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
-  }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
+  const apiUrl = `/api/events?limit=20&page=1${debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
+    }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
 
   const { data, loading, error } = useFetch<any>(apiUrl, false);
-  
+
   const events = data?.success && Array.isArray(data?.events) ? data.events : [];
-  
+
   // For the "Featured" section, we take the top 3 upcoming
   // For "Happening Soon", we take the rest
   const featuredEvents = events.slice(0, 3);
@@ -106,7 +105,7 @@ export default function Home() {
               <Ionicons name="close-circle" size={18} color={colors.subtext} />
             </TouchableOpacity>
           ) : null}
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => setShowFilters(!showFilters)}
             style={{
               backgroundColor: colors.primary, padding: 6, borderRadius: 10,
@@ -118,8 +117,8 @@ export default function Home() {
 
         {/* ── CATEGORIES (Conditional) ── */}
         {showFilters && (
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 24, marginTop: 16, gap: 10 }}
           >
@@ -161,7 +160,7 @@ export default function Home() {
             justifyContent: "space-between", alignItems: "center", marginBottom: 16,
           }}>
             <Text style={{ fontFamily: "Syne_700Bold", fontSize: 20, color: colors.text }}>
-              {debouncedSearch || selectedCategory !== "All" ? "Results" : "Featured Events"}
+              {debouncedSearch || selectedCategory !== "All" ? "Results" : "Upcoming Events"}
             </Text>
           </View>
 
@@ -241,10 +240,10 @@ export default function Home() {
               <View style={{ marginTop: (!debouncedSearch && selectedCategory === "All") ? 32 : 0, paddingHorizontal: 24 }}>
                 {(!debouncedSearch && selectedCategory === "All") && (
                   <Text style={{ fontFamily: "Syne_700Bold", fontSize: 20, color: colors.text, marginBottom: 16 }}>
-                    Happening Soon
+                    More Events
                   </Text>
                 )}
-                {( (debouncedSearch || selectedCategory !== "All") ? events : happeningSoon).map((item: any) => (
+                {((debouncedSearch || selectedCategory !== "All") ? events : happeningSoon).map((item: any) => (
                   <TouchableOpacity
                     key={item._id}
                     onPress={() => navigateToEvent(item._id)}
@@ -265,12 +264,12 @@ export default function Home() {
                         {item.title}
                       </Text>
                       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
-                         <View style={{ backgroundColor: colors.primaryLight, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, marginRight: 6 }}>
-                            <Text style={{ color: colors.primary, fontSize: 10, fontWeight: '700' }}>{item.category}</Text>
-                         </View>
-                         <Text style={{ color: colors.subtext, fontSize: 12 }}>
-                           {item.date ? new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBA"}
-                         </Text>
+                        <View style={{ backgroundColor: colors.primaryLight, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 4, marginRight: 6 }}>
+                          <Text style={{ color: colors.primary, fontSize: 10, fontWeight: '700' }}>{item.category}</Text>
+                        </View>
+                        <Text style={{ color: colors.subtext, fontSize: 12 }}>
+                          {item.date ? new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBA"}
+                        </Text>
                       </View>
                       <Text style={{ color: colors.subtext, fontSize: 12 }}>
                         {item.venue_id?.name || "Venue TBA"}
