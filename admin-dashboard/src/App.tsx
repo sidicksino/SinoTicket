@@ -6,11 +6,13 @@ import { OverviewPage } from "./pages/OverviewPage";
 import { ReservationsPage } from "./pages/ReservationsPage";
 import { UsersPage } from "./pages/UsersPage";
 import { VenuesPage } from "./pages/VenuesPage";
+import { LandingPage } from "./pages/LandingPage";
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<AdminLayout />}>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<OverviewPage />} />
         <Route path="events" element={<EventsPage />} />
         <Route path="venues" element={<VenuesPage />} />

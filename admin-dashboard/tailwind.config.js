@@ -4,8 +4,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        heading: ["'Instrument Serif'", "serif"],
+        body: ["'Barlow'", "sans-serif"],
         display: ['"Space Grotesk"', "sans-serif"],
-        body: ['"Manrope"', "sans-serif"],
       },
       keyframes: {
         riseIn: {
