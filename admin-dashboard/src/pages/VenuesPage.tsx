@@ -22,34 +22,7 @@ const fields: FieldDef[] = [
   },
 ];
 
-interface ApiVenue {
-  _id?: string;
-  id?: string;
-  name?: string;
-  location?: string;
-  city?: string;
-  capacity?: number;
-  seats?: number;
-}
-
-function mapVenueFromApi(data: ApiVenue | undefined): VenueItem {
-  if (!data) {
-    return {
-      id: "",
-      name: "N/A",
-      city: "N/A",
-      seats: 0,
-      status: "active",
-    };
-  }
-  return {
-    id: data._id || data.id || "",
-    name: data.name || "N/A",
-    city: data.location || data.city || "N/A",
-    seats: data.capacity || data.seats || 0,
-    status: "active",
-  };
-}
+import { mapVenueFromApi } from "../lib/mappers";
 
 export function VenuesPage() {
   const token = authManager.getToken();

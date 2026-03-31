@@ -163,7 +163,7 @@ export default function EventDetail() {
         >
           <View style={{ marginTop: 'auto', backgroundColor: colors.background, padding: 24, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingBottom: 50 }}>
             <View style={{ width: 40, height: 4, backgroundColor: colors.border, alignSelf: 'center', borderRadius: 2, marginBottom: 24 }} />
-            
+
             <Text style={{ fontSize: 22, fontFamily: "Syne_700Bold", color: colors.text, marginBottom: 8 }}>Select Tickets</Text>
             <Text style={{ fontSize: 14, color: colors.subtext, marginBottom: 24 }}>Pick your preferred seating category</Text>
 

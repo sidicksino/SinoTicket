@@ -25,50 +25,7 @@ const fields: FieldDef[] = [
   { key: "createdAt", label: "Created At" },
 ];
 
-interface ApiReservation {
-  _id?: string;
-  id?: string;
-  ticketCode?: string;
-  code?: string;
-  eventName?: string;
-  event?: string;
-  customerName?: string;
-  customer?: string;
-  numberOfSeats?: number;
-  seats?: number;
-  totalPrice?: number;
-  total?: number;
-  status?: string;
-  createdAt?: string;
-}
-
-function mapReservationFromApi(data: ApiReservation | undefined): ReservationItem {
-  if (!data) {
-    return {
-      id: "",
-      ticketCode: "N/A",
-      event: "N/A",
-      customer: "N/A",
-      seats: 0,
-      total: 0,
-      status: "draft",
-      createdAt: new Date().toLocaleDateString(),
-    };
-  }
-  return {
-    id: data._id || data.id || "",
-    ticketCode: data.ticketCode || data.code || "N/A",
-    event: data.eventName || data.event || "N/A",
-    customer: data.customerName || data.customer || "N/A",
-    seats: data.numberOfSeats || data.seats || 0,
-    total: data.totalPrice || data.total || 0,
-    status:
-      data.status === "Cancelled" ? "paused" : data.status ? "active" : "draft",
-    createdAt: data.createdAt
-      ? new Date(data.createdAt).toLocaleDateString()
-      : new Date().toLocaleDateString(),
-  };
-}
+import { mapReservationFromApi } from "../lib/mappers";
 
 export function ReservationsPage() {
   const token = authManager.getToken();

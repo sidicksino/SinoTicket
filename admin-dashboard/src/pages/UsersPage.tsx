@@ -8,32 +8,7 @@ import { apiClient } from "../lib/api";
 import { authManager } from "../lib/auth";
 import type { UserItem } from "../types";
 
-interface ApiUser {
-  _id?: string;
-  id?: string;
-  name?: string;
-  email?: string;
-  role?: "admin" | "manager" | "support";
-}
-
-function mapUserFromApi(data: ApiUser | undefined): UserItem {
-  if (!data) {
-    return {
-      id: "",
-      name: "N/A",
-      email: "N/A",
-      role: "support",
-      status: "active",
-    };
-  }
-  return {
-    id: data._id || data.id || "",
-    name: data.name || "N/A",
-    email: data.email || "N/A",
-    role: data.role || "support",
-    status: "active",
-  };
-}
+import { mapUserFromApi } from "../lib/mappers";
 
 export function UsersPage() {
   const token = authManager.getToken();

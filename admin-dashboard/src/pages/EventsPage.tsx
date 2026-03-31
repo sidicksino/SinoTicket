@@ -26,46 +26,7 @@ const fields: FieldDef[] = [
   },
 ];
 
-interface ApiEvent {
-  _id?: string;
-  id?: string;
-  title?: string;
-  name?: string;
-  date?: string;
-  venue_id?: string;
-  venue?: string;
-  capacity?: number;
-  price?: number;
-  status?: string;
-}
-
-function mapEventFromApi(data: ApiEvent | undefined): EventItem {
-  if (!data) {
-    return {
-      id: "",
-      name: "N/A",
-      date: "N/A",
-      venue: "N/A",
-      capacity: 0,
-      price: 0,
-      status: "draft",
-    };
-  }
-  return {
-    id: data._id || data.id || "",
-    name: data.title || data.name || "N/A",
-    date: data.date ? new Date(data.date).toLocaleString() : "N/A",
-    venue: data.venue_id || data.venue || "N/A",
-    capacity: data.capacity || 0,
-    price: data.price || 0,
-    status:
-      data.status === "Upcoming"
-        ? "active"
-        : data.status === "Ongoing"
-          ? "draft"
-          : "paused",
-  };
-}
+import { mapEventFromApi } from "../lib/mappers";
 
 export function EventsPage() {
   const token = authManager.getToken();

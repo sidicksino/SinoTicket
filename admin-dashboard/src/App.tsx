@@ -7,11 +7,14 @@ import { ReservationsPage } from "./pages/ReservationsPage";
 import { UsersPage } from "./pages/UsersPage";
 import { VenuesPage } from "./pages/VenuesPage";
 import { LandingPage } from "./pages/LandingPage";
+import { AuthPage } from "./pages/AuthPage";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<AuthPage />} />
+      <Route path="/register" element={<AuthPage />} />
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<OverviewPage />} />
         <Route path="events" element={<EventsPage />} />
