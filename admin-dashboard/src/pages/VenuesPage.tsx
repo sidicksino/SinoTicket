@@ -1,4 +1,4 @@
-import { AlertCircle, Loader2, Plus } from "lucide-react";
+import { AlertCircle, Loader2, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EntityTable, type Column } from "../components/tables/EntityTable";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
@@ -22,10 +22,29 @@ const fields: FieldDef[] = [
   },
 ];
 
-function mapVenueFromApi(data: any): VenueItem {
+interface ApiVenue {
+  _id?: string;
+  id?: string;
+  name?: string;
+  location?: string;
+  city?: string;
+  capacity?: number;
+  seats?: number;
+}
+
+function mapVenueFromApi(data: ApiVenue | undefined): VenueItem {
+  if (!data) {
+    return {
+      id: "",
+      name: "N/A",
+      city: "N/A",
+      seats: 0,
+      status: "active",
+    };
+  }
   return {
-    id: data._id || data.id,
-    name: data.name,
+    id: data._id || data.id || "",
+    name: data.name || "N/A",
     city: data.location || data.city || "N/A",
     seats: data.capacity || data.seats || 0,
     status: "active",
@@ -66,7 +85,7 @@ export function VenuesPage() {
       {
         key: "name",
         title: "Venue",
-        render: (item) => <span className="font-medium">{item.name}</span>,
+        render: (item) => <span className="font-medium text-white">{item.name}</span>,
       },
       { key: "city", title: "City", render: (item) => item.city },
       {
@@ -99,45 +118,47 @@ export function VenuesPage() {
   }
 
   return (
-    <>
+    <div className="pb-12 font-body">
       <Panel
-        title="Venue Management"
-        subtitle="Control inventory and operational availability"
+        title="Venues"
         action={
           <button
             type="button"
             onClick={() => setOpenCreate(true)}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90 disabled:opacity-50"
           >
             {loading ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
               <Plus size={16} />
             )}
-            {loading ? "Loading..." : "Add Venue"}
+            {loading ? "Loading..." : "ADD VENUE"}
           </button>
         }
       >
         {error && (
-          <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 p-3 text-rose-100 flex items-center gap-2">
+          <div className="mb-6 rounded-xl border border-rose-400/40 bg-rose-500/10 p-3 text-rose-100 flex items-center gap-2">
             <AlertCircle size={16} />
             {error}
           </div>
         )}
 
-        <div className="mb-4">
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search venues by name, city, or status"
-            className="w-full rounded-xl border border-white/15 bg-slate-900 px-3 py-2 text-slate-100 outline-none transition focus:border-cyan-400"
-          />
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search venues by name, city, or status"
+              className="w-full rounded-full border border-white/10 bg-white/5 pl-12 pr-4 py-2.5 text-sm text-white outline-none transition focus:border-white/20"
+            />
+          </div>
         </div>
 
         {loading && filteredItems.length === 0 ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="animate-spin" size={24} />
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="animate-spin text-white/20" size={32} />
           </div>
         ) : (
           <EntityTable
@@ -205,6 +226,6 @@ export function VenuesPage() {
           }}
         />
       ) : null}
-    </>
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { AlertCircle, Loader2, Plus } from "lucide-react";
+import { AlertCircle, Loader2, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EntityTable, type Column } from "../components/tables/EntityTable";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
@@ -8,6 +8,8 @@ import { StatusBadge } from "../components/ui/StatusBadge";
 import { useApiCrud } from "../hooks/useApiCrud";
 import { apiClient } from "../lib/api";
 import { authManager } from "../lib/auth";
+import { StatCard } from "../components/ui/StatCard";
+import clsx from "clsx";
 import type { EventItem } from "../types";
 
 const fields: FieldDef[] = [
@@ -24,10 +26,34 @@ const fields: FieldDef[] = [
   },
 ];
 
-function mapEventFromApi(data: any): EventItem {
+interface ApiEvent {
+  _id?: string;
+  id?: string;
+  title?: string;
+  name?: string;
+  date?: string;
+  venue_id?: string;
+  venue?: string;
+  capacity?: number;
+  price?: number;
+  status?: string;
+}
+
+function mapEventFromApi(data: ApiEvent | undefined): EventItem {
+  if (!data) {
+    return {
+      id: "",
+      name: "N/A",
+      date: "N/A",
+      venue: "N/A",
+      capacity: 0,
+      price: 0,
+      status: "draft",
+    };
+  }
   return {
-    id: data._id || data.id,
-    name: data.title || data.name,
+    id: data._id || data.id || "",
+    name: data.title || data.name || "N/A",
     date: data.date ? new Date(data.date).toLocaleString() : "N/A",
     venue: data.venue_id || data.venue || "N/A",
     capacity: data.capacity || 0,
@@ -69,22 +95,22 @@ export function EventsPage() {
   const [editing, setEditing] = useState<EventItem | null>(null);
   const [deleting, setDeleting] = useState<EventItem | null>(null);
   const [openCreate, setOpenCreate] = useState(false);
+  const [activeTab, setActiveTab] = useState("ALL");
 
   const columns: Column<EventItem>[] = useMemo(
     () => [
       {
         key: "name",
-        title: "Event",
-        render: (item) => <span className="font-medium">{item.name}</span>,
+        title: "Event Name",
+        render: (item) => <span className="font-medium text-white">{item.name}</span>,
       },
+      { key: "venue", title: "Location", render: (item) => item.venue },
       { key: "date", title: "Date", render: (item) => item.date },
-      { key: "venue", title: "Venue", render: (item) => item.venue },
       {
         key: "capacity",
-        title: "Capacity",
+        title: "Size",
         render: (item) => item.capacity.toLocaleString(),
       },
-      { key: "price", title: "Price", render: (item) => `$${item.price}` },
       {
         key: "status",
         title: "Status",
@@ -93,6 +119,12 @@ export function EventsPage() {
     ],
     [],
   );
+
+  const stats = [
+    { title: "Total Events", value: "1,000", delta: "+12%", trend: "up" as const },
+    { title: "Completed events", value: "900", delta: "+5%", trend: "up" as const },
+    { title: "In Process", value: "100", delta: "Steady", trend: "steady" as const },
+  ];
 
   if (!token) {
     return (
@@ -110,45 +142,71 @@ export function EventsPage() {
   }
 
   return (
-    <>
+    <div className="space-y-8 pb-12 font-body">
+      {/* Cards Section */}
+      <section className="grid gap-4 md:grid-cols-3">
+        {stats.map((stat) => (
+          <StatCard key={stat.title} {...stat} />
+        ))}
+      </section>
+
       <Panel
-        title="Event Management"
-        subtitle="Create, modify, and retire events from the catalogue"
+        title="Events"
         action={
           <button
             type="button"
             onClick={() => setOpenCreate(true)}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90 disabled:opacity-50"
           >
             {loading ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
               <Plus size={16} />
             )}
-            {loading ? "Loading..." : "Add Event"}
+            CREATE EVENT
           </button>
         }
       >
         {error && (
-          <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 p-3 text-rose-100 flex items-center gap-2">
+          <div className="mb-6 rounded-xl border border-rose-400/40 bg-rose-500/10 p-3 text-rose-100 flex items-center gap-2">
             <AlertCircle size={16} />
             {error}
           </div>
         )}
 
-        <div className="mb-4">
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search events by title, venue, or status"
-            className="w-full rounded-xl border border-white/15 bg-slate-900 px-3 py-2 text-slate-100 outline-none transition focus:border-cyan-400"
-          />
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
+          <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
+            {["ALL", "Published", "Draft"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={clsx(
+                  "px-8 py-2 rounded-full text-xs font-medium uppercase tracking-wider transition-all",
+                  activeTab === tab
+                    ? "bg-white text-black"
+                    : "text-white/40 hover:text-white"
+                )}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search for event, vendor, etc"
+              className="w-full rounded-full border border-white/10 bg-white/5 pl-12 pr-4 py-2.5 text-sm text-white outline-none transition focus:border-white/20"
+            />
+          </div>
         </div>
 
         {loading && filteredItems.length === 0 ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="animate-spin" size={24} />
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="animate-spin text-white/20" size={32} />
           </div>
         ) : (
           <EntityTable
@@ -216,6 +274,6 @@ export function EventsPage() {
           }}
         />
       ) : null}
-    </>
+    </div>
   );
 }

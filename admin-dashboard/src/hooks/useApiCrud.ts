@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-export interface UseCrudOptions {
-  getAll: () => Promise<any[]>;
-  create: (payload: Record<string, unknown>) => Promise<any>;
-  update: (id: string, payload: Record<string, unknown>) => Promise<any>;
+export interface UseCrudOptions<T> {
+  getAll: () => Promise<T[]>;
+  create: (payload: Record<string, unknown>) => Promise<T>;
+  update: (id: string, payload: Record<string, unknown>) => Promise<T>;
   delete: (id: string) => Promise<void>;
 }
 
-export function useApiCrud<T extends { id: string }>(options: UseCrudOptions) {
+export function useApiCrud<T extends { id: string }>(options: UseCrudOptions<T>) {
   const [items, setItems] = useState<T[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);

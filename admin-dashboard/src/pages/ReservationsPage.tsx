@@ -1,4 +1,4 @@
-import { AlertCircle, Loader2, Plus } from "lucide-react";
+import { AlertCircle, Loader2, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { EntityTable, type Column } from "../components/tables/EntityTable";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
@@ -25,9 +25,38 @@ const fields: FieldDef[] = [
   { key: "createdAt", label: "Created At" },
 ];
 
-function mapReservationFromApi(data: any): ReservationItem {
+interface ApiReservation {
+  _id?: string;
+  id?: string;
+  ticketCode?: string;
+  code?: string;
+  eventName?: string;
+  event?: string;
+  customerName?: string;
+  customer?: string;
+  numberOfSeats?: number;
+  seats?: number;
+  totalPrice?: number;
+  total?: number;
+  status?: string;
+  createdAt?: string;
+}
+
+function mapReservationFromApi(data: ApiReservation | undefined): ReservationItem {
+  if (!data) {
+    return {
+      id: "",
+      ticketCode: "N/A",
+      event: "N/A",
+      customer: "N/A",
+      seats: 0,
+      total: 0,
+      status: "draft",
+      createdAt: new Date().toLocaleDateString(),
+    };
+  }
   return {
-    id: data._id || data.id,
+    id: data._id || data.id || "",
     ticketCode: data.ticketCode || data.code || "N/A",
     event: data.eventName || data.event || "N/A",
     customer: data.customerName || data.customer || "N/A",
@@ -77,7 +106,7 @@ export function ReservationsPage() {
         key: "ticketCode",
         title: "Ticket",
         render: (item) => (
-          <span className="font-medium">{item.ticketCode}</span>
+          <span className="font-medium text-white">{item.ticketCode}</span>
         ),
       },
       { key: "event", title: "Event", render: (item) => item.event },
@@ -110,40 +139,42 @@ export function ReservationsPage() {
   }
 
   return (
-    <>
+    <div className="pb-12 font-body">
       <Panel
-        title="Reservation Management"
-        subtitle="Handle active bookings and post-checkout operations"
+        title="Reservations"
         action={
           <button
             type="button"
             onClick={() => setOpenCreate(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
+            className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90"
           >
             <Plus size={16} />
-            Add Reservation
+            ADD RESERVATION
           </button>
         }
       >
         {error && (
-          <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 p-3 text-rose-100 flex items-center gap-2">
+          <div className="mb-6 rounded-xl border border-rose-400/40 bg-rose-500/10 p-3 text-rose-100 flex items-center gap-2">
             <AlertCircle size={16} />
             {error}
           </div>
         )}
 
-        <div className="mb-4">
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search reservations by ticket, customer, event, or status"
-            className="w-full rounded-xl border border-white/15 bg-slate-900 px-3 py-2 text-slate-100 outline-none transition focus:border-cyan-400"
-          />
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search reservations by ticket, customer..."
+              className="w-full rounded-full border border-white/10 bg-white/5 pl-12 pr-4 py-2.5 text-sm text-white outline-none transition focus:border-white/20"
+            />
+          </div>
         </div>
 
         {loading && filteredItems.length === 0 ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="animate-spin" size={24} />
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="animate-spin text-white/20" size={32} />
           </div>
         ) : (
           <EntityTable
@@ -211,6 +242,6 @@ export function ReservationsPage() {
           }}
         />
       ) : null}
-    </>
+    </div>
   );
 }

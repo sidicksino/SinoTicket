@@ -3,9 +3,9 @@ import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
 import type { MetricCard } from "../../types";
 
 const trendStyles = {
-  up: "text-emerald-300 bg-emerald-400/15",
-  down: "text-rose-200 bg-rose-400/15",
-  steady: "text-sky-200 bg-sky-400/15",
+  up: "text-emerald-400 bg-emerald-500/10",
+  down: "text-rose-400 bg-rose-500/10",
+  steady: "text-white/50 bg-white/5",
 } as const;
 
 export function StatCard({ title, value, delta, trend }: MetricCard) {
@@ -17,21 +17,21 @@ export function StatCard({ title, value, delta, trend }: MetricCard) {
         : ArrowRight;
 
   return (
-    <article className="rounded-2xl border border-white/10 bg-slate-900/80 p-4">
-      <p className="text-sm text-slate-300">{title}</p>
-      <div className="mt-2 flex items-end justify-between gap-3">
-        <h3 className="text-2xl font-bold tracking-tight text-white">
+    <article className="rounded-2xl border border-white/5 bg-white/[0.02] p-6 lg:p-8 liquid-glass transition-all hover:bg-white/[0.04]">
+      <p className="text-sm font-body font-light text-white/50 tracking-wide uppercase">{title}</p>
+      <div className="mt-4 flex items-end justify-between gap-3">
+        <h3 className="text-4xl lg:text-5xl font-heading italic tracking-tighter text-white">
           {value}
         </h3>
-        <span
+        <div
           className={clsx(
-            "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold",
-            trendStyles[trend],
+            "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium border border-white/10",
+            trendStyles[trend] || trendStyles.steady,
           )}
         >
           <Icon size={14} />
           {delta}
-        </span>
+        </div>
       </div>
     </article>
   );

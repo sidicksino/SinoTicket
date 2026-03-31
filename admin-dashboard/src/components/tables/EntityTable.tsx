@@ -21,62 +21,62 @@ export function EntityTable<T extends { id: string }>({
   onDelete,
 }: EntityTableProps<T>) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10">
+    <div className="overflow-hidden rounded-2xl border border-white/10 liquid-glass">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-white/10">
-          <thead className="bg-slate-800/80">
-            <tr>
+        <table className="min-w-full">
+          <thead>
+            <tr className="border-b border-white/10 bg-white/[0.02]">
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-300"
+                  className="px-6 py-4 text-left text-xs font-body font-medium uppercase tracking-[0.2em] text-white/40"
                 >
                   {column.title}
                 </th>
               ))}
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.16em] text-slate-300">
+              <th className="px-6 py-4 text-right text-xs font-body font-medium uppercase tracking-[0.2em] text-white/40">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/10 bg-slate-900/45">
+          <tbody className="divide-y divide-white/5">
             {data.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length + 1}
-                  className="px-4 py-8 text-center text-sm text-slate-300"
+                  className="px-6 py-12 text-center text-sm font-body font-light text-white/30"
                 >
                   No records found.
                 </td>
               </tr>
             ) : (
               data.map((item) => (
-                <tr key={item.id} className="transition hover:bg-white/5">
+                <tr key={item.id} className="transition-colors hover:bg-white/[0.03] group">
                   {columns.map((column) => (
                     <td
                       key={column.key}
-                      className="whitespace-nowrap px-4 py-3 text-sm text-slate-100"
+                      className="whitespace-nowrap px-6 py-4 text-sm font-body font-light text-white/70"
                     >
                       {column.render(item)}
                     </td>
                   ))}
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         type="button"
                         onClick={() => onEdit(item)}
-                        className="rounded-lg border border-white/15 p-2 text-slate-100 transition hover:bg-white/10"
+                        className="rounded-full border border-white/10 bg-white/5 p-2 text-white/70 transition hover:bg-white/10 hover:text-white"
                         aria-label="Edit row"
                       >
-                        <Pencil size={15} />
+                        <Pencil size={14} />
                       </button>
                       <button
                         type="button"
                         onClick={() => onDelete(item)}
-                        className="rounded-lg border border-rose-400/40 p-2 text-rose-200 transition hover:bg-rose-500/15"
+                        className="rounded-full border border-rose-500/20 bg-rose-500/5 p-2 text-rose-400/70 transition hover:bg-rose-500/20 hover:text-rose-400"
                         aria-label="Delete row"
                       >
-                        <Trash2 size={15} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>

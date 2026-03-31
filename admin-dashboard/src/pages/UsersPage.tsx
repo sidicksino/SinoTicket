@@ -1,4 +1,4 @@
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2, Search } from "lucide-react";
 import { useMemo } from "react";
 import { EntityTable, type Column } from "../components/tables/EntityTable";
 import { Panel } from "../components/ui/Panel";
@@ -8,11 +8,28 @@ import { apiClient } from "../lib/api";
 import { authManager } from "../lib/auth";
 import type { UserItem } from "../types";
 
-function mapUserFromApi(data: any): UserItem {
+interface ApiUser {
+  _id?: string;
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: "admin" | "manager" | "support";
+}
+
+function mapUserFromApi(data: ApiUser | undefined): UserItem {
+  if (!data) {
+    return {
+      id: "",
+      name: "N/A",
+      email: "N/A",
+      role: "support",
+      status: "active",
+    };
+  }
   return {
-    id: data._id || data.id,
-    name: data.name,
-    email: data.email,
+    id: data._id || data.id || "",
+    name: data.name || "N/A",
+    email: data.email || "N/A",
     role: data.role || "support",
     status: "active",
   };
@@ -39,7 +56,7 @@ export function UsersPage() {
       {
         key: "name",
         title: "Name",
-        render: (item) => <span className="font-medium">{item.name}</span>,
+        render: (item) => <span className="font-medium text-white">{item.name}</span>,
       },
       { key: "email", title: "Email", render: (item) => item.email },
       {
@@ -72,39 +89,41 @@ export function UsersPage() {
   }
 
   return (
-    <>
+    <div className="pb-12 font-body">
       <Panel
-        title="User Management"
-        subtitle="Manage admin users and permission-bearing team members"
+        title="Users"
         action={
           <button
             type="button"
             disabled={true}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-600 px-3 py-2 text-sm font-semibold text-slate-400 cursor-not-allowed"
+            className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-6 py-2.5 text-sm font-semibold text-white/40 cursor-not-allowed"
           >
-            Add User (Read-only)
+            ADD USER (READ-ONLY)
           </button>
         }
       >
         {error && (
-          <div className="mb-4 rounded-xl border border-rose-400/40 bg-rose-500/10 p-3 text-rose-100 flex items-center gap-2">
+          <div className="mb-6 rounded-xl border border-rose-400/40 bg-rose-500/10 p-3 text-rose-100 flex items-center gap-2">
             <AlertCircle size={16} />
             {error}
           </div>
         )}
 
-        <div className="mb-4">
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search users by name, role, or status"
-            className="w-full rounded-xl border border-white/15 bg-slate-900 px-3 py-2 text-slate-100 outline-none transition focus:border-cyan-400"
-          />
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-6">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search users by name, role, or status"
+              className="w-full rounded-full border border-white/10 bg-white/5 pl-12 pr-4 py-2.5 text-sm text-white outline-none transition focus:border-white/20"
+            />
+          </div>
         </div>
 
         {loading && filteredItems.length === 0 ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="animate-spin" size={24} />
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="animate-spin text-white/20" size={32} />
           </div>
         ) : (
           <EntityTable
@@ -115,6 +134,6 @@ export function UsersPage() {
           />
         )}
       </Panel>
-    </>
+    </div>
   );
 }
