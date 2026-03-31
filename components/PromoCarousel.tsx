@@ -139,7 +139,7 @@ export default function PromoCarousel() {
       {/* Pagination Dots beneath the Carousel */}
       <View style={styles.paginationContainer}>
         {promoData.map((_, index) => {
-          const dotColor = index === currentIndex ? colors.error : colors.subtext; // Active dot colored, inactive subtext
+          const dotColor = index === currentIndex ? colors.primary : colors.subtext; // Active dot colored, inactive subtext
           const dotWidth = index === currentIndex ? 10 : 8; // Active dot slightly larger
           return (
             <View
