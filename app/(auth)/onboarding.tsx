@@ -17,6 +17,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 
 import CustomButton from "@/components/CustomButton";
 import { onboarding } from "@/constants";
@@ -287,6 +288,7 @@ const OnboardingScreen = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
+      <StatusBar style="dark" />
       <TouchableOpacity
         onPress={() => router.replace("/(auth)/welcome" as any)}
         className="w-full items-end px-6 py-4"

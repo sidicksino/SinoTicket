@@ -1,9 +1,11 @@
 import { useAuth } from "@clerk/expo";
 import { Redirect, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useTheme } from "@/context/ThemeContext";
 
 const Layout = () => {
   const { isSignedIn, isLoaded } = useAuth();
+  const { isDark } = useTheme();
 
   if (!isLoaded) {
     return null;
@@ -47,7 +49,7 @@ const Layout = () => {
           }}
         />
       </Stack>
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
     </>
   );
 };
