@@ -1,6 +1,6 @@
-import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
-import { ButtonProps } from "@/types/type";
 import { useTheme } from "@/context/ThemeContext";
+import { ButtonProps } from "@/types/type";
+import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
 
 const CustomButton = ({
     onPress,
@@ -49,9 +49,9 @@ const CustomButton = ({
         <TouchableOpacity
             onPress={onPress}
             disabled={loading}
-            className={`w-full rounded-xl p-4 flex flex-row justify-center items-center shadow-sm ${className}`}
+            className={`w-full rounded-xl p-4 flex flex-row justify-center items-center${className}`}
             style={[
-                getBgStyle(bgVariant), 
+                getBgStyle(bgVariant),
                 { shadowColor: colors.text, shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }
             ]}
             {...props}

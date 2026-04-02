@@ -1,9 +1,9 @@
 import CustomButton from "@/components/CustomButton";
 import { images } from "@/constants";
+import { useTheme } from "@/context/ThemeContext";
 import { router } from "expo-router";
 import React from "react";
 import { DimensionValue, Image, Text, View, useWindowDimensions } from "react-native";
-import { useTheme } from "@/context/ThemeContext";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 

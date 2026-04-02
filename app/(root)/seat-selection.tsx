@@ -47,7 +47,7 @@ export default function SeatSelection() {
 
   const { data: reservationsData } = useFetch<any>(
     `/api/reservations/me`,
-    false
+    true
   );
 
   const seats = data?.success && Array.isArray(data?.seats) ? data.seats : [];

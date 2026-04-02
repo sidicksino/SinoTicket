@@ -10,6 +10,9 @@ import "react-native-reanimated";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import "../global.css";
 import { tokenCache } from "../lib/auth";
+import * as WebBrowser from "expo-web-browser";
+
+WebBrowser.maybeCompleteAuthSession();
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,6 +34,8 @@ function AppShell() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(root)" />
+        <Stack.Screen name="oauth-native-callback" options={{ presentation: 'transparentModal' }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />

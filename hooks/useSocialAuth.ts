@@ -1,6 +1,8 @@
 import { useClerk, useSSO } from "@clerk/expo";
+import * as Linking from "expo-linking";
 import { useState } from "react";
 import { Alert } from "react-native";
+import { useWarmUpBrowser } from "./useWarmUpBrowser";
 
 const BACKEND_TIMEOUT_MS = 8000;
 
@@ -9,6 +11,8 @@ const useSocialAuth = () => {
   const { startSSOFlow } = useSSO();
   const clerk = useClerk();
 
+  useWarmUpBrowser();
+
   const handleGoogleAuth = async () => {
     if (loading) return;
     setLoading(true);
@@ -16,6 +20,7 @@ const useSocialAuth = () => {
     try {
       const { createdSessionId, setActive, signUp, signIn } = await startSSOFlow({
         strategy: "oauth_google",
+        redirectUrl: Linking.createURL("/oauth-native-callback", { scheme: "sinoticket" }),
       });
 
       if (createdSessionId && setActive) {
