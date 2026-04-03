@@ -4,10 +4,13 @@ import { TicketCategoryCard } from "@/components/Booking/TicketCategoryCard";
 import { useTheme } from "@/context/ThemeContext";
 import { useFetch } from "@/lib/fetch";
 import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Dimensions,
   Image,
   Modal,
   ScrollView,
@@ -15,12 +18,15 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function EventDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
 
   // Selection State
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -49,7 +55,6 @@ export default function EventDetail() {
     );
   }
 
-
   const handleBookNow = () => {
     setIsModalVisible(true);
   };
@@ -74,80 +79,110 @@ export default function EventDetail() {
   const totalPrice = selectedCategory ? selectedCategory.price * quantity : 0;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
+
         {/* Hero Image Section */}
-        <View style={{ height: 320, backgroundColor: colors.black }}>
+        <View style={{ height: SCREEN_HEIGHT * 0.55, width: "100%" }}>
           <Image
             source={{ uri: event.imageUrl || "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800" }}
             defaultSource={require("@/assets/images/icon.png")}
-            style={{ width: "100%", height: "100%" }}
+            style={{ width: "100%", height: "100%", position: 'absolute' }}
             resizeMode="cover"
           />
-          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.overlayLight }} />
+          <LinearGradient
+            colors={['transparent', isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)', colors.background]}
+            locations={[0.4, 0.8, 1]}
+            style={{ position: 'absolute', width: '100%', height: '100%' }}
+          />
 
-          {/* Back Button */}
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={{ position: "absolute", top: 20, left: 20, backgroundColor: colors.overlayDark, borderRadius: 999, padding: 10 }}
-          >
-            <Ionicons name="arrow-back" size={22} color={colors.white} />
-          </TouchableOpacity>
-        </View>
+          {/* Top Actions */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, top: Math.max(insets.top, 20) }}>
+            <BlurView intensity={isDark ? 50 : 80} tint={isDark ? "dark" : "light"} style={{ borderRadius: 24, overflow: 'hidden' }}>
+              <TouchableOpacity onPress={() => router.back()} style={{ padding: 12 }}>
+                <Ionicons name="chevron-back" size={24} color={isDark ? "#fff" : "#000"} />
+              </TouchableOpacity>
+            </BlurView>
 
-        {/* Event Content */}
-        <View style={{ padding: 24, marginTop: -30, backgroundColor: colors.background, borderTopLeftRadius: 30, borderTopRightRadius: 30 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 26, marginBottom: 8 }}>{event.title}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-                <Ionicons name="location-sharp" size={16} color={colors.primary} style={{ marginRight: 4 }} />
-                <Text style={{ color: colors.subtext, fontSize: 14 }}>{event.venue_id?.name || "Venue TBA"}</Text>
-              </View>
-            </View>
-            <View style={{ backgroundColor: colors.primaryLight, padding: 8, borderRadius: 12, alignItems: 'center', minWidth: 60 }}>
-              <Text style={{ color: colors.primary, fontWeight: '800', fontSize: 16 }}>{new Date(event.date).getDate()}</Text>
-              <Text style={{ color: colors.primary, fontSize: 10, fontWeight: '700', textTransform: 'uppercase' }}>
-                {new Date(event.date).toLocaleString('default', { month: 'short' })}
-              </Text>
-            </View>
+            <BlurView intensity={isDark ? 50 : 80} tint={isDark ? "dark" : "light"} style={{ borderRadius: 24, overflow: 'hidden' }}>
+              <TouchableOpacity style={{ padding: 12 }}>
+                <Ionicons name="share-social-outline" size={24} color={isDark ? "#fff" : "#000"} />
+              </TouchableOpacity>
+            </BlurView>
           </View>
 
-          {/* Details Row */}
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 30 }}>
-            <View>
-              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: "700", marginBottom: 4 }}>TIME</Text>
-              <Text style={{ color: colors.text, fontSize: 15, fontWeight: "600" }}>
+          {/* Overlaid Title Area */}
+          <View style={{ position: 'absolute', bottom: 20, left: 24, right: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <View style={{ flex: 1, paddingRight: 16 }}>
+              <Text style={{ color: colors.subtext, fontSize: 13, fontWeight: "700", marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                Show
+              </Text>
+              <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28, marginBottom: 4, lineHeight: 32 }}>{event.title}</Text>
+              <Text style={{ color: colors.subtext, fontSize: 16, fontWeight: "500" }}>{event.venue_id?.name || "Venue TBA"}</Text>
+            </View>
+            <BlurView intensity={isDark ? 60 : 80} tint={isDark ? "dark" : "light"} style={{ borderRadius: 16, overflow: 'hidden', paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
+              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' }}>
+                {new Date(event.date).toLocaleString('default', { month: 'short' })}
+              </Text>
+              <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 22, marginTop: 2 }}>
+                {new Date(event.date).getDate()}
+              </Text>
+            </BlurView>
+          </View>
+        </View>
+
+        {/* Content Body */}
+        <View style={{ paddingHorizontal: 24, paddingTop: 12 }}>
+          {/* Info row */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 32 }}>
+            <BlurView intensity={isDark ? 20 : 60} tint={isDark ? "dark" : "light"} style={{ flex: 1, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginRight: 8, overflow: 'hidden', backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
+              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '600', marginBottom: 4 }}>Start</Text>
+              <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 16 }}>
                 {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </Text>
-            </View>
-            <View>
-              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: "700", marginBottom: 4 }}>FROM</Text>
-              <Text style={{ color: colors.primary, fontSize: 15, fontWeight: "800" }}>
-                {event.ticket_categories?.[0]?.price || 0} XAF
-              </Text>
-            </View>
-            <View>
-              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: "700", marginBottom: 4 }}>STATUS</Text>
-              <Text style={{ color: colors.success, fontSize: 15, fontWeight: "800" }}>ACTIVE</Text>
-            </View>
+            </BlurView>
           </View>
 
           {/* Description */}
-          <View style={{ marginBottom: 24 }}>
-            <Text style={{ fontFamily: "Syne_700Bold", fontSize: 20, color: colors.text, marginBottom: 12 }}>Description</Text>
-            <Text style={{ color: colors.subtext, fontSize: 15, lineHeight: 24 }}>{event.description || "No description provided."}</Text>
+          <View style={{ marginBottom: 32 }}>
+            <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>Description</Text>
+            <Text style={{ color: colors.subtext, fontSize: 15, lineHeight: 24, fontWeight: '400' }}>
+              {event.description || "Steve-O's Bucket List Tour is a multimedia comedy experience that blends stand-up routines with video footage of extreme stunts many of which were deemed too outrageous or explicit for his previous work on Jackass."}
+            </Text>
+          </View>
+
+          {/* Location Placeholder */}
+          <View style={{ marginBottom: 32 }}>
+            <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>Location</Text>
+            <View style={{ width: '100%', height: 160, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.overlayLight }}>
+              <Image
+                source={{ uri: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800" }}
+                style={{ width: '100%', height: '100%', opacity: 0.6 }}
+                resizeMode="cover"
+              />
+              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="location" size={32} color={colors.primary || "#4CAF50"} />
+              </View>
+            </View>
           </View>
         </View>
       </ScrollView>
 
-      {/* Primary CTA */}
-      <SummaryBar
-        title="Admission"
-        subtitle="Starts from"
-        buttonLabel="Book Now"
-        onPress={handleBookNow}
-      />
+      {/* Floating CTA */}
+      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: Math.max(insets.bottom, 24), paddingTop: 40, paddingHorizontal: 24, alignItems: 'center' }}>
+        <LinearGradient
+          colors={['transparent', colors.background, colors.background]}
+          locations={[0, 0.4, 1]}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+        />
+        <TouchableOpacity
+          onPress={handleBookNow}
+          style={{ width: '100%', height: 60, backgroundColor: "#4CAF50", borderRadius: 30, justifyContent: 'center', alignItems: 'center', shadowColor: "#4CAF50", shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 }}
+          activeOpacity={0.8}
+        >
+          <Text style={{ color: '#FFF', fontFamily: "Syne_700Bold", fontSize: 18 }}>Book Now</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Selection Modal */}
       <Modal
@@ -208,6 +243,6 @@ export default function EventDetail() {
           </View>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
