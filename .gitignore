@@ -2,17 +2,40 @@
 
 # dependencies
 node_modules/
+backend/node_modules/
+admin-dashboard/node_modules/
+
+# env files
 .env
-.env/
 .env.local
-.env.example
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
 backend/.env
+admin-dashboard/.env
+
+# AI Agents & IDEs
+.agents/
+.claude/
+.windsurf/
+.prompting/
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # Expo
 .expo/
 dist/
 web-build/
 expo-env.d.ts
+/ios
+/android
 
 # Native
 .kotlin/
@@ -26,23 +49,34 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
-# debug
+# debug / logs
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+*.log
+logs/
+pids
+lib-cov
+coverage
+*.seed
+*.pid
+*.pid.lock
 
 # macOS
 .DS_Store
-*.pem
-
-# local env files
-.env*.local
+.AppleDouble
+.LSOverride
+Icon
+Network Trash Folder
+Temporary Items
+.apdisk
 
 # typescript
 *.tsbuildinfo
 
-app-example
-
-# generated native folders
-/ios
-/android
+# others
+app-example/
+build/
+out/
+temp/
+tmp/
