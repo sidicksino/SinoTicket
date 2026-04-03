@@ -86,7 +86,7 @@ export default function EventDetail() {
         <View style={{ height: SCREEN_HEIGHT * 0.55, width: "100%" }}>
           <Image
             source={{ uri: event.imageUrl || "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800" }}
-            defaultSource={require("@/assets/images/icon.png")}
+            defaultSource={require("@/assets/icons/adaptive-icon.png")}
             style={{ width: "100%", height: "100%", position: 'absolute' }}
             resizeMode="cover"
           />
@@ -172,7 +172,7 @@ export default function EventDetail() {
       <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: Math.max(insets.bottom, 24), paddingTop: 40, paddingHorizontal: 24, alignItems: 'center' }}>
         <LinearGradient
           colors={['transparent', colors.background, colors.background]}
-          locations={[0, 0.4, 1]}
+          locations={[0, 0.9, 1]}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
         />
         <TouchableOpacity
