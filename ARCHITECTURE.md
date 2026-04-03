@@ -48,6 +48,46 @@ The system is split into two codebases inside a single monorepo:
 | REST API | `/backend` | Node.js / Express / MongoDB |
 | Admin Dashboard | `/admin-dashboard` | (Separate app) |
 
+### System Architecture
+
+```mermaid
+graph TD
+    classDef frontend fill:#3b82f6,stroke:#1e3a8a,stroke-width:2px,color:#fff
+    classDef auth fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff
+    classDef backend fill:#10b981,stroke:#047857,stroke-width:2px,color:#fff
+    classDef db fill:#8b5cf6,stroke:#4c1d95,stroke-width:2px,color:#fff
+
+    subgraph "Frontend Layer"
+        A[SinoTicket App<br/>Expo / React Native]:::frontend
+        Theme[ThemeContext<br/>Dark/Light]:::frontend
+        Cache[SecureStore<br/>Token Cache]:::frontend
+    end
+
+    subgraph "Authentication Services"
+        C[Clerk Auth<br/>Authentication & MFA]:::auth
+        G[Google OAuth]:::auth
+    end
+
+    subgraph "Backend APIs"
+        B[Node.js + Express<br/>REST API]:::backend
+        MW[Auth Middleware<br/>JWT Verification]:::backend
+        Ctrl[Event, User, Venue<br/>Controllers]:::backend
+    end
+
+    subgraph "Infrastructure"
+        DB[(MongoDB Atlas<br/>Database)]:::db
+    end
+
+    A -->|OAuth / OTP SignIn| C
+    C -->|SSO Request| G
+    A -->|API Request + Bearer JWT| B
+    B -->|Verify Keys| C
+    B --> MW
+    MW --> Ctrl
+    Ctrl <-->|Mongoose ODM| DB
+    Cache -.->|Store Session| A
+```
+
 ---
 
 ## 2. Repository Structure
@@ -323,7 +363,65 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 ### 5.2 Data Models
 
-All models live in `backend/models/` and use **Mongoose schemas**.
+All models live in `backend/models/` and use **Mongoose schemas**. Below is the Entity Relationship Diagram showing how these documents interconnect:
+
+```mermaid
+erDiagram
+    USER ||--o{ EVENT : "admin_id (manages)"
+    USER ||--o{ RESERVATION : "user_id"
+    USER ||--o{ TICKET : "attendee_id"
+    VENUE ||--o{ EVENT : "venue_id"
+    VENUE ||--o{ SECTION : "venue_id"
+    SECTION ||--o{ SEAT : "section_id"
+    EVENT ||--o{ TICKET : "event_id"
+    EVENT ||--o{ RESERVATION : "event_id"
+    SEAT ||--o| RESERVATION : "seat_id"
+    SEAT ||--o| TICKET : "seat_id"
+    RESERVATION ||--o{ PAYMENT : "reservation_id"
+
+    USER {
+        ObjectId _id PK
+        string user_id "Clerk external ID"
+        string email
+        string name
+        string role "Attendee/Admin"
+    }
+    EVENT {
+        ObjectId _id PK
+        string title
+        date date
+        string status "Upcoming/Ongoing/Ended"
+        string category
+    }
+    VENUE {
+        ObjectId _id PK
+        string name
+        string address
+        number capacity
+    }
+    SECTION {
+        ObjectId _id PK
+        string name
+        number rows
+        number seats_per_row
+    }
+    SEAT {
+        ObjectId _id PK
+        number row
+        number number
+        string status "Available/Reserved/Booked"
+    }
+    RESERVATION {
+        ObjectId _id PK
+        date expires_at "TTL Index"
+        string status "Active/Completed/Expired"
+    }
+    TICKET {
+        ObjectId _id PK
+        string qr_code
+        string status "Active/Used/Refunded"
+    }
+```
 
 #### User
 ```js
@@ -401,23 +499,44 @@ All models live in `backend/models/` and use **Mongoose schemas**.
 
 ## 6. Booking Flow (End-to-End)
 
+The complete end-to-end booking flow integrates frontend UI navigation and backend temporal seat holding (TTL).
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant App
+    participant Auth as Clerk Auth
+    participant Events API
+    participant Booking API
+    participant DB as MongoDB (TTL)
+
+    User->>App: Opens event detail
+    App->>Events API: GET /api/events/:id
+    Events API-->>App: Event Data
+    User->>App: Taps "Book Now" & Selects Quantity
+    App->>Events API: GET /api/seats?section_id=...
+    Events API-->>App: Seat layout & statuses
+    User->>App: Selects specific seats
+    User->>App: Proceed to checkout
+    
+    opt User is not authenticated
+        App->>Auth: Prompts Sign In / OAuth
+        Auth-->>App: JWT Bearer Token
+    end
+    
+    App->>Booking API: POST /api/reservations (Hold Seats)
+    Booking API->>DB: Create Reservation (10 min TTL)
+    Booking API-->>App: Reservation ID
+    
+    User->>App: Confirms Checkout / Payment
+    App->>Booking API: POST /api/tickets (Confirm)
+    Booking API->>DB: Update Seat Status -> Booked
+    Booking API->>DB: Clear Reservation & Create Ticket
+    Booking API-->>App: Generated Ticket + QR Code
+    
+    App->>User: Renders Success Screen & updates Wallet
 ```
-1. User browses Home → taps an event card
-2. Event Detail screen loads via /api/events/:id
-3. User taps "Book Now" → bottom modal opens
-   ├── Selects ticket category (TicketCategoryCard)
-   └── Sets quantity (QuantitySelector)
-4. Taps "Select Seats" → navigates to /(root)/seat-selection
-   └── Params passed: event_id, section_id, category_id, quantity, price
-5. Seat Selection screen fetches /api/seats?section_id=...
-   ├── User picks N seats (matching quantity)
-   └── Taps "Proceed to Checkout"
-6. Checkout screen
-   ├── POST /api/reservations (holds seats temporarily via TTL)
-   └── POST /api/tickets (confirms and generates QR code)
-7. Success screen shown
-8. Ticket appears in /(tabs)/ticket wallet
-```
+
 
 ---
 
