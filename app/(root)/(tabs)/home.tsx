@@ -4,6 +4,7 @@ import PromoCarousel from "@/components/PromoCarousel";
 import { useTheme } from "@/context/ThemeContext";
 import { useFetch } from "@/lib/fetch";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -15,7 +16,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const CATEGORIES = ["All", "Music", "Sports", "Cultural", "Business", "Fashion"];
@@ -48,9 +48,8 @@ export default function Home() {
     setHasMore(true);
   }, [debouncedSearch, selectedCategory]);
 
-  const apiUrl = `/api/events?limit=20&page=${page}${
-    debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
-  }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
+  const apiUrl = `/api/events?limit=20&page=${page}${debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
+    }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
 
   const { data, loading, error, refetch } = useFetch<any>(apiUrl, false);
 
@@ -159,8 +158,6 @@ export default function Home() {
   const ListHeader = useMemo(
     () => (
       <View>
-        {/* ── HEADER ── */}
-        <AppHeader />
 
         {/* ── SEARCH BAR ── */}
         <View
@@ -372,6 +369,8 @@ export default function Home() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* ── HEADER ── */}
+      <AppHeader />
       <FlatList
         data={!loading && !error ? listEvents : []}
         keyExtractor={(item) => item._id}
