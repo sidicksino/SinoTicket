@@ -32,3 +32,17 @@ export interface Event {
   price?: number;
   ticket_categories?: any[];
 }
+
+export interface User {
+  _id: string;
+  user_id: string;
+  email: string;
+  name: string;
+  profile_photo?: string;
+  phone_number?: string;
+  role: "Attendee" | "Admin";
+  preferences?: any;
+  is_verified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}

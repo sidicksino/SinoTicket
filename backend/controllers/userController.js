@@ -96,9 +96,41 @@ const checkUserExists = async (req, res) => {
   }
 };
 
+const updateMe = async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { name, phone_number } = req.body;
+    const updateFields = {};
+
+    if (name !== undefined) updateFields.name = name.trim();
+    if (phone_number !== undefined) updateFields.phone_number = phone_number.trim() || null;
+
+    const updatedUser = await User.findOneAndUpdate(
+      { user_id: userId },
+      updateFields,
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error('💥 Error in updateMe:', error.message || error);
+    res.status(500).json({ error: 'Internal Server Error', details: error.message });
+  }
+};
+
 module.exports = {
   getMe,
   makeMeAdmin,
   registerUser,
   checkUserExists,
+  updateMe,
 };

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, checkUserExists, getMe, makeMeAdmin } = require('../controllers/userController');
+const { registerUser, checkUserExists, getMe, makeMeAdmin, updateMe } = require('../controllers/userController');
 const authenticateToken = require('../middleware/auth');
 
 /**
@@ -23,6 +23,30 @@ const authenticateToken = require('../middleware/auth');
  *         description: Current user profile
  */
 router.get('/me', authenticateToken, getMe);
+
+/**
+ * @swagger
+ * /api/users/me:
+ *   put:
+ *     summary: Update current logged in user's profile
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               phone_number:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Updated user profile
+ */
+router.put('/me', authenticateToken, updateMe);
 
 /**
  * @swagger

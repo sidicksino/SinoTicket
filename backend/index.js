@@ -1,6 +1,6 @@
+require('dotenv').config({ override: true });
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config({ override: true });
 
 // Import Routes
 const userRoutes = require('./routes/userRoutes');
