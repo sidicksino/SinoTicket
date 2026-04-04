@@ -11,13 +11,13 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
-  Image,
   Modal,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -33,7 +33,7 @@ export default function EventDetail() {
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
 
-  const { data, loading, error } = useFetch<any>(`/api/events/${id}`, false);
+  const { data, loading, error, refetch } = useFetch<any>(`/api/events/${id}`, false);
   const event = data?.success ? data.event : null;
 
   if (loading) {
@@ -47,9 +47,12 @@ export default function EventDetail() {
   if (error || !event) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: "red", fontSize: 16 }}>Could not load event.</Text>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 16 }}>
-          <Text style={{ color: colors.primary, fontWeight: "700" }}>Go Back</Text>
+        <Text style={{ color: "red", fontSize: 16, marginBottom: 16 }}>Could not load event.</Text>
+        <TouchableOpacity onPress={refetch} style={{ backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, marginBottom: 12 }}>
+          <Text style={{ color: colors.white, fontWeight: "700" }}>Retry Connection</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={{ padding: 12 }}>
+          <Text style={{ color: colors.subtext, fontWeight: "700" }}>Go Back</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -108,9 +111,10 @@ export default function EventDetail() {
         <View style={{ height: SCREEN_HEIGHT * 0.55, width: "100%" }}>
           <Image
             source={{ uri: event.imageUrl || "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800" }}
-            defaultSource={require("@/assets/icons/adaptive-icon.png")}
-            style={{ width: "100%", height: "100%", position: 'absolute' }}
-            resizeMode="cover"
+            style={{ width: "100%", height: "100%", position: "absolute" }}
+            contentFit="cover"
+            transition={300}
+            cachePolicy="memory-disk"
           />
           <LinearGradient
             colors={['transparent', isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)', colors.background]}
@@ -166,8 +170,8 @@ export default function EventDetail() {
             <View style={{ width: '100%', height: 160, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.overlayLight }}>
               <Image
                 source={{ uri: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800" }}
-                style={{ width: '100%', height: '100%', opacity: 0.6 }}
-                resizeMode="cover"
+                style={{ width: "100%", height: "100%" }}
+                contentFit="cover"
               />
               <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
                 <Ionicons name="location" size={32} color={colors.primary || "#4CAF50"} />

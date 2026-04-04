@@ -9,13 +9,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const CATEGORIES = ["All", "Music", "Sports", "Cultural", "Business", "Fashion"];
@@ -52,7 +52,7 @@ export default function Home() {
     debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
   }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
 
-  const { data, loading, error } = useFetch<any>(apiUrl, false);
+  const { data, loading, error, refetch } = useFetch<any>(apiUrl, false);
 
   useEffect(() => {
     if (data?.success && Array.isArray(data.events)) {
@@ -124,6 +124,9 @@ export default function Home() {
         <Image
           source={{ uri: item.imageUrl || "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400" }}
           style={{ width: 72, height: 72, borderRadius: 14 }}
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
         />
         <View style={{ flex: 1, marginLeft: 14 }}>
           <Text
@@ -253,8 +256,11 @@ export default function Home() {
 
         {/* ── ERROR ── */}
         {!loading && error && (
-          <View style={{ marginHorizontal: 24, padding: 20, backgroundColor: colors.card, borderRadius: 16 }}>
-            <Text style={{ color: colors.subtext, textAlign: "center" }}>Could not connect to server.</Text>
+          <View style={{ marginHorizontal: 24, padding: 20, backgroundColor: colors.card, borderRadius: 16, alignItems: 'center' }}>
+            <Text style={{ color: colors.subtext, textAlign: "center", marginBottom: 12 }}>Could not connect to server.</Text>
+            <TouchableOpacity onPress={refetch} style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 }}>
+              <Text style={{ color: colors.white, fontWeight: "700" }}>Retry Connection</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -285,7 +291,9 @@ export default function Home() {
                   <Image
                     source={{ uri: item.imageUrl || "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800" }}
                     style={{ width: "100%", height: "100%", position: "absolute" }}
-                    resizeMode="cover"
+                    contentFit="cover"
+                    transition={200}
+                    cachePolicy="memory-disk"
                   />
                   <View
                     style={{
@@ -351,7 +359,7 @@ export default function Home() {
         )}
       </View>
     ),
-    [colors, searchQuery, showFilters, selectedCategory, isDefaultView, loading, error, events, featuredEvents, navigateToEvent]
+    [colors, searchQuery, showFilters, selectedCategory, isDefaultView, loading, error, events, featuredEvents, navigateToEvent, refetch]
   );
 
   if (loading && events.length === 0) {
