@@ -1,6 +1,7 @@
 require('dotenv').config({ override: true });
 const express = require('express');
 const cors = require('cors');
+const { clerkMiddleware } = require('@clerk/express');
 
 // Import Routes
 const userRoutes = require('./routes/userRoutes');
@@ -23,6 +24,7 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+app.use(clerkMiddleware()); // Required by @clerk/express to validate JWTs
 
 // Use Routes
 app.use('/api/users', userRoutes);

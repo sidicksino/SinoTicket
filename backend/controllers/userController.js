@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const { clerkClient } = require('@clerk/clerk-sdk-node');
+const { clerkClient } = require('@clerk/express');
 const { Buffer } = require('buffer');
 
 const getMe = async (req, res) => {

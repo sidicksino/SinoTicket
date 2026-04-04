@@ -1,13 +1,14 @@
-const { ClerkExpressRequireAuth } = require('@clerk/clerk-sdk-node');
+const { getAuth } = require('@clerk/express');
 
-// This middleware automatically validates the Clerk JWT passed in the Authorization header.
-// It will attach the payload to req.auth (e.g. req.auth.userId)
-// If the token is invalid or missing, it returns a 401 Unauthorized response.
+// Reads the auth state set by clerkMiddleware() and rejects requests
+// with no valid userId (missing/invalid/expired Clerk JWT).
 const authenticateToken = (req, res, next) => {
-  return ClerkExpressRequireAuth({
-    secretKey: process.env.CLERK_SECRET_KEY,
-    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
-  })(req, res, next);
+  const auth = getAuth(req);
+  if (!auth?.userId) {
+    return res.status(401).json({ error: 'Unauthorized: No valid Clerk token' });
+  }
+  req.auth = auth; // Attach so controllers can read req.auth.userId
+  next();
 };
 
 module.exports = authenticateToken;

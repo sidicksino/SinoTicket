@@ -60,6 +60,9 @@ export const useAuthFetch = () => {
 
   const authFetch = useCallback(async (url: string, options?: RequestInit) => {
     const token = await getToken();
+    if (!token) {
+      throw new Error("Session expired. Please sign in again.");
+    }
     return fetchAPI(url, {
       ...options,
       headers: {

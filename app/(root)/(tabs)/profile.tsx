@@ -13,7 +13,7 @@ import { useFocusEffect } from "@react-navigation/native";
 
 export default function Profile() {
   const { colors, isDark, toggleTheme } = useTheme();
-  const { user: clerkUser, user } = useUser();
+  const { user: clerkUser } = useUser();
   const { signOut } = useClerk();
 
   // Fetch backend User data
@@ -24,8 +24,7 @@ export default function Profile() {
   useFocusEffect(
     useCallback(() => {
       refetch();
-      user?.reload(); // Also reload Clerk user to pick up name/avatar changes
-    }, [refetch, user])
+    }, [refetch])
   );
 
   const handleSignOut = () => {
@@ -89,16 +88,14 @@ export default function Profile() {
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
                 <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 20, marginRight: 6 }}>
-                  {loading ? "..." : (clerkUser?.fullName || backendUser?.name || "Guest User")}
+                  {clerkUser?.fullName || backendUser?.name || "Guest User"}
                 </Text>
                 {!loading && backendUser?.is_verified && (
                   <Ionicons name="checkmark-circle" size={18} color={colors.success} />
                 )}
               </View>
               <Text style={{ color: colors.subtext, fontSize: 13, fontWeight: "500" }}>
-                {loading
-                  ? "Syncing profile..."
-                  : (clerkUser?.emailAddresses?.[0]?.emailAddress || backendUser?.email || "Set up your account")}
+                {clerkUser?.emailAddresses?.[0]?.emailAddress || backendUser?.email || "Set up your account"}
               </Text>
             </View>
             <TouchableOpacity
@@ -121,7 +118,7 @@ export default function Profile() {
             <SettingsRow
               icon="person-outline"
               title="Personal Information"
-              subtitle={loading ? "Loading..." : backendUser?.phone_number || "Add phone number"}
+              subtitle={backendUser?.phone_number || "Add phone number"}
               isFirst
               onPress={() => router.push("/(root)/personal-info")}
             />
