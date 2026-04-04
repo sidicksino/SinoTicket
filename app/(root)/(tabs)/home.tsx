@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Event } from "@/types/type";
 
 const CATEGORIES = ["All", "Music", "Sports", "Cultural", "Business", "Fashion"];
 
@@ -30,7 +31,7 @@ export default function Home() {
   const [showFilters, setShowFilters] = useState(false);
 
   const [page, setPage] = useState(1);
-  const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [hasMore, setHasMore] = useState(true);
 
   // Debounce search input
@@ -51,7 +52,7 @@ export default function Home() {
   const apiUrl = `/api/events?limit=20&page=${page}${debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
     }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
 
-  const { data, loading, error, refetch } = useFetch<any>(apiUrl, false);
+  const { data, loading, error, refetch } = useFetch<{ success: boolean; events: Event[] }>(apiUrl, false);
 
   useEffect(() => {
     if (data?.success && Array.isArray(data.events)) {
@@ -102,9 +103,9 @@ export default function Home() {
     [router]
   );
 
-  // ── Event row renderer (for FlatList) ──
+  // ── 2. Reusable Event Row (Memoized) ──
   const renderEventRow = useCallback(
-    ({ item }: { item: any }) => (
+    ({ item }: { item: Event }) => (
       <TouchableOpacity
         onPress={() => navigateToEvent(item._id)}
         activeOpacity={0.85}
@@ -271,7 +272,7 @@ export default function Home() {
               decelerationRate="fast"
               snapToInterval={276}
             >
-              {featuredEvents.map((item: any) => (
+              {featuredEvents.map((item: Event) => (
                 <TouchableOpacity
                   key={item._id}
                   onPress={() => navigateToEvent(item._id)}

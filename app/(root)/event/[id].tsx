@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { Event } from "@/types/type";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -33,8 +34,10 @@ export default function EventDetail() {
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
 
-  const { data, loading, error, refetch } = useFetch<any>(`/api/events/${id}`, false);
+  const { data, loading, error, refetch } = useFetch<{ success: boolean; event: Event }>(`/api/events/${id}`, false);
   const event = data?.success ? data.event : null;
+
+  const eventDate = new Date(event?.date || Date.now());
 
   if (loading) {
     return (
@@ -135,10 +138,10 @@ export default function EventDetail() {
             </View>
             <BlurView intensity={isDark ? 60 : 80} tint={isDark ? "dark" : "light"} style={{ borderRadius: 16, overflow: 'hidden', paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
               <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' }}>
-                {new Date(event.date).toLocaleString('default', { month: 'short' })}
+                {eventDate.toLocaleString('default', { month: 'short' })}
               </Text>
               <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 22, marginTop: 2 }}>
-                {new Date(event.date).getDate()}
+                {eventDate.getDate()}
               </Text>
             </BlurView>
           </View>
@@ -151,7 +154,7 @@ export default function EventDetail() {
             <BlurView intensity={isDark ? 20 : 60} tint={isDark ? "dark" : "light"} style={{ flex: 1, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginRight: 8, overflow: 'hidden', backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
               <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '600', marginBottom: 4 }}>Start</Text>
               <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 16 }}>
-                {new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </Text>
             </BlurView>
           </View>

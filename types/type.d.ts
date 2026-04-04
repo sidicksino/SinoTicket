@@ -20,3 +20,15 @@ export interface InputFieldProps extends TextInputProps {
   iconStyle?: string;
   className?: string;
 }
+
+export interface Event {
+  _id: string;
+  title: string;
+  category: string;
+  date?: string;
+  imageUrl?: string;
+  venue_id?: { name: string };
+  description?: string;
+  price?: number;
+  ticket_categories?: any[];
+}
