@@ -159,6 +159,19 @@ export default function EventDetail() {
             </BlurView>
           </View>
 
+          {/* Tickets Pricing */}
+          {event.ticket_categories && event.ticket_categories.length > 0 && (
+            <View style={{ marginBottom: 32 }}>
+              <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>Tickets</Text>
+              {event.ticket_categories.map((cat: any, index: number) => (
+                <View key={cat.category_id || cat.name || index} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)", padding: 16, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
+                  <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>{cat.name}</Text>
+                  <Text style={{ color: colors.primary || "#4CAF50", fontFamily: "Syne_700Bold", fontSize: 16 }}>{cat.price} XAF</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
           {/* Description */}
           <View style={{ marginBottom: 32 }}>
             <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>Description</Text>
