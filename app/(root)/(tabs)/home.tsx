@@ -242,7 +242,7 @@ export default function Home() {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            marginTop: 24,
+            marginTop: 16,
             marginBottom: 16,
           }}
         >
@@ -359,14 +359,6 @@ export default function Home() {
     [colors, searchQuery, showFilters, selectedCategory, isDefaultView, loading, error, events, featuredEvents, navigateToEvent, refetch]
   );
 
-  if (loading && events.length === 0) {
-    return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: "center" }}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       {/* ── HEADER ── */}
@@ -377,7 +369,11 @@ export default function Home() {
         renderItem={renderEventRow}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={
-          !loading && !error && events.length === 0 ? (
+          loading ? (
+            <View style={{ marginTop: 60, alignItems: "center" }}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : !error && events.length === 0 ? (
             <EmptyState
               title="No events found"
               message="No events found matching your criteria. Try adjusting your search or filters."

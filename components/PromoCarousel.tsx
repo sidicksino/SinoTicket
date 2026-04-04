@@ -1,6 +1,6 @@
+import { useTheme } from '@/context/ThemeContext';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, StyleSheet, Text, View } from 'react-native';
-import { useTheme } from '@/context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 // Card width relative to screen
