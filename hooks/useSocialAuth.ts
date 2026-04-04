@@ -69,7 +69,7 @@ const useSocialAuth = () => {
               const errorText = await response.text();
               console.error("Backend sync failed:", response.status, errorText);
             } else {
-              console.log("✅ Backend sync successful");
+              console.log("Backend sync successful");
             }
           } catch (backendError: any) {
             console.error("Backend sync error:", backendError);

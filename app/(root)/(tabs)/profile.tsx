@@ -6,18 +6,27 @@ import { useClerk, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React from "react";
+import React, { useCallback } from "react";
 import { Alert, ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function Profile() {
   const { colors, isDark, toggleTheme } = useTheme();
-  const { user: clerkUser } = useUser();
+  const { user: clerkUser, user } = useUser();
   const { signOut } = useClerk();
 
   // Fetch backend User data
-  const { data, loading } = useFetch<{ success: boolean; user: UserType }>("/api/users/me", true);
+  const { data, loading, refetch } = useFetch<{ success: boolean; user: UserType }>("/api/users/me", true);
   const backendUser = data?.user;
+
+  // Refetch when screen comes into focus (e.g. after editing personal info)
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+      user?.reload(); // Also reload Clerk user to pick up name/avatar changes
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const handleSignOut = () => {
     Alert.alert(
@@ -71,7 +80,7 @@ export default function Profile() {
               }}
             >
               <Image
-                source={{ uri: clerkUser?.imageUrl || "https://avatar.iran.liara.run/public/32" }}
+                source={{ uri: backendUser?.profile_photo || clerkUser?.imageUrl || "https://avatar.iran.liara.run/public/32" }}
                 style={{ width: "100%", height: "100%" }}
                 contentFit="cover"
                 cachePolicy="memory-disk"

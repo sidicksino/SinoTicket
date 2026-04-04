@@ -3,6 +3,7 @@ import { useAuthFetch } from "@/lib/fetch";
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -25,25 +26,62 @@ export default function PersonalInfo() {
 
   const [name, setName] = useState(clerkUser?.fullName || "");
   const [phone, setPhone] = useState("");
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   // Load current backend data on mount
   React.useEffect(() => {
-    (async () => {
+    let isMounted = true;
+
+    const loadProfile = async () => {
       try {
+        console.log("[PersonalInfo] Fetching profile...");
         const result = await authFetch("/api/users/me");
-        if (result?.user) {
+        console.log("[PersonalInfo] Got result:", result?.success);
+        if (isMounted && result?.user) {
           setName(result.user.name || clerkUser?.fullName || "");
           setPhone(result.user.phone_number || "");
+          if (result.user.profile_photo) {
+            setAvatarUri(result.user.profile_photo);
+          }
         }
-      } catch {
-        // silent — fields will use Clerk defaults
+      } catch (err: any) {
+        console.log("[PersonalInfo] Load error:", err.message);
       } finally {
-        setLoaded(true);
+        if (isMounted) setLoaded(true);
       }
-    })();
+    };
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission Required", "We need access to your photos to update your avatar.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      // Store as data URI for direct database storage
+      const base64Image = `data:image/jpeg;base64,${asset.base64}`;
+      setAvatarUri(base64Image);
+    }
+  };
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -53,10 +91,21 @@ export default function PersonalInfo() {
 
     setSaving(true);
     try {
+      const body: Record<string, string> = {
+        name: name.trim(),
+        phone_number: phone.trim(),
+      };
+
+      // Only send photo if it was changed (starts with data: means new pick)
+      if (avatarUri && avatarUri.startsWith("data:")) {
+        body.profile_photo = avatarUri;
+      }
+
       await authFetch("/api/users/me", {
         method: "PUT",
-        body: JSON.stringify({ name: name.trim(), phone_number: phone.trim() }),
+        body: JSON.stringify(body),
       });
+
       Alert.alert("Success", "Your profile has been updated.", [
         { text: "OK", onPress: () => router.back() },
       ]);
@@ -66,6 +115,9 @@ export default function PersonalInfo() {
       setSaving(false);
     }
   };
+
+  // Determine the display image
+  const displayImage = avatarUri || clerkUser?.imageUrl || "https://avatar.iran.liara.run/public/32";
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -104,7 +156,7 @@ export default function PersonalInfo() {
               fontFamily: "Syne_700Bold",
               fontSize: 18,
               color: colors.text,
-              marginRight: 40, // offset for the back button
+              marginRight: 40,
             }}
           >
             Personal Information
@@ -124,27 +176,47 @@ export default function PersonalInfo() {
             </View>
           ) : (
             <>
-              {/* ── AVATAR ── */}
+              {/* ── AVATAR WITH EDIT ── */}
               <View style={{ alignItems: "center", marginBottom: 32 }}>
-                <View
-                  style={{
-                    width: 96,
-                    height: 96,
-                    borderRadius: 48,
-                    borderWidth: 3,
-                    borderColor: colors.primary,
-                    overflow: "hidden",
-                  }}
-                >
-                  <Image
-                    source={{ uri: clerkUser?.imageUrl || "https://avatar.iran.liara.run/public/32" }}
-                    style={{ width: "100%", height: "100%" }}
-                    contentFit="cover"
-                    cachePolicy="memory-disk"
-                  />
-                </View>
-                <Text style={{ color: colors.subtext, fontSize: 12, marginTop: 8 }}>
-                  Photo managed by your sign-in provider
+                <TouchableOpacity onPress={pickImage} activeOpacity={0.8}>
+                  <View
+                    style={{
+                      width: 96,
+                      height: 96,
+                      borderRadius: 48,
+                      borderWidth: 3,
+                      borderColor: colors.primary,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Image
+                      source={{ uri: displayImage }}
+                      style={{ width: "100%", height: "100%" }}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                    />
+                  </View>
+                  {/* Camera badge */}
+                  <View
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      right: 0,
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: colors.primary,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderWidth: 3,
+                      borderColor: colors.background,
+                    }}
+                  >
+                    <Ionicons name="camera" size={14} color="#fff" />
+                  </View>
+                </TouchableOpacity>
+                <Text style={{ color: colors.subtext, fontSize: 12, marginTop: 10 }}>
+                  Tap to change photo
                 </Text>
               </View>
 

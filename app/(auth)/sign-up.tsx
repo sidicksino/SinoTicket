@@ -1,9 +1,9 @@
 import InputField from "@/components/InputField";
 import LoadingScreen from "@/components/LoadingScreen";
+import { useTheme } from "@/context/ThemeContext";
 import useSocialAuth from "@/hooks/useSocialAuth";
 import { fetchAPI } from "@/lib/fetch";
 import { useAuth, useClerk, useSignUp } from "@clerk/expo";
-import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Redirect, useRouter } from "expo-router";
 import React from "react";
@@ -91,7 +91,7 @@ const SignUp = () => {
     setIsSubmitting(true);
 
     try {
-      // ✅ 0️⃣ Check if user exists in Neon DB first
+      //  0️⃣ Check if user exists in Neon DB first
       const dbCheck = await fetchAPI("/api/users/check", {
         method: "POST",
         body: JSON.stringify({ email: emailAddress }),

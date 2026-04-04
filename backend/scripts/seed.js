@@ -8,11 +8,11 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const mongoose = require('mongoose');
-const User    = require('../models/User');
-const Venue   = require('../models/Venue');
+const User = require('../models/User');
+const Venue = require('../models/Venue');
 const Section = require('../models/Section');
-const Seat    = require('../models/Seat');
-const Event   = require('../models/Event');
+const Seat = require('../models/Seat');
+const Event = require('../models/Event');
 
 const DB_URL = process.env.DATABASE_URL;
 if (!DB_URL) { console.error('DATABASE_URL not found. Check backend/.env'); process.exit(1); }
@@ -23,9 +23,9 @@ if (!DB_URL) { console.error('DATABASE_URL not found. Check backend/.env'); proc
 
 const ADMIN = {
   user_id: 'seed_admin_001',
-  email:   'admin@sinoticket.com',
-  name:    'Sino Admin',
-  role:    'Admin',
+  email: 'admin@sinoticket.com',
+  name: 'Sino Admin',
+  role: 'Admin',
   is_verified: true,
 };
 
@@ -149,7 +149,7 @@ const EVENTS = [
 
 async function seed() {
   await mongoose.connect(DB_URL);
-  console.log('✅ Connected to MongoDB');
+  console.log(' Connected to MongoDB');
 
   // 1. Wipe existing seed data (keep real user data)
   console.log('🧹 Clearing previous seed data...');
