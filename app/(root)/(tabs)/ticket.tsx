@@ -1,4 +1,5 @@
 import AppHeader from "@/components/AppHeader";
+import EmptyState from "@/components/EmptyState";
 import { useAuth } from "@clerk/expo";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthFetch } from "@/lib/fetch";
@@ -155,13 +156,11 @@ export default function TicketWallet() {
   useEffect(() => { loadTickets(); }, [loadTickets]);
 
   const renderEmpty = () => (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 40, marginTop: 100 }}>
-      <View style={{ width: 80, height: 80, backgroundColor: colors.cardBorder, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-        <Ionicons name="ticket-outline" size={40} color={colors.subtext} />
-      </View>
-      <Text style={{ color: colors.text, fontSize: 18, fontFamily: "Syne_700Bold", textAlign: 'center' }}>No tickets found</Text>
-      <Text style={{ color: colors.subtext, fontSize: 14, textAlign: 'center', marginTop: 8 }}>Your booked tickets will appear here for scanning at the venue.</Text>
-    </View>
+    <EmptyState 
+      icon="ticket-outline"
+      title="No tickets found"
+      message="Your booked tickets will appear here for scanning at the venue."
+    />
   );
 
   if (!isLoaded || loading) {
