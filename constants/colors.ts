@@ -27,6 +27,7 @@ export type ThemeColors = {
   white: string;
   black: string;
   transparent: string;
+  shadow: string;
 };
 
 export const Colors: { light: ThemeColors; dark: ThemeColors } = {
@@ -57,6 +58,7 @@ export const Colors: { light: ThemeColors; dark: ThemeColors } = {
     white: "#FFFFFF",
     black: "#000000",
     transparent: "transparent",
+    shadow: "#000000",
   },
   dark: {
     background: "#0F172A",
@@ -85,5 +87,6 @@ export const Colors: { light: ThemeColors; dark: ThemeColors } = {
     white: "#FFFFFF",
     black: "#000000",
     transparent: "transparent",
+    shadow: "#000000",
   },
 };
