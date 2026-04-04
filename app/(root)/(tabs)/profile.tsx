@@ -1,9 +1,9 @@
-import React from "react";
-import { Text, View, TouchableOpacity, Switch } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "@/context/ThemeContext";
 import { useClerk, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "@/context/ThemeContext";
+import React from "react";
+import { Switch, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Profile() {
   const { colors, isDark, toggleTheme } = useTheme();
@@ -13,9 +13,6 @@ export default function Profile() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
-        {/* Header */}
-        <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28, marginBottom: 32 }}>Profile</Text>
-
         {/* User Info Card */}
         <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: 20, marginBottom: 24, borderWidth: 1, borderColor: colors.cardBorder, alignItems: "center" }}>
           <View style={{ width: 72, height: 72, borderRadius: 999, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center", marginBottom: 12 }}>

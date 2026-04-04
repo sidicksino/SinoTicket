@@ -1,7 +1,7 @@
+import AppHeader from "@/components/AppHeader";
 import PromoCarousel from "@/components/PromoCarousel";
 import { useTheme } from "@/context/ThemeContext";
 import { useFetch } from "@/lib/fetch";
-import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -19,7 +19,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const CATEGORIES = ["All", "Music", "Sports", "Cultural", "Business", "Fashion"];
 
 export default function Home() {
-  const { user } = useUser();
   const { colors } = useTheme();
   const router = useRouter();
 
@@ -58,31 +57,7 @@ export default function Home() {
         contentContainerStyle={{ paddingBottom: 140 }}
       >
         {/* ── HEADER ── */}
-        <View style={{
-          paddingHorizontal: 24,
-          paddingTop: 8,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}>
-          <View>
-            <Text style={{ color: colors.subtext, fontSize: 13, fontWeight: "500" }}>
-              Welcome back,
-            </Text>
-            <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 24 }}>
-              {user?.firstName ? user.firstName.split(' ')[0] : "Guest"}
-            </Text>
-          </View>
-          <TouchableOpacity style={{
-            height: 46, width: 46, borderRadius: 999,
-            borderWidth: 2, borderColor: colors.border, overflow: "hidden",
-          }}>
-            <Image
-              source={{ uri: user?.imageUrl || "https://avatar.iran.liara.run/public/32" }}
-              style={{ width: "100%", height: "100%" }}
-            />
-          </TouchableOpacity>
-        </View>
+        <AppHeader />
 
         {/* ── SEARCH BAR ── */}
         <View style={{

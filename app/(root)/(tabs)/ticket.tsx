@@ -1,3 +1,4 @@
+import AppHeader from "@/components/AppHeader";
 import { useAuth } from "@clerk/expo";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthFetch } from "@/lib/fetch";
@@ -173,8 +174,8 @@ export default function TicketWallet() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ paddingHorizontal: 24, paddingVertical: 20 }}>
-        <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28 }}>My Wallet</Text>
+      <AppHeader subtitle="Your tickets," displayName="Wallet" />
+      <View style={{ paddingHorizontal: 24, paddingBottom: 8 }}>
         <Text style={{ color: colors.subtext, fontSize: 14, marginTop: 4 }}>Showing {tickets.length} available tickets</Text>
       </View>
 
