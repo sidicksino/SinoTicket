@@ -74,17 +74,23 @@ export const useAuthFetch = () => {
 
 // Generic hook to fetch data from any API endpoint
 export const useFetch = <T>(url: string, authenticated = false) => {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded } = useAuth();
 
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async (signal?: AbortSignal) => {
+    // If auth is required but Clerk hasn't loaded yet, don't fetch yet
+    if (authenticated && !isLoaded) {
+      return;
+    }
+
     if (!url) {
       setLoading(false);
       return;
     }
+
     try {
       setLoading(true);
       setError(null);
@@ -121,16 +127,20 @@ export const useFetch = <T>(url: string, authenticated = false) => {
         setLoading(false);
       }
     }
-  }, [url, authenticated, getToken]);
+  }, [url, authenticated, getToken, isLoaded]);
 
   useEffect(() => {
+    if (authenticated && !isLoaded) {
+      return; // wait until clerk is ready
+    }
+
     const controller = new AbortController();
     load(controller.signal);
     
     return () => {
       controller.abort();
     };
-  }, [url, authenticated]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [url, authenticated, isLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { data, loading, error, refetch: () => load() };
 };

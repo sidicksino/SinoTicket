@@ -25,7 +25,7 @@ export default function Profile() {
     useCallback(() => {
       refetch();
       user?.reload(); // Also reload Clerk user to pick up name/avatar changes
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [refetch, user])
   );
 
   const handleSignOut = () => {
