@@ -36,7 +36,7 @@ export default function SeatSelection() {
     booked:    colors.seatBooked,
   };
 
-  const requiredQuantity = parseInt(params.quantity || "1");
+
   const [selectedSeats, setSelectedSeats] = useState<any[]>([]);
   const [reserving, setReserving] = useState(false);
 
@@ -74,21 +74,17 @@ export default function SeatSelection() {
     if (isSelected) {
       setSelectedSeats(prev => prev.filter(s => s._id !== seat._id));
     } else {
-      if (selectedSeats.length < requiredQuantity) {
+      if (selectedSeats.length < 10) {
         setSelectedSeats(prev => [...prev, seat]);
       } else {
-        if (requiredQuantity === 1) {
-          setSelectedSeats([seat]);
-        } else {
-          Alert.alert("Limit Reached", `You can only select ${requiredQuantity} seats.`);
-        }
+        Alert.alert("Limit Reached", "You can only select up to 10 seats.");
       }
     }
   };
 
   const handleContinue = async () => {
-    if (selectedSeats.length !== requiredQuantity) {
-      Alert.alert("Incomplete Selection", `Please select ${requiredQuantity} seats.`);
+    if (selectedSeats.length === 0) {
+      Alert.alert("Incomplete Selection", "Please select at least one seat.");
       return;
     }
 
@@ -104,6 +100,7 @@ export default function SeatSelection() {
       );
 
       const reservationIds = reservations.map(r => r.reservation._id);
+      const actualQuantity = selectedSeats.length;
       
       router.push({
         pathname: "/checkout",
@@ -111,9 +108,9 @@ export default function SeatSelection() {
           reservation_ids: JSON.stringify(reservationIds), 
           seat_numbers: selectedSeats.map(s => s.number).join(", "),
           event_title: params.event_title,
-          total_price: (parseInt(params.price) * requiredQuantity).toString(),
+          total_price: (parseInt(params.price) * actualQuantity).toString(),
           category_name: params.category_name,
-          quantity: params.quantity
+          quantity: actualQuantity.toString()
         },
       } as any);
     } catch (err: any) {
@@ -212,7 +209,7 @@ export default function SeatSelection() {
 
       <SummaryBar
         title={`${currentTotal} XAF`}
-        subtitle={`${selectedSeats.length}/${requiredQuantity} Seats Selected`}
+        subtitle={`${selectedSeats.length}/10 Seats Maximum`}
         buttonLabel="Continue"
         onPress={handleContinue}
         loading={reserving}
