@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/expo";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const baseUrl = process.env.EXPO_PUBLIC_API_URL;
 
@@ -132,6 +132,10 @@ export const useFetch = <T>(url: string, authenticated = false) => {
     }
   }, [url, authenticated, getToken, isLoaded]);
 
+  // Keep a ref to the latest load function so refetch is always stable
+  const loadRef = useRef(load);
+  loadRef.current = load;
+
   useEffect(() => {
     if (authenticated && !isLoaded) {
       return; // wait until clerk is ready
@@ -139,11 +143,14 @@ export const useFetch = <T>(url: string, authenticated = false) => {
 
     const controller = new AbortController();
     load(controller.signal);
-    
+
     return () => {
       controller.abort();
     };
   }, [url, authenticated, isLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { data, loading, error, refetch: () => load() };
+  // Stable refetch function that never changes identity
+  const refetch = useCallback(() => loadRef.current(), []);
+
+  return { data, loading, error, refetch };
 };

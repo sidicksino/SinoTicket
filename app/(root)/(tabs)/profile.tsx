@@ -4,12 +4,12 @@ import { useFetch } from "@/lib/fetch";
 import { User as UserType } from "@/types/type";
 import { useClerk, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useCallback } from "react";
 import { Alert, ScrollView, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "@react-navigation/native";
 
 export default function Profile() {
   const { colors, isDark, toggleTheme } = useTheme();
@@ -88,7 +88,7 @@ export default function Profile() {
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
                 <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 20, marginRight: 6 }}>
-                  {clerkUser?.fullName || backendUser?.name || "Guest User"}
+                  {backendUser?.name || clerkUser?.fullName || "Guest User"}
                 </Text>
                 {!loading && backendUser?.is_verified && (
                   <Ionicons name="checkmark-circle" size={18} color={colors.success} />

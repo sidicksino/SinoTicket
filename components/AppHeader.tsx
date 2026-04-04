@@ -1,9 +1,13 @@
 import { useTheme } from "@/context/ThemeContext";
+import { useFetch } from "@/lib/fetch";
+import { User as UserType } from "@/types/type";
 import { useUser } from "@clerk/expo";
-import { useRouter } from "expo-router";
-import { Text, TouchableOpacity, View } from "react-native";
-import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import { useCallback } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 interface AppHeaderProps {
   /** Optional subtitle shown above the user's name. Defaults to "Welcome back," */
@@ -17,7 +21,21 @@ export default function AppHeader({ subtitle = "Welcome back,", displayName }: A
   const { user } = useUser();
   const router = useRouter();
 
-  const name = displayName ?? (user?.firstName ? user.firstName.split(" ")[0] : "Guest");
+  // Fetch backend user data so updated name/photo are reflected immediately
+  const { data, refetch } = useFetch<{ success: boolean; user: UserType }>("/api/users/me", true);
+  const backendUser = data?.user;
+
+  // Re-fetch when the screen containing this header gains focus
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
+
+  // Prioritise backend name → prop override → Clerk → fallback
+  const backendFirstName = backendUser?.name?.split(" ")[0];
+  const name = displayName ?? backendFirstName ?? (user?.firstName ? user.firstName.split(" ")[0] : "Guest");
+  const avatarUri = backendUser?.profile_photo || user?.imageUrl || "https://avatar.iran.liara.run/public/32";
 
   return (
     <View
@@ -44,7 +62,7 @@ export default function AppHeader({ subtitle = "Welcome back,", displayName }: A
           }}
         >
           <Image
-            source={{ uri: user?.imageUrl || "https://avatar.iran.liara.run/public/32" }}
+            source={{ uri: avatarUri }}
             style={{ width: "100%", height: "100%" }}
             contentFit="cover"
             cachePolicy="memory-disk"
