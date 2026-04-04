@@ -5,7 +5,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useFetch } from "@/lib/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -29,6 +29,10 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
 
+  const [page, setPage] = useState(1);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -37,14 +41,55 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const apiUrl = `/api/events?limit=20&page=1${debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
-    }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
+  // Reset when filters/search change
+  useEffect(() => {
+    setPage(1);
+    setAllEvents([]);
+    setHasMore(true);
+  }, [debouncedSearch, selectedCategory]);
+
+  const apiUrl = `/api/events?limit=20&page=${page}${
+    debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
+  }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
 
   const { data, loading, error } = useFetch<any>(apiUrl, false);
 
-  const events = useMemo(() => {
-    return data?.success && Array.isArray(data?.events) ? data.events : [];
-  }, [data]);
+  useEffect(() => {
+    if (data?.success && Array.isArray(data.events)) {
+      if (data.events.length === 0) {
+        setHasMore(false);
+      } else {
+        if (page === 1) {
+          setAllEvents(data.events);
+        } else {
+          setAllEvents((prev) => {
+            // Deduplicate to prevent React key warnings in Strict Mode
+            const existingIds = new Set(prev.map((e) => e._id));
+            const newEvents = data.events.filter((e: any) => !existingIds.has(e._id));
+            if (newEvents.length === 0) setHasMore(false);
+            return [...prev, ...newEvents];
+          });
+        }
+      }
+    }
+  }, [data, page]);
+
+  const events = allEvents;
+
+  const loadingMoreRef = useRef(false);
+
+  const handleLoadMore = () => {
+    if (!loading && hasMore && !loadingMoreRef.current) {
+      loadingMoreRef.current = true;
+      setPage((prev) => prev + 1);
+    }
+  };
+
+  useEffect(() => {
+    if (!loading) {
+      loadingMoreRef.current = false;
+    }
+  }, [loading]);
 
   const isDefaultView = !debouncedSearch && selectedCategory === "All";
   const featuredEvents = events.slice(0, 3);
@@ -206,19 +251,11 @@ export default function Home() {
           </Text>
         </View>
 
-        {/* ── LOADING / ERROR / EMPTY ── */}
-        {loading && <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: 40 }} />}
+        {/* ── ERROR ── */}
         {!loading && error && (
           <View style={{ marginHorizontal: 24, padding: 20, backgroundColor: colors.card, borderRadius: 16 }}>
             <Text style={{ color: colors.subtext, textAlign: "center" }}>Could not connect to server.</Text>
           </View>
-        )}
-        {!loading && !error && events.length === 0 && (
-          <EmptyState 
-            title="No events found"
-            message="No events found matching your criteria. Try adjusting your search or filters."
-            marginTop={40}
-          />
         )}
 
         {/* ── FEATURED HORIZONTAL CARDS ── */}
@@ -317,6 +354,14 @@ export default function Home() {
     [colors, searchQuery, showFilters, selectedCategory, isDefaultView, loading, error, events, featuredEvents, navigateToEvent]
   );
 
+  if (loading && events.length === 0) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: "center" }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <FlatList
@@ -324,8 +369,28 @@ export default function Home() {
         keyExtractor={(item) => item._id}
         renderItem={renderEventRow}
         ListHeaderComponent={ListHeader}
+        ListEmptyComponent={
+          !loading && !error && events.length === 0 ? (
+            <EmptyState
+              title="No events found"
+              message="No events found matching your criteria. Try adjusting your search or filters."
+              marginTop={40}
+            />
+          ) : null
+        }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 140 }}
+        /* Performance & Pagination Props */
+        initialNumToRender={6}
+        windowSize={5}
+        removeClippedSubviews={true}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          loading && page > 1 ? (
+            <ActivityIndicator style={{ marginVertical: 20 }} color={colors.primary} />
+          ) : null
+        }
       />
     </SafeAreaView>
   );

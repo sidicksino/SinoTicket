@@ -46,8 +46,10 @@ export const fetchAPI = async (url: string, options?: RequestInit) => {
       }
       throw new Error("Server returned non-JSON response. Check backend logs.");
     }
-  } catch (error) {
-    console.error(`[fetchAPI] Error fetching ${fullUrl}:`, error);
+  } catch (error: any) {
+    if (error.name !== "AbortError" && !error.message?.includes("aborted")) {
+      console.error(`[fetchAPI] Error fetching ${fullUrl}:`, error);
+    }
     throw error;
   }
 };
@@ -78,7 +80,7 @@ export const useFetch = <T>(url: string, authenticated = false) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     if (!url) {
       setLoading(false);
       return;
@@ -99,7 +101,7 @@ export const useFetch = <T>(url: string, authenticated = false) => {
         headers.Authorization = `Bearer ${token}`;
       }
 
-      const result = await fetchAPI(url, { headers });
+      const result = await fetchAPI(url, { headers, signal });
 
       // 🔥 SAFE DATA
       if (!result) {
@@ -108,16 +110,27 @@ export const useFetch = <T>(url: string, authenticated = false) => {
 
       setData(result);
     } catch (err: any) {
+      if (err.name === "AbortError" || err.message?.includes("aborted")) {
+        console.log(`[fetchAPI] Request aborted: ${url}`);
+        return;
+      }
       console.log("USEFETCH ERROR:", err.message);
       setError(err.message || "Something went wrong");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }, [url, authenticated, getToken]);
 
   useEffect(() => {
-    load();
+    const controller = new AbortController();
+    load(controller.signal);
+    
+    return () => {
+      controller.abort();
+    };
   }, [url, authenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { data, loading, error, refetch: load };
+  return { data, loading, error, refetch: () => load() };
 };

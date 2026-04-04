@@ -80,8 +80,30 @@ export default function EventDetail() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
+      {/* Fixed Top Actions (Back & Share) */}
+      <View style={{ 
+        position: 'absolute', 
+        top: Math.max(insets.top, 20), 
+        left: 20, 
+        right: 20, 
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
+        zIndex: 100 
+      }}>
+        <BlurView intensity={isDark ? 50 : 80} tint={isDark ? "dark" : "light"} style={{ borderRadius: 24, overflow: 'hidden' }}>
+          <TouchableOpacity onPress={() => router.back()} style={{ padding: 12 }}>
+            <Ionicons name="chevron-back" size={24} color={isDark ? "#fff" : "#000"} />
+          </TouchableOpacity>
+        </BlurView>
 
+        <BlurView intensity={isDark ? 50 : 80} tint={isDark ? "dark" : "light"} style={{ borderRadius: 24, overflow: 'hidden' }}>
+          <TouchableOpacity style={{ padding: 12 }}>
+            <Ionicons name="share-social-outline" size={24} color={isDark ? "#fff" : "#000"} />
+          </TouchableOpacity>
+        </BlurView>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
         {/* Hero Image Section */}
         <View style={{ height: SCREEN_HEIGHT * 0.55, width: "100%" }}>
           <Image
@@ -96,20 +118,7 @@ export default function EventDetail() {
             style={{ position: 'absolute', width: '100%', height: '100%' }}
           />
 
-          {/* Top Actions */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 20, top: Math.max(insets.top, 20) }}>
-            <BlurView intensity={isDark ? 50 : 80} tint={isDark ? "dark" : "light"} style={{ borderRadius: 24, overflow: 'hidden' }}>
-              <TouchableOpacity onPress={() => router.back()} style={{ padding: 12 }}>
-                <Ionicons name="chevron-back" size={24} color={isDark ? "#fff" : "#000"} />
-              </TouchableOpacity>
-            </BlurView>
-
-            <BlurView intensity={isDark ? 50 : 80} tint={isDark ? "dark" : "light"} style={{ borderRadius: 24, overflow: 'hidden' }}>
-              <TouchableOpacity style={{ padding: 12 }}>
-                <Ionicons name="share-social-outline" size={24} color={isDark ? "#fff" : "#000"} />
-              </TouchableOpacity>
-            </BlurView>
-          </View>
+        {/* The Top Actions were moved outside ScrollView */}
 
           {/* Overlaid Title Area */}
           <View style={{ position: 'absolute', bottom: 20, left: 24, right: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
