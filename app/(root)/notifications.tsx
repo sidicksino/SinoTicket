@@ -48,7 +48,11 @@ export default function Notifications() {
     loadNotifications();
   };
 
-  const handleMarkAsRead = async (id: string, currentlyRead: boolean) => {
+  const handleMarkAsRead = async (id: string, currentlyRead: boolean, link?: string) => {
+    if (link) {
+      router.push(link as any);
+    }
+
     if (currentlyRead) return;
 
     // Optimistic UI Update
@@ -92,7 +96,7 @@ export default function Notifications() {
 
     return (
       <TouchableOpacity
-        onPress={() => handleMarkAsRead(item._id, item.is_read)}
+        onPress={() => handleMarkAsRead(item._id, item.is_read, item.link)}
         activeOpacity={0.8}
         style={{
           flexDirection: "row",

@@ -229,7 +229,7 @@ async function seed() {
 }
 
 seed().catch((err) => {
-  console.error('❌ Seed failed:', err);
+  console.error('Seed failed:', err);
   mongoose.disconnect();
   process.exit(1);
 });
