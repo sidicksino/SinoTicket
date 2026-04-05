@@ -111,6 +111,7 @@ SinoTicket/
 │       ├── checkout.tsx
 │       ├── seat-selection.tsx
 │       ├── success.tsx
+│       ├── notifications.tsx   # In-app notifications inbox
 │       ├── event/[id].tsx      # Dynamic event detail page
 │       └── (tabs)/             # Bottom tab bar screens
 │           ├── _layout.tsx     # NativeTabs definition
@@ -167,12 +168,14 @@ SinoTicket/
 | `nativewind` / `tailwindcss` | 4.x / 3.x | Utility CSS classes |
 | `@expo/vector-icons` | ^15 | Ionicons, MaterialIcons |
 | `expo-secure-store` | ~15.0 | Persistent secure storage |
+| `expo-image-picker` | ~16.0 | Device photo library access |
 
 ### Backend
 | Package | Version | Purpose |
 |---|---|---|
 | `express` | ^4 | REST API framework |
 | `mongoose` | ^8 | MongoDB ODM |
+| `@clerk/express` | ^2 | Authentication validation |
 | `dotenv` | ^16 | Environment variables |
 | `cors` | ^2 | Cross-origin policy |
 | `swagger-jsdoc` / `swagger-ui-express` | — | API documentation |
@@ -192,6 +195,7 @@ The app uses **file-based routing** via Expo Router. The navigation tree:
 /(root)/(tabs)/ticket  → My Wallet
 /(root)/(tabs)/history → History
 /(root)/(tabs)/profile → Profile
+/(root)/personal-info  → Manage personal profile + avatar
 /(root)/event/[id]     → Event detail (dynamic)
 /(root)/seat-selection → Seat picker
 /(root)/checkout       → Checkout
@@ -293,7 +297,7 @@ const result = await authFetch('/api/tickets/me');
 - **Hero Section**: full-width image, `LinearGradient` fade into theme background color
 - **Back + Share** buttons: circular `BlurView` glassmorphic overlays at top
 - **Date Badge**: `BlurView` card overlaid on image bottom-right
-- **Info Row**: 3 `BlurView` cards (Start Time / Duration / P-G)
+- **Info Row**: Shows start time. Inline **Tickets Pricing** block displays immediately below.
 - **Description** + **Location** map placeholder image
 - **Floating CTA**: absolute bottom bar with `LinearGradient` + green "Book Now" pill
 - Tap "Book Now" → bottom-sheet modal for ticket category + quantity selection, then → `seat-selection`
@@ -304,9 +308,16 @@ const result = await authFetch('/api/tickets/me');
 - Each ticket is expandable to reveal a custom pixel-art **QR code** display (hex-based pattern)
 - Pull-to-refresh supported
 
+#### Notifications (`/(root)/notifications.tsx`)
+- Accessed via the bell icon in the `AppHeader` (which polls for unread count badge)
+- Fetches notifications from `/api/notifications` using `useAuthFetch`
+- Visually separates read vs. unread alerts using subtle glass-morphic backgrounds
+- Optimistic UI updates for "Mark as Read" and "Mark All as Read"
+
 #### Seat Selection (`/(root)/seat-selection.tsx`)
-- Receives params: `event_id`, `section_id`, `category_id`, `quantity`, `price`, `event_title`, `category_name`
+- Receives params: `event_id`, `section_id`, `category_id`, `event_title`, `category_name`, initial `quantity` and `price`
 - Displays a visual seat map grid fetched from `/api/seats`
+- Supports dynamic selection of up to 10 seats on the map, overriding the initial `quantity` param
 - Available / Selected / Reserved / Booked states with color coding from `colors` tokens
 - Proceeds to `/checkout`
 
@@ -315,6 +326,11 @@ const result = await authFetch('/api/tickets/me');
 - Calls `/api/reservations` to hold seats temporarily (TTL-backed)
 - Calls `/api/tickets` to confirm booking and generate QR code
 - On success → `/success` screen
+
+#### Personal Information (`/(root)/personal-info.tsx`)
+- Manages user's name, phone number, and avatar image
+- Uploads images via `expo-image-picker` with base64 data URIs
+- Saves via `PUT /api/users/me` and ensures changes apply across `AppHeader` and `Profile` instantly using optimized data fetch caching.
 
 ### 4.6 Component Library
 
@@ -370,6 +386,7 @@ erDiagram
     USER ||--o{ EVENT : "admin_id (manages)"
     USER ||--o{ RESERVATION : "user_id"
     USER ||--o{ TICKET : "attendee_id"
+    USER ||--o{ NOTIFICATION : "user_id"
     VENUE ||--o{ EVENT : "venue_id"
     VENUE ||--o{ SECTION : "venue_id"
     SECTION ||--o{ SEAT : "section_id"
@@ -385,6 +402,12 @@ erDiagram
         string email
         string name
         string role "Attendee/Admin"
+    }
+    NOTIFICATION {
+        ObjectId _id PK
+        string title
+        string type "SYSTEM/BOOKING/PROMO"
+        boolean is_read
     }
     EVENT {
         ObjectId _id PK
@@ -470,6 +493,11 @@ erDiagram
 { reservation_id, amount, method, status }
 ```
 
+#### Notification
+```js
+{ user_id, title, message, type: ['SYSTEM','BOOKING','PROMO'], is_read, link }
+```
+
 ### 5.3 API Routes
 
 | Method | Route | Auth | Description |
@@ -488,6 +516,9 @@ erDiagram
 | `POST` | `/api/reservations` | Auth | Hold a seat |
 | `GET` | `/api/tickets/me` | Auth | Current user's tickets |
 | `POST` | `/api/tickets` | Auth | Confirm booking / issue ticket |
+| `GET` | `/api/notifications` | Auth | List user notifications |
+| `PUT` | `/api/notifications/:id/read` | Auth | Mark notification as read |
+| `PUT` | `/api/notifications/read-all` | Auth | Mark all notifications as read |
 
 > Full Swagger documentation available at `http://<backend-host>/api-docs`
 
