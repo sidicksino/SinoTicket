@@ -46,7 +46,7 @@ const useSocialAuth = () => {
             const clerkId = syncId;
             const profilePhoto = currentUser?.imageUrl || fallbackSignUp?.imageUrl || null;
 
-            console.log("📤 Syncing user to backend:", { name, email, clerkId, profilePhoto });
+            // console.log("📤 Syncing user to backend:", { name, email, clerkId, profilePhoto });
 
             const response = await fetch(
               `${process.env.EXPO_PUBLIC_API_URL}/api/users`,

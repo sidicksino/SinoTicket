@@ -25,11 +25,15 @@ export default function AppHeader({ subtitle = "Welcome back,", displayName }: A
   const { data, refetch } = useFetch<{ success: boolean; user: UserType }>("/api/users/me", true);
   const backendUser = data?.user;
 
+  // Fetch unread notification count
+  const { data: notifData, refetch: refetchNotifs } = useFetch<{ success: boolean; count: number }>("/api/notifications/unread-count", true);
+
   // Re-fetch when the screen containing this header gains focus
   useFocusEffect(
     useCallback(() => {
       refetch();
-    }, [refetch])
+      refetchNotifs();
+    }, [refetch, refetchNotifs])
   );
 
   // Prioritise backend name → prop override → Clerk → fallback
@@ -81,6 +85,7 @@ export default function AppHeader({ subtitle = "Welcome back,", displayName }: A
 
       {/* ── RIGHT SIDE: Notifications ── */}
       <TouchableOpacity
+        onPress={() => router.push("/(root)/notifications")}
         style={{
           height: 46,
           width: 46,
@@ -94,19 +99,21 @@ export default function AppHeader({ subtitle = "Welcome back,", displayName }: A
       >
         <Ionicons name="notifications-outline" size={22} color={colors.text} />
         {/* Unread Indicator Dot */}
-        <View 
-          style={{ 
-            position: "absolute", 
-            top: 12, 
-            right: 14, 
-            width: 8, 
-            height: 8, 
-            borderRadius: 4, 
-            backgroundColor: colors.primary,
-            borderWidth: 1.5,
-            borderColor: colors.card
-          }} 
-        />
+        {notifData?.count && notifData.count > 0 ? (
+          <View 
+            style={{ 
+              position: "absolute", 
+              top: 12, 
+              right: 14, 
+              width: 8, 
+              height: 8, 
+              borderRadius: 4, 
+              backgroundColor: colors.primary,
+              borderWidth: 1.5,
+              borderColor: colors.card
+            }} 
+          />
+        ) : null}
       </TouchableOpacity>
     </View>
   );
