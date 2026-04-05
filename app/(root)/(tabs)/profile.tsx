@@ -110,6 +110,25 @@ export default function Profile() {
         {/* ── SETTINGS GROUPS ── */}
         <View style={{ paddingHorizontal: 20 }}>
 
+          {/* Admin Group */}
+          {backendUser?.role === 'Admin' && (
+            <>
+              <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, marginLeft: 16, marginBottom: 8 }}>
+                Administration
+              </Text>
+              <View style={{ shadowColor: colors.shadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2, marginBottom: 28 }}>
+                <SettingsRow
+                  icon="barcode-outline"
+                  title="Ticket Scanner"
+                  subtitle="Verify incoming attendees"
+                  isFirst
+                  isLast
+                  onPress={() => router.push("/(root)/scanner")}
+                />
+              </View>
+            </>
+          )}
+
           {/* Account Group */}
           <Text style={{ color: colors.subtext, fontSize: 13, fontWeight: "700", textTransform: "uppercase", letterSpacing: 1, marginLeft: 16, marginBottom: 8 }}>
             Account
