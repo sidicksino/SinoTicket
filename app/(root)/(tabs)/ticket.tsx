@@ -4,7 +4,8 @@ import { useAuth } from "@clerk/expo";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthFetch } from "@/lib/fetch";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback, useEffect, useState, useMemo } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import QRCode from "react-native-qrcode-svg";
 import {
   ActivityIndicator,
   FlatList,
@@ -16,42 +17,22 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// Compact QR-code style display - Optimized
+// Compact true QR-code display
 const QRDisplay = React.memo(function QRDisplay({ code }: { code: string }) {
-  const rows = 8;
-  const cols = 8;
-
-  const cells = useMemo(() => {
-    if (!code) return Array(rows * cols).fill(false);
-    return Array.from({ length: rows * cols }, (_, i) =>
-      parseInt(code[i % code.length], 16) % 2 === 0
-    );
-  }, [code]);
-
   if (!code) return null;
 
   return (
     <View style={{ alignItems: "center", paddingVertical: 24, backgroundColor: '#fff', borderRadius: 24, marginTop: 16 }}>
       <View style={{ padding: 16, backgroundColor: "#fff" }}>
-        {Array.from({ length: rows }).map((_, r) => (
-          <View key={r} style={{ flexDirection: "row" }}>
-            {Array.from({ length: cols }).map((_, c) => (
-              <View
-                key={c}
-                style={{
-                  width: 14,
-                  height: 14,
-                  margin: 1.5,
-                  borderRadius: 2,
-                  backgroundColor: cells[r * cols + c] ? "#111" : "#fff",
-                }}
-              />
-            ))}
-          </View>
-        ))}
+        <QRCode 
+          value={code} 
+          size={160} 
+          color="#0286FF" 
+          backgroundColor="#fff" 
+        />
       </View>
       <Text style={{ color: "#64748B", fontSize: 11, marginTop: 12, fontWeight: '700', letterSpacing: 2 }}>
-        {code.toUpperCase()}
+        {code.length > 16 ? code.substring(0, 16).toUpperCase() + '...' : code.toUpperCase()}
       </Text>
     </View>
   );
