@@ -18,17 +18,19 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Compact true QR-code display
-const QRDisplay = React.memo(function QRDisplay({ code }: { code: string }) {
+const QRDisplay = React.memo(function QRDisplay({ code, colors }: { code: string, colors: any }) {
   if (!code) return null;
+
+  const qrUrl = `${process.env.EXPO_PUBLIC_API_URL || 'https://sinoticket.com'}/api/tickets/verify/${code}`;
 
   return (
     <View style={{ alignItems: "center", paddingVertical: 24, backgroundColor: '#fff', borderRadius: 24, marginTop: 16 }}>
       <View style={{ padding: 16, backgroundColor: "#fff" }}>
         <QRCode 
-          value={code} 
+          value={qrUrl} 
           size={160} 
-          color="#0286FF" 
-          backgroundColor="#fff" 
+          color={colors.primary} 
+          backgroundColor="#FFFFFF" 
         />
       </View>
       <Text style={{ color: "#64748B", fontSize: 11, marginTop: 12, fontWeight: '700', letterSpacing: 2 }}>
@@ -102,7 +104,7 @@ const TicketItem = React.memo(({ item, isExpanded, onToggle }: { item: any; isEx
             </TouchableOpacity>
           </View>
 
-          {isExpanded && <QRDisplay code={item.qr_code || "SINOTICKET-PREMIUM"} />}
+          {isExpanded && <QRDisplay code={item.qr_code || "SINOTICKET-PREMIUM"} colors={colors} />}
         </View>
       </TouchableOpacity>
     </View>

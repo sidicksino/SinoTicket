@@ -40,6 +40,25 @@ router.post('/checkout', authenticateToken, ticketController.checkoutReservation
 
 /**
  * @swagger
+ * /api/tickets/verify/{qr}:
+ *   get:
+ *     summary: Verify and consume a Ticket via QR code scan
+ *     tags: [Ticket]
+ *     parameters:
+ *       - in: path
+ *         name: qr
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The QR code hash to verify
+ *     responses:
+ *       200:
+ *         description: Ticket verification status
+ */
+router.get('/verify/:qr', ticketController.verifyTicket);
+
+/**
+ * @swagger
  * /api/tickets/me:
  *   get:
  *     summary: Retrieve my purchased tickets (Wallet)

@@ -16,7 +16,7 @@ const getMongoUser = async (clerkId) => {
 // Generate a secure unique QR code hash
 const generateQRCode = (userId, eventId, seatId) => {
     const data = `${userId}-${eventId}-${seatId}-${Date.now()}-${Math.random()}`;
-    return crypto.createHash('sha256').update(data).digest('hex');
+    return `STK_${crypto.createHash('sha256').update(data).digest('hex')}`;
 };
 
 // @desc    Checkout and generate Ticket from a Reservation
@@ -78,6 +78,18 @@ const checkoutReservation = async (req, res) => {
         await session.abortTransaction();
         session.endSession();
         return res.status(400).json({ success: false, message: 'Seat is no longer reserved for you' });
+    }
+
+    // 2.5 Prevent Duplicate Tickets
+    const existing = await Ticket.findOne({
+      seat_id: seat._id,
+      event_id: reservation.event_id
+    }).session(session);
+    
+    if (existing) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ success: false, message: 'Ticket already exists for this seat' });
     }
 
     // 3. Simulate Payment Processing (MVP)
@@ -165,4 +177,39 @@ const getMyTickets = async (req, res) => {
   }
 };
 
-module.exports = { checkoutReservation, getMyTickets };
+// @desc    Verify script for ticket entry (Scanner)
+// @route   GET /api/tickets/verify/:qr
+// @access  Public (for MVP Scanner purposes)
+const verifyTicket = async (req, res) => {
+  try {
+    const { qr } = req.params;
+
+    const ticket = await Ticket.findOne({ qr_code: qr })
+      .populate("event_id", "title date")
+      .populate("seat_id", "number");
+
+    if (!ticket) {
+      return res.status(404).json({ valid: false, message: "Invalid ticket ❌" });
+    }
+
+    if (ticket.status === "Used") {
+      return res.json({ valid: false, message: "Already used ❌" });
+    }
+
+    // mark as used
+    ticket.status = "Used";
+    await ticket.save();
+
+    return res.json({
+      valid: true,
+      message: "Valid ticket ✅",
+      ticket,
+    });
+
+  } catch (error) {
+    console.error("Error verifying ticket:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports = { checkoutReservation, getMyTickets, verifyTicket };

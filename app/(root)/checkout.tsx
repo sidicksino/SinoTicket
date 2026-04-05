@@ -46,14 +46,14 @@ export default function Checkout() {
     try {
       // For now, checkout each reservation individually.
       // Optimization: Implement a bulk checkout endpoint in the backend.
-      await Promise.all(
-        reservationIds.map((id: string) => 
-          authFetch("/api/tickets/checkout", {
-            method: "POST",
-            body: JSON.stringify({ reservation_id: id, payment_method: selectedMethod }),
-          })
-        )
-      );
+      // Checkout sequentially to prevent MongoDB transactional WriteConflicts 
+      // on shared documents (like Event ticket counts).
+      for (const id of reservationIds) {
+        await authFetch("/api/tickets/checkout", {
+          method: "POST",
+          body: JSON.stringify({ reservation_id: id, payment_method: selectedMethod }),
+        });
+      }
 
       router.replace({
         pathname: "/(root)/success",
