@@ -17,7 +17,7 @@ const getMongoUser = async (clerkId) => {
 // Generate a secure unique QR code hash
 const generateQRCode = (userId, eventId, seatId) => {
     const data = `${userId}-${eventId}-${seatId}-${Date.now()}-${Math.random()}`;
-    return `STK_${crypto.createHash('sha256').update(data).digest('hex')}`;
+    return `SINO_TK_${crypto.createHash('sha256').update(data).digest('hex')}`;
 };
 
 // @desc    Checkout and generate Ticket from a Reservation
