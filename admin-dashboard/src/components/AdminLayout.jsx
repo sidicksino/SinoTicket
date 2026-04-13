@@ -1,16 +1,15 @@
-import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
 import { useClerk, useUser } from '@clerk/clerk-react';
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  MapPin, 
-  Users, 
-  Settings, 
-  Ticket,
+import {
+  Bell,
+  Calendar,
+  LayoutDashboard,
   LogOut,
-  Bell
+  MapPin,
+  Settings,
+  Ticket,
+  Users
 } from 'lucide-react';
+import { NavLink, Outlet } from 'react-router-dom';
 
 const SidebarItem = ({ to, icon: Icon, label }) => (
   <NavLink

@@ -1,15 +1,49 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #0286FF;
-  --color-primary-dark: #0266CC;
-  --color-background: #F8FAFC;
-  --color-card: #FFFFFF;
-  --color-text: #0F172A;
-  --color-subtext: #64748B;
-  --color-border: #E2E8F0;
+  /* ─── Brand ─────────────────────────────── */
+  --color-primary:       #3B82F6;
+  --color-primary-light: rgba(59,130,246,0.18);
+
+  /* ─── Surfaces (Dark theme) ─────────────── */
+  --color-background:    #0B0F19;
+  --color-card:          #121826;
+  --color-card-border:   #1F2937;
+  --color-input-bg:      #111827;
+
+  /* ─── Typography ─────────────────────────── */
+  --color-text:          #E5E7EB;
+  --color-subtext:       #9CA3AF;
+  --color-border:        #1F2937;
+
+  /* ─── Tab bar ────────────────────────────── */
+  --color-tab-bar:       #0F172A;
+  --color-tab-bar-pill:  #1E293B;
+  --color-tab-bar-icon:  #6B7280;
+
+  /* ─── Overlays ───────────────────────────── */
+  --color-overlay:        rgba(0,0,0,0.35);
+  --color-overlay-light:  rgba(0,0,0,0.20);
+  --color-overlay-medium: rgba(0,0,0,0.55);
+  --color-overlay-dark:   rgba(0,0,0,0.85);
+
+  /* ─── Seat States ────────────────────────── */
+  --color-seat-available: #1F2937;
+  --color-seat-selected:  #3B82F6;
+  --color-seat-reserved:  #F59E0B;
+  --color-seat-booked:    #EF4444;
+
+  /* ─── Feedback ───────────────────────────── */
+  --color-success:   #22C55E;
+  --color-error:     #EF4444;
+  --color-warning:   #F59E0B;
+
+  /* ─── Base ───────────────────────────────── */
+  --color-white:       #FFFFFF;
+  --color-black:       #000000;
 }
 
+/* ─── Animations ─────────────────────────────────────── */
 .animate-orbit {
   animation: orbit calc(var(--duration) * 1s) linear infinite;
 }
@@ -19,32 +53,21 @@
 }
 
 @keyframes ripple {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(0.9);
-  }
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%       { transform: translate(-50%, -50%) scale(0.9); }
 }
 
 @keyframes orbit {
-  0% {
-    transform: rotate(0deg) translateY(calc(var(--radius) * 1px)) rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg) translateY(calc(var(--radius) * 1px)) rotate(-360deg);
-  }
+  0%   { transform: rotate(0deg)   translateY(calc(var(--radius) * 1px)) rotate(0deg); }
+  100% { transform: rotate(360deg) translateY(calc(var(--radius) * 1px)) rotate(-360deg); }
 }
 
+/* ─── Reset & Base ───────────────────────────────────── */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  color-scheme: dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -56,7 +79,8 @@ body {
   display: flex;
   min-width: 320px;
   min-height: 100vh;
-  @apply bg-slate-50 text-slate-900;
+  background-color: #0B0F19;
+  color: #E5E7EB;
 }
 
 #root {
