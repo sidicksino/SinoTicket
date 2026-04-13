@@ -11,6 +11,9 @@ import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import "../global.css";
 import { tokenCache } from "../lib/auth";
 import * as WebBrowser from "expo-web-browser";
+import { ErrorBoundary } from "../components/ErrorBoundary";
+
+export { ErrorBoundary };
 
 WebBrowser.maybeCompleteAuthSession();
 

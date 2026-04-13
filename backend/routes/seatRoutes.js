@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const seatControllers = require('../controllers/seatController');
-const authenticateToken = require('../middleware/auth');
+const { authenticateToken, checkAdmin } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -39,7 +39,7 @@ const authenticateToken = require('../middleware/auth');
  *       201:
  *         description: Seats generated successfully
  */
-router.post('/generate', authenticateToken, seatControllers.generateSeats);
+router.post('/generate', authenticateToken, checkAdmin, seatControllers.generateSeats);
 
 /**
  * @swagger
@@ -99,7 +99,7 @@ router.get('/', seatControllers.getSeats);
  *       200:
  *         description: Seat updated
  */
-router.put('/:id', authenticateToken, seatControllers.updateSeat);
+router.put('/:id', authenticateToken, checkAdmin, seatControllers.updateSeat);
 
 /**
  * @swagger
@@ -119,7 +119,7 @@ router.put('/:id', authenticateToken, seatControllers.updateSeat);
  *       200:
  *         description: Seat deleted
  */
-router.delete('/:id', authenticateToken, seatControllers.deleteSeat);
+router.delete('/:id', authenticateToken, checkAdmin, seatControllers.deleteSeat);
 
 /**
  * @swagger
@@ -139,6 +139,6 @@ router.delete('/:id', authenticateToken, seatControllers.deleteSeat);
  *       200:
  *         description: All seats deleted in section
  */
-router.delete('/section/:section_id', authenticateToken, seatControllers.clearSectionSeats);
+router.delete('/section/:section_id', authenticateToken, checkAdmin, seatControllers.clearSectionSeats);
 
 module.exports = router;

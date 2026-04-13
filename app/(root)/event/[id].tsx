@@ -5,6 +5,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useFetch } from "@/lib/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
+import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -62,11 +63,13 @@ export default function EventDetail() {
   }
 
   const handleBookNow = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsModalVisible(true);
   };
 
   const handleSelectSeats = () => {
     if (!selectedCategory) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsModalVisible(false);
     router.push({
       pathname: "/(root)/seat-selection",

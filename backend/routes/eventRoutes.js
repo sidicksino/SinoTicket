@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const eventControllers = require('../controllers/eventController');
-const authenticateToken = require('../middleware/auth');
+const { authenticateToken, checkAdmin } = require('../middleware/auth');
+const validate = require('../middleware/validate');
+const { eventSchema } = require('../utils/validators');
 
 /**
  * @swagger
@@ -80,7 +82,7 @@ const authenticateToken = require('../middleware/auth');
  *       201:
  *         description: Event created successfully
  */
-router.post('/add', authenticateToken, eventControllers.addEvent);
+router.post('/add', authenticateToken, checkAdmin, validate(eventSchema), eventControllers.addEvent);
 
 /**
  * @swagger
@@ -136,7 +138,7 @@ router.get('/:id', eventControllers.getEventById);
  *       200:
  *         description: Event updated
  */
-router.put('/:id', authenticateToken, eventControllers.updateEvent);
+router.put('/:id', authenticateToken, checkAdmin, validate(eventSchema.partial()), eventControllers.updateEvent);
 
 /**
  * @swagger
@@ -156,6 +158,6 @@ router.put('/:id', authenticateToken, eventControllers.updateEvent);
  *       200:
  *         description: Event deleted
  */
-router.delete('/:id', authenticateToken, eventControllers.deleteEvent);
+router.delete('/:id', authenticateToken, checkAdmin, eventControllers.deleteEvent);
 
 module.exports = router;

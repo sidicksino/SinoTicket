@@ -3,6 +3,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAuthFetch } from "@/lib/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
 import {
   Alert,
@@ -39,6 +40,7 @@ export default function Checkout() {
 
   const handleCheckout = async () => {
     if (!selectedMethod) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       Alert.alert("Payment Method", "Please select a payment method.");
       return;
     }
@@ -55,6 +57,7 @@ export default function Checkout() {
         });
       }
 
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace({
         pathname: "/(root)/success",
         params: {
@@ -66,6 +69,7 @@ export default function Checkout() {
         }
       } as any);
     } catch (err: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("Checkout Failed", err.message || "Something went wrong during payment.");
     } finally {
       setLoading(false);

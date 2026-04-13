@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const sectionControllers = require('../controllers/sectionController');
-const authenticateToken = require('../middleware/auth');
+const { authenticateToken, checkAdmin } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -39,7 +39,7 @@ const authenticateToken = require('../middleware/auth');
  *       201:
  *         description: Section created successfully
  */
-router.post('/add', authenticateToken, sectionControllers.addSection);
+router.post('/add', authenticateToken, checkAdmin, sectionControllers.addSection);
 
 /**
  * @swagger
@@ -100,7 +100,7 @@ router.get('/:id', sectionControllers.getSectionById);
  *       200:
  *         description: Section updated
  */
-router.put('/:id', authenticateToken, sectionControllers.updateSection);
+router.put('/:id', authenticateToken, checkAdmin, sectionControllers.updateSection);
 
 /**
  * @swagger
@@ -120,6 +120,6 @@ router.put('/:id', authenticateToken, sectionControllers.updateSection);
  *       200:
  *         description: Section deleted
  */
-router.delete('/:id', authenticateToken, sectionControllers.deleteSection);
+router.delete('/:id', authenticateToken, checkAdmin, sectionControllers.deleteSection);
 
 module.exports = router;

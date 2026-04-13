@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const venueControllers = require('../controllers/venueController');
-const authenticateToken = require('../middleware/auth');
+const { authenticateToken, checkAdmin } = require('../middleware/auth');
+const validate = require('../middleware/validate');
+const { venueSchema } = require('../utils/validators');
 
 /**
  * @swagger
@@ -35,7 +37,7 @@ const authenticateToken = require('../middleware/auth');
  *       201:
  *         description: Venue created successfully
  */
-router.post('/add', authenticateToken, venueControllers.addVenue);
+router.post('/add', authenticateToken, checkAdmin, validate(venueSchema), venueControllers.addVenue);
 
 /**
  * @swagger
@@ -73,7 +75,7 @@ router.get('/getVenue', venueControllers.getVenue);
  *       200:
  *         description: Venue updated
  */
-router.put('/updateVenue/:id', authenticateToken, venueControllers.updateVenue);
+router.put('/updateVenue/:id', authenticateToken, checkAdmin, validate(venueSchema.partial()), venueControllers.updateVenue);
 
 /**
  * @swagger
@@ -93,6 +95,6 @@ router.put('/updateVenue/:id', authenticateToken, venueControllers.updateVenue);
  *       200:
  *         description: Venue deleted
  */
-router.delete('/deleteVenue/:id', authenticateToken, venueControllers.deleteVenue);
+router.delete('/deleteVenue/:id', authenticateToken, checkAdmin, venueControllers.deleteVenue);
 
 module.exports = router;

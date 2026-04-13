@@ -1,6 +1,7 @@
 import AppHeader from "@/components/AppHeader";
 import EmptyState from "@/components/EmptyState";
 import PromoCarousel from "@/components/PromoCarousel";
+import Skeleton from "@/components/Skeleton";
 import { useTheme } from "@/context/ThemeContext";
 import { useFetch } from "@/lib/fetch";
 import { Ionicons } from "@expo/vector-icons";
@@ -371,8 +372,17 @@ export default function Home() {
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={
           loading ? (
-            <View style={{ marginTop: 60, alignItems: "center" }}>
-              <ActivityIndicator size="large" color={colors.primary} />
+            <View style={{ marginTop: 20 }}>
+              {[1, 2, 3, 4].map((i) => (
+                <View key={i} style={{ flexDirection: "row", marginBottom: 14, marginHorizontal: 24, backgroundColor: colors.card, padding: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.cardBorder }}>
+                  <Skeleton width={72} height={72} borderRadius={14} />
+                  <View style={{ flex: 1, marginLeft: 14, justifyContent: 'center' }}>
+                    <Skeleton width="80%" height={16} style={{ marginBottom: 8 }} />
+                    <Skeleton width="40%" height={12} style={{ marginBottom: 6 }} />
+                    <Skeleton width="50%" height={12} />
+                  </View>
+                </View>
+              ))}
             </View>
           ) : !error && events.length === 0 ? (
             <EmptyState
