@@ -1,7 +1,18 @@
-import { useState, useEffect, type FormEvent } from 'react';
-import { Plus, Search, Filter, Loader2, Calendar as CalendarIcon, X } from 'lucide-react';
+import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
+import {
+  Plus,
+  Search,
+  Filter,
+  Loader2,
+  Calendar as CalendarIcon,
+  X,
+  Edit,
+  Trash2,
+  Eye,
+} from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
 
+// ─── Types ────────────────────────────────────────
 interface TicketCategory {
   name: string;
   price: number;
@@ -23,6 +34,7 @@ interface Event {
   date: string;
   imageUrl: string;
   category: string;
+  status?: string;
   venue_id?: Venue;
   ticket_categories?: TicketCategory[];
 }
@@ -37,68 +49,124 @@ interface EventFormData {
   ticket_categories: TicketCategory[];
 }
 
+const EMPTY_FORM: EventFormData = {
+  title: '',
+  description: '',
+  date: '',
+  imageUrl: '',
+  venue_id: '',
+  category: 'Music',
+  ticket_categories: [{ name: 'General Admission', price: 0, quantity: 100 }],
+};
+
+const CATEGORIES = ['Music', 'Sports', 'Cultural', 'Business', 'Fashion'];
+
 export default function EventsManager() {
   const { getToken } = useAuth();
-  
+
   const [events, setEvents] = useState<Event[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [adding, setAdding] = useState(false);
-  const [error, setError] = useState('');
-  
-  const [formData, setFormData] = useState<EventFormData>({
-    title: '',
-    description: '',
-    date: '',
-    imageUrl: '',
-    venue_id: '',
-    category: 'Music',
-    ticket_categories: [
-      { name: 'General Admission', price: 0, quantity: 100 }
-    ]
-  });
+  const [search, setSearch] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
 
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState<EventFormData>(EMPTY_FORM);
+  const [error, setError] = useState('');
+
+  // Delete
+  const [deleteTarget, setDeleteTarget] = useState<Event | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Detail view
+  const [viewEvent, setViewEvent] = useState<Event | null>(null);
+
+  // ─── Fetch data ─────────────────────────────────
   const fetchData = async () => {
     try {
       setLoading(true);
       const [eventsRes, venuesRes] = await Promise.all([
         fetch('http://localhost:5001/api/events'),
-        fetch('http://localhost:5001/api/venues')
+        fetch('http://localhost:5001/api/venue/getVenue'),
       ]);
       const eventsData = await eventsRes.json();
       const venuesData = await venuesRes.json();
-      
+
       if (eventsData.success) setEvents(eventsData.events);
       if (venuesData.success) {
         setVenues(venuesData.venues);
         if (venuesData.venues.length > 0) {
-          setFormData(prev => ({ ...prev, venue_id: venuesData.venues[0]._id }));
+          setFormData((prev) => ({ ...prev, venue_id: venuesData.venues[0]._id }));
         }
       }
     } catch (err) {
-      console.error("Failed to fetch data", err);
+      console.error('Failed to fetch data', err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
-  const handleAddTicketCategory = () => {
+  // ─── Filtered events ────────────────────────────
+  const filteredEvents = events.filter((e) => {
+    const matchesSearch =
+      !search ||
+      e.title.toLowerCase().includes(search.toLowerCase()) ||
+      e.category.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = !filterCategory || e.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // ─── Open modals ────────────────────────────────
+  const openAdd = () => {
+    setEditingEvent(null);
+    setFormData({
+      ...EMPTY_FORM,
+      venue_id: venues.length > 0 ? venues[0]._id : '',
+    });
+    setError('');
+    setShowModal(true);
+  };
+
+  const openEdit = (event: Event) => {
+    setEditingEvent(event);
+    setFormData({
+      title: event.title,
+      description: event.description,
+      date: event.date ? new Date(event.date).toISOString().slice(0, 16) : '',
+      imageUrl: event.imageUrl || '',
+      venue_id: event.venue_id?._id || '',
+      category: event.category,
+      ticket_categories: event.ticket_categories?.map((tc) => ({
+        name: tc.name,
+        price: tc.price,
+        quantity: tc.quantity,
+      })) || [{ name: 'General Admission', price: 0, quantity: 100 }],
+    });
+    setError('');
+    setShowModal(true);
+  };
+
+  // ─── Ticket category helpers ────────────────────
+  const addTicketCategory = () => {
     setFormData({
       ...formData,
       ticket_categories: [
         ...formData.ticket_categories,
-        { name: '', price: 0, quantity: 0 }
-      ]
+        { name: '', price: 0, quantity: 0 },
+      ],
     });
   };
 
-  const handleTicketChange = (index: number, field: keyof TicketCategory, value: string) => {
+  const updateTicket = (
+    index: number,
+    field: keyof TicketCategory,
+    value: string
+  ) => {
     const updated = [...formData.ticket_categories];
     if (field === 'name') {
       updated[index][field] = value;
@@ -108,57 +176,54 @@ export default function EventsManager() {
     setFormData({ ...formData, ticket_categories: updated });
   };
 
-  const handleRemoveTicket = (index: number) => {
+  const removeTicket = (index: number) => {
     const updated = [...formData.ticket_categories];
     updated.splice(index, 1);
     setFormData({ ...formData, ticket_categories: updated });
   };
 
-  const handleAddEvent = async (e: FormEvent<HTMLFormElement>) => {
+  // ─── Save (create / update) ─────────────────────
+  const handleSave = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setAdding(true);
+    setSaving(true);
     setError('');
-    
+
     try {
       const token = await getToken();
-      
-      let eventDate = new Date();
-      if (formData.date) {
-         eventDate = new Date(formData.date);
-      }
-      
+      const isEdit = !!editingEvent;
+
+      const eventDate = formData.date ? new Date(formData.date) : new Date();
+
       const payload = {
         title: formData.title,
         description: formData.description,
         date: eventDate.toISOString(),
-        imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800',
+        imageUrl:
+          formData.imageUrl ||
+          'https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800',
         venue_id: formData.venue_id,
         category: formData.category,
-        ticket_categories: formData.ticket_categories
+        ticket_categories: formData.ticket_categories,
       };
 
-      const res = await fetch('http://localhost:5001/api/events/add', {
-        method: 'POST',
+      const url = isEdit
+        ? `http://localhost:5001/api/events/${editingEvent!._id}`
+        : 'http://localhost:5001/api/events/add';
+
+      const res = await fetch(url, {
+        method: isEdit ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
-      
+
       const data = await res.json();
-      
+
       if (data.success) {
-        setShowAddModal(false);
-        setFormData({
-          title: '',
-          description: '',
-          date: '',
-          imageUrl: '',
-          venue_id: venues.length > 0 ? venues[0]._id : '',
-          category: 'Music',
-          ticket_categories: [{ name: 'General Admission', price: 0, quantity: 100 }]
-        });
+        setShowModal(false);
+        setFormData(EMPTY_FORM);
         fetchData();
       } else {
         setError(data.message || 'Validation error. Check fields.');
@@ -166,86 +231,201 @@ export default function EventsManager() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
-      setAdding(false);
+      setSaving(false);
     }
   };
 
+  // ─── Delete ─────────────────────────────────────
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(
+        `http://localhost:5001/api/events/${deleteTarget._id}`,
+        { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      if (data.success) {
+        setDeleteTarget(null);
+        fetchData();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // ─── Helpers ────────────────────────────────────
+  function getSalesInfo(event: Event) {
+    const total = event.ticket_categories?.reduce((s, c) => s + (c.quantity || 0), 0) || 0;
+    const sold = event.ticket_categories?.reduce((s, c) => s + (c.sold || 0), 0) || 0;
+    const pct = total === 0 ? 0 : Math.round((sold / total) * 100);
+    return { total, sold, pct };
+  }
+
+  function getStatusBadge(event: Event) {
+    const d = new Date(event.date);
+    const now = new Date();
+    if (event.status === 'Ended' || d < now) return { label: 'Ended', cls: 'bg-error/10 text-error' };
+    if (event.status === 'Ongoing') return { label: 'Live', cls: 'bg-success/10 text-success' };
+    return { label: 'Upcoming', cls: 'bg-primary/10 text-primary' };
+  }
+
+  // ─── Render ─────────────────────────────────────
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Events</h2>
-          <p className="text-slate-500">Create and manage your platform events.</p>
+          <h2 className="text-2xl font-bold text-text">Events</h2>
+          <p className="text-subtext mt-1">Create and manage your platform events.</p>
         </div>
-        <button 
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-2xl font-bold self-stretch sm:self-auto shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all"
+        <button
+          onClick={openAdd}
+          className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:brightness-110 transition-all active:scale-[0.97]"
         >
           <Plus size={20} />
-          <span>Create New Event</span>
+          <span>Create Event</span>
         </button>
       </div>
 
-      <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-        <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row gap-4 justify-between items-center">
+      {/* Toolbar */}
+      <div className="bg-card rounded-3xl border border-card-border overflow-hidden shadow-sm">
+        <div className="p-5 border-b border-card-border flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:w-96">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search events..." 
-              className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-medium text-slate-600"
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-subtext" size={18} />
+            <input
+              type="text"
+              placeholder="Search events..."
+              value={search}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              className="w-full pl-12 pr-4 py-2.5 bg-input-bg border border-card-border rounded-xl text-text placeholder:text-subtext/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-medium"
             />
           </div>
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition-colors">
-              <Filter size={18} />
-              <span>Filters</span>
-            </button>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Filter size={18} className="text-subtext" />
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="px-4 py-2.5 bg-input-bg border border-card-border rounded-xl text-text font-bold outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="">All Categories</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
         </div>
 
+        {/* Table */}
         {loading ? (
-           <div className="p-20 flex justify-center text-blue-600"><Loader2 className="animate-spin" size={40} /></div>
-        ) : events.length === 0 ? (
-           <div className="p-12 text-center">
-             <CalendarIcon size={48} className="mx-auto text-slate-300 mb-4" />
-             <h3 className="text-lg font-bold text-slate-700">No events found</h3>
-           </div>
+          <div className="p-20 flex justify-center text-primary">
+            <Loader2 className="animate-spin" size={40} />
+          </div>
+        ) : filteredEvents.length === 0 ? (
+          <div className="p-12 text-center">
+            <CalendarIcon size={48} className="mx-auto text-subtext/30 mb-4" />
+            <h3 className="text-lg font-bold text-text">No events found</h3>
+            <p className="text-subtext text-sm mt-1">
+              {events.length > 0
+                ? 'Try adjusting your search or filters.'
+                : 'Create your first event to get started.'}
+            </p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-slate-50/50 text-slate-400 text-xs font-bold uppercase tracking-widest border-b border-slate-100">
+                <tr className="bg-card-border/20 text-subtext text-xs font-bold uppercase tracking-widest border-b border-card-border">
                   <th className="px-6 py-4">Event</th>
                   <th className="px-6 py-4">Category</th>
                   <th className="px-6 py-4">Venue</th>
                   <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4">Sales</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
-                {events.map((event) => {
-                  const totalTickets = event.ticket_categories?.reduce((acc, c) => acc + (c.quantity || 0), 0) || 0;
-                  const soldTickets = event.ticket_categories?.reduce((acc, c) => acc + (c.sold || 0), 0) || 0;
-                  const pct = totalTickets === 0 ? 0 : Math.round((soldTickets / totalTickets) * 100);
-                  
+              <tbody className="divide-y divide-card-border/50">
+                {filteredEvents.map((event) => {
+                  const { total, sold, pct } = getSalesInfo(event);
+                  const status = getStatusBadge(event);
+
                   return (
-                    <tr key={event._id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 cursor-pointer">
-                        <div className="flex items-center gap-4 font-bold text-slate-800">
-                          <img src={event.imageUrl} alt="" className="w-10 h-10 object-cover bg-slate-100 rounded-xl flex-shrink-0" />
-                          <span className="truncate max-w-[200px]">{event.title}</span>
+                    <tr
+                      key={event._id}
+                      className="hover:bg-card-border/10 transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <img
+                            src={event.imageUrl}
+                            alt=""
+                            className="w-10 h-10 object-cover bg-card-border rounded-xl flex-shrink-0"
+                          />
+                          <span className="font-bold text-text truncate max-w-[200px]">
+                            {event.title}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-500">{event.category}</td>
-                      <td className="px-6 py-4 text-sm text-slate-500">{event.venue_id?.name || "TBA"}</td>
-                      <td className="px-6 py-4 text-sm font-medium text-slate-600">
-                        {new Date(event.date).toLocaleDateString()}
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-card-border/30 text-subtext">
+                          {event.category}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-subtext">
+                        {event.venue_id?.name || 'TBA'}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-text">
+                        {new Date(event.date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm font-bold text-slate-800">{soldTickets}/{totalTickets}</div>
-                        <div className="w-24 h-1.5 bg-slate-100 rounded-full mt-1">
-                          <div className={`h-full rounded-full ${pct > 80 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${pct}%` }}></div>
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${status.cls}`}>
+                          {status.label}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-bold text-text">
+                          {sold}/{total}
+                        </div>
+                        <div className="w-24 h-1.5 bg-card-border rounded-full mt-1 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              pct > 80 ? 'bg-success' : 'bg-primary'
+                            }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => setViewEvent(event)}
+                            className="p-2 text-subtext hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            title="View"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => openEdit(event)}
+                            className="p-2 text-subtext hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(event)}
+                            className="p-2 text-subtext hover:text-error hover:bg-error/10 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -257,83 +437,189 @@ export default function EventsManager() {
         )}
       </div>
 
-       {/* Add Event Modal */}
-       {showAddModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-slate-800">Draft New Event</h3>
-              <button disabled={adding} onClick={() => setShowAddModal(false)} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors">
+      {/* ─── Add / Edit Modal ─────────────────────── */}
+      {showModal && (
+        <div className="fixed inset-0 bg-overlay-dark z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-3xl w-full max-w-2xl max-h-[90vh] shadow-2xl border border-card-border flex flex-col animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-5 border-b border-card-border flex items-center justify-between flex-shrink-0">
+              <h3 className="text-xl font-bold text-text">
+                {editingEvent ? 'Edit Event' : 'Create New Event'}
+              </h3>
+              <button
+                disabled={saving}
+                onClick={() => setShowModal(false)}
+                className="p-2 text-subtext hover:bg-card-border/50 rounded-full transition-colors"
+              >
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-6">
-              <form id="add-event-form" onSubmit={handleAddEvent} className="space-y-6">
+              <form id="event-form" onSubmit={handleSave} className="space-y-6">
                 {error && (
-                  <div className="p-3 bg-red-50 text-red-600 text-sm font-bold rounded-xl border border-red-100">
+                  <div className="p-3 bg-error/10 text-error text-sm font-bold rounded-xl border border-error/20">
                     {error}
                   </div>
                 )}
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Event Title</label>
-                      <input required type="text" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+                      <label className="block text-sm font-bold text-text mb-2">
+                        Event Title
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        value={formData.title}
+                        onChange={(e) =>
+                          setFormData({ ...formData, title: e.target.value })
+                        }
+                        className="w-full px-4 py-3 bg-input-bg border border-card-border rounded-xl text-text placeholder:text-subtext/50 focus:ring-2 focus:ring-primary/30 focus:border-primary/50 outline-none"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Date & Time</label>
-                      <input required type="datetime-local" value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+                      <label className="block text-sm font-bold text-text mb-2">
+                        Date & Time
+                      </label>
+                      <input
+                        required
+                        type="datetime-local"
+                        value={formData.date}
+                        onChange={(e) =>
+                          setFormData({ ...formData, date: e.target.value })
+                        }
+                        className="w-full px-4 py-3 bg-input-bg border border-card-border rounded-xl text-text focus:ring-2 focus:ring-primary/30 focus:border-primary/50 outline-none"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Venue</label>
-                      <select required value={formData.venue_id} onChange={(e) => setFormData({...formData, venue_id: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none">
-                        <option value="" disabled>Select a Venue</option>
-                        {venues.map(v => <option key={v._id} value={v._id}>{v.name}</option>)}
+                      <label className="block text-sm font-bold text-text mb-2">
+                        Venue
+                      </label>
+                      <select
+                        required
+                        value={formData.venue_id}
+                        onChange={(e) =>
+                          setFormData({ ...formData, venue_id: e.target.value })
+                        }
+                        className="w-full px-4 py-3 bg-input-bg border border-card-border rounded-xl text-text focus:ring-2 focus:ring-primary/30 focus:border-primary/50 outline-none"
+                      >
+                        <option value="" disabled>
+                          Select a Venue
+                        </option>
+                        {venues.map((v) => (
+                          <option key={v._id} value={v._id}>
+                            {v.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Category</label>
-                      <select value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none">
-                        <option value="Music">Music</option>
-                        <option value="Sports">Sports</option>
-                        <option value="Cultural">Cultural</option>
-                        <option value="Business">Business</option>
-                        <option value="Fashion">Fashion</option>
+                      <label className="block text-sm font-bold text-text mb-2">
+                        Category
+                      </label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) =>
+                          setFormData({ ...formData, category: e.target.value })
+                        }
+                        className="w-full px-4 py-3 bg-input-bg border border-card-border rounded-xl text-text focus:ring-2 focus:ring-primary/30 focus:border-primary/50 outline-none"
+                      >
+                        {CATEGORIES.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-2">Cover Image URL</label>
-                      <input type="url" placeholder="Optional URL" value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none" />
+                      <label className="block text-sm font-bold text-text mb-2">
+                        Cover Image URL
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="Optional URL"
+                        value={formData.imageUrl}
+                        onChange={(e) =>
+                          setFormData({ ...formData, imageUrl: e.target.value })
+                        }
+                        className="w-full px-4 py-3 bg-input-bg border border-card-border rounded-xl text-text placeholder:text-subtext/50 focus:ring-2 focus:ring-primary/30 focus:border-primary/50 outline-none"
+                      />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
-                  <textarea required rows={3} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none"></textarea>
+                  <label className="block text-sm font-bold text-text mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                    className="w-full px-4 py-3 bg-input-bg border border-card-border rounded-xl text-text placeholder:text-subtext/50 focus:ring-2 focus:ring-primary/30 focus:border-primary/50 outline-none resize-none"
+                  />
                 </div>
 
-                <div className="pt-6 border-t border-slate-100">
+                {/* Tickets */}
+                <div className="pt-6 border-t border-card-border">
                   <div className="flex justify-between items-center mb-4">
-                    <h4 className="font-bold text-slate-800">Ticket Categories</h4>
-                    <button type="button" onClick={handleAddTicketCategory} className="text-sm font-bold text-blue-600 hover:text-blue-700">
+                    <h4 className="font-bold text-text">Ticket Categories</h4>
+                    <button
+                      type="button"
+                      onClick={addTicketCategory}
+                      className="text-sm font-bold text-primary hover:text-primary/80"
+                    >
                       + Add Category
                     </button>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {formData.ticket_categories.map((cat, index) => (
                       <div key={index} className="flex gap-2 items-center">
-                        <input type="text" placeholder="Name" required value={cat.name} onChange={(e) => handleTicketChange(index, 'name', e.target.value)} className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none" />
-                        <input type="number" placeholder="Price" min="0" required value={cat.price} onChange={(e) => handleTicketChange(index, 'price', e.target.value)} className="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none" />
-                        <span className="text-slate-400 font-bold">XAF</span>
-                        <input type="number" placeholder="Qty" min="1" required value={cat.quantity} onChange={(e) => handleTicketChange(index, 'quantity', e.target.value)} className="w-20 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none" />
-                        <button type="button" onClick={() => handleRemoveTicket(index)} disabled={formData.ticket_categories.length === 1} className="p-2 text-red-500 hover:bg-red-50 rounded-lg disabled:opacity-30">
+                        <input
+                          type="text"
+                          placeholder="Name"
+                          required
+                          value={cat.name}
+                          onChange={(e) =>
+                            updateTicket(index, 'name', e.target.value)
+                          }
+                          className="flex-1 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Price"
+                          min="0"
+                          required
+                          value={cat.price}
+                          onChange={(e) =>
+                            updateTicket(index, 'price', e.target.value)
+                          }
+                          className="w-24 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                        <span className="text-subtext font-bold text-xs">XAF</span>
+                        <input
+                          type="number"
+                          placeholder="Qty"
+                          min="1"
+                          required
+                          value={cat.quantity}
+                          onChange={(e) =>
+                            updateTicket(index, 'quantity', e.target.value)
+                          }
+                          className="w-20 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeTicket(index)}
+                          disabled={formData.ticket_categories.length === 1}
+                          className="p-2 text-error hover:bg-error/10 rounded-lg disabled:opacity-30 transition-colors"
+                        >
                           <X size={16} />
                         </button>
                       </div>
@@ -342,22 +628,171 @@ export default function EventsManager() {
                 </div>
               </form>
             </div>
-            
-            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 rounded-b-3xl">
-              <button 
-                type="button" 
-                onClick={() => setShowAddModal(false)}
-                className="py-2.5 px-5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors"
+
+            <div className="p-6 border-t border-card-border bg-card-border/10 flex justify-end gap-3 rounded-b-3xl flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="py-2.5 px-5 bg-card-border/30 text-subtext font-bold rounded-xl hover:bg-card-border/50 transition-colors"
               >
                 Cancel
               </button>
-              <button 
-                form="add-event-form"
-                type="submit" 
-                disabled={adding}
-                className="py-2.5 px-6 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 disabled:opacity-70 flex items-center gap-2 transition-colors min-w-[140px] justify-center"
+              <button
+                form="event-form"
+                type="submit"
+                disabled={saving}
+                className="py-2.5 px-6 bg-primary text-white font-bold rounded-xl hover:brightness-110 disabled:opacity-70 flex items-center gap-2 transition-all min-w-[140px] justify-center"
               >
-                {adding ? <Loader2 className="animate-spin" size={20} /> : 'Publish Event'}
+                {saving ? (
+                  <Loader2 className="animate-spin" size={20} />
+                ) : editingEvent ? (
+                  'Update Event'
+                ) : (
+                  'Publish Event'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── View Detail Modal ────────────────────── */}
+      {viewEvent && (
+        <div className="fixed inset-0 bg-overlay-dark z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-3xl w-full max-w-lg shadow-2xl border border-card-border overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Image */}
+            <div className="h-48 relative">
+              <img
+                src={viewEvent.imageUrl}
+                alt={viewEvent.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
+              <button
+                onClick={() => setViewEvent(null)}
+                className="absolute top-4 right-4 p-2 bg-black/40 text-white rounded-full hover:bg-black/60 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 -mt-8 relative space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <h3 className="text-xl font-bold text-text">{viewEvent.title}</h3>
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg flex-shrink-0 ${getStatusBadge(viewEvent).cls}`}>
+                  {getStatusBadge(viewEvent).label}
+                </span>
+              </div>
+
+              <p className="text-subtext text-sm leading-relaxed">
+                {viewEvent.description}
+              </p>
+
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="bg-card-border/20 px-4 py-3 rounded-xl">
+                  <div className="text-xs text-subtext font-bold uppercase tracking-widest mb-1">
+                    Date
+                  </div>
+                  <div className="text-sm font-bold text-text">
+                    {new Date(viewEvent.date).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
+                  </div>
+                </div>
+                <div className="bg-card-border/20 px-4 py-3 rounded-xl">
+                  <div className="text-xs text-subtext font-bold uppercase tracking-widest mb-1">
+                    Venue
+                  </div>
+                  <div className="text-sm font-bold text-text">
+                    {viewEvent.venue_id?.name || 'TBA'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Tickets breakdown */}
+              {viewEvent.ticket_categories && viewEvent.ticket_categories.length > 0 && (
+                <div className="pt-4 border-t border-card-border">
+                  <h4 className="text-sm font-bold text-text mb-3">Ticket Categories</h4>
+                  <div className="space-y-2">
+                    {viewEvent.ticket_categories.map((tc, i) => {
+                      const tcPct = tc.quantity === 0 ? 0 : Math.round(((tc.sold || 0) / tc.quantity) * 100);
+                      return (
+                        <div key={i} className="flex items-center gap-3">
+                          <span className="text-sm text-text font-medium flex-1">{tc.name}</span>
+                          <span className="text-xs text-subtext font-bold">
+                            {(tc.sold || 0)}/{tc.quantity}
+                          </span>
+                          <span className="text-xs font-bold text-primary">
+                            {tc.price.toLocaleString()} XAF
+                          </span>
+                          <div className="w-16 h-1.5 bg-card-border rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${tcPct > 80 ? 'bg-success' : 'bg-primary'}`}
+                              style={{ width: `${tcPct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    setViewEvent(null);
+                    openEdit(viewEvent);
+                  }}
+                  className="flex-1 py-2.5 bg-primary/10 text-primary font-bold rounded-xl hover:bg-primary/20 transition-colors text-sm"
+                >
+                  Edit Event
+                </button>
+                <button
+                  onClick={() => setViewEvent(null)}
+                  className="flex-1 py-2.5 bg-card-border/30 text-subtext font-bold rounded-xl hover:bg-card-border/50 transition-colors text-sm"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Delete Confirmation ──────────────────── */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-overlay-dark z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-3xl w-full max-w-sm shadow-2xl border border-card-border p-8 text-center animate-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 bg-error/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Trash2 size={28} className="text-error" />
+            </div>
+            <h3 className="text-xl font-bold text-text mb-2">Delete Event?</h3>
+            <p className="text-subtext text-sm mb-6">
+              Are you sure you want to delete{' '}
+              <span className="font-bold text-text">{deleteTarget.title}</span>?
+              This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 py-3 bg-card-border/30 text-subtext font-bold rounded-xl hover:bg-card-border/50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-3 bg-error text-white font-bold rounded-xl hover:brightness-110 disabled:opacity-70 flex justify-center items-center gap-2 transition-all"
+              >
+                {deleting ? (
+                  <Loader2 className="animate-spin" size={20} />
+                ) : (
+                  'Delete'
+                )}
               </button>
             </div>
           </div>
