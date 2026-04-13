@@ -1,6 +1,6 @@
 import { useSignIn } from '@clerk/clerk-react';
 import { ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { memo, useState } from 'react';
+import { memo, useState, type FormEvent } from 'react';
 import { BoxReveal } from '../ui/BoxReveal';
 import { Input } from '../ui/Input';
 
@@ -13,7 +13,7 @@ export const AnimatedForm = memo(function AnimatedForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isLoaded) return;
     
@@ -31,8 +31,9 @@ export const AnimatedForm = memo(function AnimatedForm() {
       } else {
         setError('Verification required. Access denied.');
       }
-    } catch (err) {
-      setError(err.errors?.[0]?.longMessage || 'Invalid credentials');
+    } catch (err: unknown) {
+      const clerkErr = err as { errors?: { longMessage?: string }[] };
+      setError(clerkErr.errors?.[0]?.longMessage || 'Invalid credentials');
     } finally {
       setLoading(false);
     }

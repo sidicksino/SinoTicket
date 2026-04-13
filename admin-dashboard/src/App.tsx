@@ -1,16 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { SignedIn, SignedOut, SignIn, useAuth, useUser } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, useAuth, useUser } from "@clerk/clerk-react";
 import AdminLayout from './components/AdminLayout';
 import DashboardHome from './pages/DashboardHome';
 import EventsManager from './pages/EventsManager';
 import VenuesManager from './pages/VenuesManager';
 import LoginScreen from './pages/LoginScreen';
 
-const ProtectedAdmin = ({ children }) => {
+interface ProtectedAdminProps {
+  children: ReactNode;
+}
+
+function ProtectedAdmin({ children }: ProtectedAdminProps) {
   const { getToken, signOut } = useAuth();
   const { user } = useUser();
-  const [isAdmin, setIsAdmin] = useState(null);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState(3);
 
@@ -117,8 +121,8 @@ const ProtectedAdmin = ({ children }) => {
     );
   }
 
-  return children;
-};
+  return <>{children}</>;
+}
 
 function App() {
   return (

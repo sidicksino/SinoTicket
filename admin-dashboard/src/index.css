@@ -43,6 +43,28 @@
   --color-black:       #000000;
 }
 
+/* ─── Dark theme (default) ───────────────────────────── */
+:root, .dark {
+  --bg-background:    #0B0F19;
+  --bg-card:          #121826;
+  --bg-card-border:   #1F2937;
+  --bg-input-bg:      #111827;
+  --text-text:        #E5E7EB;
+  --text-subtext:     #9CA3AF;
+  --text-border:      #1F2937;
+}
+
+/* ─── Light theme ─────────────────────────────────────── */
+.light {
+  --bg-background:    #F9FAFB;
+  --bg-card:          #FFFFFF;
+  --bg-card-border:   #E5E7EB;
+  --bg-input-bg:      #F3F4F6;
+  --text-text:        #111827;
+  --text-subtext:     #6B7280;
+  --text-border:      #E5E7EB;
+}
+
 /* ─── Animations ─────────────────────────────────────── */
 .animate-orbit {
   animation: orbit calc(var(--duration) * 1s) linear infinite;
@@ -79,8 +101,9 @@ body {
   display: flex;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #0B0F19;
-  color: #E5E7EB;
+  background-color: var(--bg-background, #0B0F19);
+  color: var(--text-text, #E5E7EB);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 #root {

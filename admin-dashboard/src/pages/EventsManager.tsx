@@ -1,19 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreVertical, Filter, Loader2, Calendar as CalendarIcon, MapPin, X } from 'lucide-react';
+import { useState, useEffect, type FormEvent } from 'react';
+import { Plus, Search, Filter, Loader2, Calendar as CalendarIcon, X } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+
+interface TicketCategory {
+  name: string;
+  price: number;
+  quantity: number;
+  sold?: number;
+}
+
+interface Venue {
+  _id: string;
+  name: string;
+  location: string;
+  capacity?: number;
+}
+
+interface Event {
+  _id: string;
+  title: string;
+  description: string;
+  date: string;
+  imageUrl: string;
+  category: string;
+  venue_id?: Venue;
+  ticket_categories?: TicketCategory[];
+}
+
+interface EventFormData {
+  title: string;
+  description: string;
+  date: string;
+  imageUrl: string;
+  venue_id: string;
+  category: string;
+  ticket_categories: TicketCategory[];
+}
 
 export default function EventsManager() {
   const { getToken } = useAuth();
   
-  const [events, setEvents] = useState([]);
-  const [venues, setVenues] = useState([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
   
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<EventFormData>({
     title: '',
     description: '',
     date: '',
@@ -63,19 +98,23 @@ export default function EventsManager() {
     });
   };
 
-  const handleTicketChange = (index, field, value) => {
+  const handleTicketChange = (index: number, field: keyof TicketCategory, value: string) => {
     const updated = [...formData.ticket_categories];
-    updated[index][field] = field === 'name' ? value : Number(value);
+    if (field === 'name') {
+      updated[index][field] = value;
+    } else {
+      (updated[index][field] as number) = Number(value);
+    }
     setFormData({ ...formData, ticket_categories: updated });
   };
 
-  const handleRemoveTicket = (index) => {
+  const handleRemoveTicket = (index: number) => {
     const updated = [...formData.ticket_categories];
     updated.splice(index, 1);
     setFormData({ ...formData, ticket_categories: updated });
   };
 
-  const handleAddEvent = async (e) => {
+  const handleAddEvent = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setAdding(true);
     setError('');
@@ -83,7 +122,6 @@ export default function EventsManager() {
     try {
       const token = await getToken();
       
-      // Formatting date correctly for the schema
       let eventDate = new Date();
       if (formData.date) {
          eventDate = new Date(formData.date);
@@ -126,7 +164,7 @@ export default function EventsManager() {
         setError(data.message || 'Validation error. Check fields.');
       }
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setAdding(false);
     }
@@ -211,7 +249,7 @@ export default function EventsManager() {
                         </div>
                       </td>
                     </tr>
-                  )
+                  );
                 })}
               </tbody>
             </table>
@@ -277,7 +315,7 @@ export default function EventsManager() {
 
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
-                  <textarea required rows="3" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none"></textarea>
+                  <textarea required rows={3} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none resize-none"></textarea>
                 </div>
 
                 <div className="pt-6 border-t border-slate-100">

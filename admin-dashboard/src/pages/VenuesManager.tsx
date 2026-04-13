@@ -1,16 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, MapPin, Edit, Trash2, X, Loader2 } from 'lucide-react';
+import { useState, useEffect, type FormEvent } from 'react';
+import { Plus, MapPin, Edit, X, Loader2 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+
+interface Venue {
+  _id: string;
+  name: string;
+  location: string;
+  capacity?: number;
+}
+
+interface VenueFormData {
+  name: string;
+  location: string;
+  capacity: string;
+}
 
 export default function VenuesManager() {
   const { getToken } = useAuth();
   
-  const [venues, setVenues] = useState([]);
+  const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [showAddModal, setShowAddModal] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [formData, setFormData] = useState({ name: '', location: '', capacity: '' });
+  const [formData, setFormData] = useState<VenueFormData>({ name: '', location: '', capacity: '' });
   const [error, setError] = useState('');
 
   const fetchVenues = async () => {
@@ -32,7 +45,7 @@ export default function VenuesManager() {
     fetchVenues();
   }, []);
 
-  const handleAddVenue = async (e) => {
+  const handleAddVenue = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setAdding(true);
     setError('');
@@ -61,7 +74,7 @@ export default function VenuesManager() {
         setError(data.message || 'Validation error');
       }
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setAdding(false);
     }
@@ -116,7 +129,6 @@ export default function VenuesManager() {
                     Capacity: <span className="text-blue-600 ml-1">{venue.capacity?.toLocaleString() || 0}</span>
                   </div>
                   <div className="flex gap-2">
-                    {/* Placeholder action buttons */}
                     <button disabled className="p-2 text-slate-300 transition-colors cursor-not-allowed">
                       <Edit size={18} />
                     </button>

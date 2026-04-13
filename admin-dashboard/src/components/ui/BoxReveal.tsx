@@ -1,5 +1,15 @@
-import React, { useEffect, useRef, memo } from 'react';
+import { useEffect, useRef, memo, type ReactNode } from 'react';
 import { motion, useAnimation, useInView } from 'framer-motion';
+
+interface BoxRevealProps {
+  children: ReactNode;
+  width?: string;
+  boxColor?: string;
+  duration?: number;
+  delay?: number;
+  overflow?: string;
+  className?: string;
+}
 
 export const BoxReveal = memo(function BoxReveal({
   children,
@@ -9,10 +19,10 @@ export const BoxReveal = memo(function BoxReveal({
   delay = 0.25,
   overflow = 'hidden',
   className,
-}) {
+}: BoxRevealProps) {
   const mainControls = useAnimation();
   const slideControls = useAnimation();
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true });
 
   useEffect(() => {

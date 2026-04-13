@@ -1,4 +1,3 @@
-import React from 'react';
 import { TechOrbitDisplay } from '../components/auth/TechOrbitDisplay';
 import { AnimatedForm } from '../components/auth/AnimatedForm';
 

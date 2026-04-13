@@ -1,12 +1,19 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { cn } from '../../lib/utils';
+
+interface RippleProps {
+  mainCircleSize?: number;
+  mainCircleOpacity?: number;
+  numCircles?: number;
+  className?: string;
+}
 
 export const Ripple = memo(function Ripple({
   mainCircleSize = 210,
   mainCircleOpacity = 0.24,
   numCircles = 11,
   className = '',
-}) {
+}: RippleProps) {
   return (
     <div
       className={cn(
@@ -36,7 +43,7 @@ export const Ripple = memo(function Ripple({
               transform: 'translate(-50%, -50%)',
               '--duration': 3400,
               '--i': i,
-            }}
+            } as React.CSSProperties}
           />
         );
       })}

@@ -2,11 +2,17 @@ import { useState, useCallback } from 'react';
 
 const BASE_URL = 'http://localhost:5001';
 
-export const useApi = (token) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+interface UseApiReturn {
+  request: (endpoint: string, options?: RequestInit) => Promise<unknown>;
+  loading: boolean;
+  error: string | null;
+}
 
-  const request = useCallback(async (endpoint, options = {}) => {
+export function useApi(token: string | null): UseApiReturn {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const request = useCallback(async (endpoint: string, options: RequestInit = {}) => {
     setLoading(true);
     setError(null);
     try {
@@ -27,7 +33,8 @@ export const useApi = (token) => {
 
       return data;
     } catch (err) {
-      setError(err.message);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(message);
       throw err;
     } finally {
       setLoading(false);
@@ -35,4 +42,4 @@ export const useApi = (token) => {
   }, [token]);
 
   return { request, loading, error };
-};
+}

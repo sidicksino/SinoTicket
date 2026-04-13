@@ -17,15 +17,17 @@ import { memo } from 'react';
 import { OrbitingCircles } from '../ui/OrbitingCircles';
 import { Ripple } from '../ui/Ripple';
 
+interface TechOrbitDisplayProps {
+  text?: string;
+}
+
 export const TechOrbitDisplay = memo(function TechOrbitDisplay({
   text = 'SinoTicket Admin',
-}) {
+}: TechOrbitDisplayProps) {
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#030712]">
-      {/* Background Ripple Effect */}
       <Ripple />
 
-      {/* Center Branding Text */}
       <div className="relative z-10 text-center select-none pointer-events-none">
         <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-600 drop-shadow-2xl tracking-tighter">
           {text}
@@ -33,9 +35,7 @@ export const TechOrbitDisplay = memo(function TechOrbitDisplay({
         <div className="mt-2 h-1 w-32 bg-blue-600 mx-auto rounded-full blur-[1px]"></div>
       </div>
 
-      {/* 5 Orbiting Circles for high-fidelity radar look */}
-      
-      {/* Circle 1 - Radius 50 (Core) */}
+      {/* Circle 1 */}
       <OrbitingCircles radius={110} duration={12}>
         <div className="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-500/20">
           <Ticket size={16} />
@@ -47,7 +47,7 @@ export const TechOrbitDisplay = memo(function TechOrbitDisplay({
         </div>
       </OrbitingCircles>
 
-      {/* Circle 2 - Radius 90 (System) */}
+      {/* Circle 2 */}
       <OrbitingCircles radius={150} duration={18} reverse>
         <div className="p-2 bg-slate-900 border border-slate-700 rounded-lg text-emerald-400">
           <Activity size={16} />
@@ -64,7 +64,7 @@ export const TechOrbitDisplay = memo(function TechOrbitDisplay({
         </div>
       </OrbitingCircles>
 
-      {/* Circle 3 - Radius 130 (Management) */}
+      {/* Circle 3 */}
       <OrbitingCircles radius={190} duration={25}>
         <div className="p-2 bg-slate-900 border border-slate-700 rounded-lg text-cyan-400">
           <Users size={16} />
@@ -81,7 +81,7 @@ export const TechOrbitDisplay = memo(function TechOrbitDisplay({
         </div>
       </OrbitingCircles>
 
-      {/* Circle 4 - Radius 170 (Network) */}
+      {/* Circle 4 */}
       <OrbitingCircles radius={230} duration={32} reverse>
         <div className="p-2 bg-slate-900 border border-slate-700 rounded-lg text-purple-400">
           <Globe size={16} />
@@ -98,7 +98,7 @@ export const TechOrbitDisplay = memo(function TechOrbitDisplay({
         </div>
       </OrbitingCircles>
 
-      {/* Circle 5 - Radius 210 (Infrastructure) */}
+      {/* Circle 5 */}
       <OrbitingCircles radius={270} duration={45}>
         <div className="p-2 bg-slate-900 border border-slate-700 rounded-lg text-indigo-400">
           <MonitorPlay size={16} />
