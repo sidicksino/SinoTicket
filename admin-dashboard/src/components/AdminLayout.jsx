@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
+import { useClerk, useUser } from '@clerk/clerk-react';
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -27,7 +28,10 @@ const SidebarItem = ({ to, icon: Icon, label }) => (
   </NavLink>
 );
 
-export default function AdminLayout({ onLogout }) {
+export default function AdminLayout() {
+  const { signOut } = useClerk();
+  const { user } = useUser();
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Sidebar */}
@@ -53,7 +57,7 @@ export default function AdminLayout({ onLogout }) {
 
         <div className="pt-6 border-t border-slate-100">
           <button 
-            onClick={onLogout}
+            onClick={() => signOut()}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 transition-colors w-full text-left"
           >
             <LogOut size={20} />
@@ -72,7 +76,10 @@ export default function AdminLayout({ onLogout }) {
               <Bell size={20} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
-            <div className="h-8 w-8 rounded-full bg-slate-200 border border-slate-300"></div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-slate-700">{user?.firstName || 'Admin'}</span>
+              <img src={user?.imageUrl} alt="Profile" className="h-8 w-8 rounded-full bg-slate-200 border border-slate-300" />
+            </div>
           </div>
         </header>
 
