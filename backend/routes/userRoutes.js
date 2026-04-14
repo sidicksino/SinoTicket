@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, checkUserExists, getMe, makeMeAdmin, updateMe } = require('../controllers/userController');
-const { authenticateToken } = require('../middleware/auth');
+const { registerUser, checkUserExists, getMe, makeMeAdmin, updateMe, getAllUsers } = require('../controllers/userController');
+const { authenticateToken, checkAdmin } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -9,6 +9,20 @@ const { authenticateToken } = require('../middleware/auth');
  *   name: Users
  *   description: User management API
  */
+
+/**
+ * @swagger
+ * /api/users/all:
+ *   get:
+ *     summary: Get all registered users (Admin only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of users with pagination
+ */
+router.get('/all', authenticateToken, checkAdmin, getAllUsers);
 
 /**
  * @swagger

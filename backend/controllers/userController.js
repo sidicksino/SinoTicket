@@ -181,10 +181,45 @@ const updateMe = async (req, res) => {
   }
 };
 
+const getAllUsers = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const query = {};
+    if (req.query.search) {
+      query.$or = [
+        { name: { $regex: req.query.search, $options: 'i' } },
+        { email: { $regex: req.query.search, $options: 'i' } }
+      ];
+    }
+
+    const total = await User.countDocuments(query);
+    const users = await User.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      total,
+      page,
+      limit,
+      users
+    });
+  } catch (error) {
+    console.error('💥 Error in getAllUsers:', error.message || error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 module.exports = {
   getMe,
   makeMeAdmin,
   registerUser,
   checkUserExists,
   updateMe,
+  getAllUsers,
 };
