@@ -24,7 +24,11 @@ const checkAdmin = async (req, res, next) => {
       return res.status(404).json({ error: 'User not found in database' });
     }
 
-    if (user.role !== 'Admin') {
+    const { clerkClient } = require('@clerk/express');
+    const clerkUser = await clerkClient.users.getUser(req.auth.userId);
+    const role = clerkUser.publicMetadata?.role;
+
+    if (role !== 'Admin' && role !== 'admin') {
       return res.status(403).json({ error: 'Forbidden: Admin access required' });
     }
 

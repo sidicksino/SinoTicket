@@ -25,7 +25,6 @@ const ADMIN = {
   user_id: 'seed_admin_001',
   email: 'admin@sinoticket.com',
   name: 'Sino Admin',
-  role: 'Admin',
   is_verified: true,
 };
 

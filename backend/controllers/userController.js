@@ -10,11 +10,10 @@ const getMe = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized: No valid Clerk token' });
     }
 
+    const clerkUser = await clerkClient.users.getUser(userId);
     let user = await User.findOne({ user_id: userId });
 
     if (!user) {
-      const clerkUser = await clerkClient.users.getUser(userId);
-
       user = await User.create({
         user_id: userId,
         email: clerkUser.emailAddresses[0].emailAddress,
@@ -23,7 +22,9 @@ const getMe = async (req, res) => {
       });
     }
 
-    res.json({ success: true, user });
+    const role = clerkUser.publicMetadata?.role || 'member';
+
+    res.json({ success: true, user: { ...user.toObject(), role } });
   } catch (error) {
     console.error('💥 Error in getMe:', error.message || error);
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
@@ -38,13 +39,19 @@ const makeMeAdmin = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const updatedUser = await User.findOneAndUpdate(
-      { user_id: userId },
-      { role: 'Admin' },
-      { returnDocument: 'after' }
-    );
+    await clerkClient.users.updateUserMetadata(userId, {
+      publicMetadata: {
+        role: 'Admin'
+      }
+    });
 
-    res.json({ success: true, message: 'You are now an Admin!', user: updatedUser });
+    const user = await User.findOne({ user_id: userId });
+
+    res.json({ 
+      success: true, 
+      message: 'You are now an Admin!', 
+      user: { ...user.toObject(), role: 'Admin' } 
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -8,7 +8,6 @@ const UserSchema = new Schema(
     name: { type: String, required: true, trim: true },
     profile_photo: { type: String, default: null },
     phone_number: { type: String, default: null },
-    role: { type: String, enum: ['Attendee', 'Admin'], default: 'Attendee' },
     preferences: { type: Schema.Types.Mixed, default: {} },
     is_verified: { type: Boolean, default: false },
     last_login: { type: Date },

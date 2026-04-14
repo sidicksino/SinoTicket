@@ -19,31 +19,17 @@ function ProtectedAdmin({ children }: ProtectedAdminProps) {
   const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      try {
-        const token = await getToken();
-        if (!token) throw new Error("No token");
-        
-        const response = await fetch('http://localhost:5001/api/users/me', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success && data.user?.role === 'Admin') {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
-      } catch (err) {
-        console.error("Admin check failed", err);
-        setIsAdmin(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-    checkAdmin();
-  }, [getToken, user]);
+    if (!user) return;
+    
+    const role = user.publicMetadata?.role as string | undefined;
+    
+    if (role === 'Admin' || role === 'admin') {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+    setLoading(false);
+  }, [user]);
 
   // Auto sign-out countdown when access is denied
   useEffect(() => {

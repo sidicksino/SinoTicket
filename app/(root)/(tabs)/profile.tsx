@@ -111,7 +111,7 @@ export default function Profile() {
         <View style={{ paddingHorizontal: 20 }}>
 
           {/* Admin Group */}
-          {backendUser?.role === 'Admin' && (
+          {(clerkUser?.publicMetadata?.role === 'Admin' || clerkUser?.publicMetadata?.role === 'admin') && (
             <>
               <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "800", textTransform: "uppercase", letterSpacing: 1, marginLeft: 16, marginBottom: 8 }}>
                 Administration
