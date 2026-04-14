@@ -7,9 +7,11 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 export default function TicketScanner() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const { authFetch } = useAuthFetch();
 
@@ -33,15 +35,15 @@ export default function TicketScanner() {
         <View style={{ alignItems: 'center', marginBottom: 32 }}>
           <Ionicons name="camera-outline" size={64} color={colors.subtext} />
           <Text style={{ fontFamily: "Syne_700Bold", fontSize: 24, color: colors.text, marginTop: 16, textAlign: 'center' }}>
-            Camera Access Required
+            {t("scanner.cameraAccessRequired")}
           </Text>
           <Text style={{ color: colors.subtext, fontSize: 16, textAlign: 'center', marginTop: 12, lineHeight: 24 }}>
-            We need your permission to use the camera to scan attendee QR codes.
+            {t("scanner.cameraPermissionMessage")}
           </Text>
         </View>
-        <CustomButton title="Grant Permission" onPress={requestPermission} />
+        <CustomButton title={t("scanner.grantPermission")} onPress={requestPermission} />
         <TouchableOpacity style={{ marginTop: 24 }} onPress={() => router.back()}>
-          <Text style={{ textAlign: "center", color: colors.primary, fontSize: 16, fontWeight: "600" }}>Go Back</Text>
+          <Text style={{ textAlign: "center", color: colors.primary, fontSize: 16, fontWeight: "600" }}>{t("common.goBack")}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -97,7 +99,7 @@ export default function TicketScanner() {
             <Ionicons name="close" size={24} color="#fff" />
           </TouchableOpacity>
           <View style={{ backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' }}>
-            <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>ADMIN SCANNER</Text>
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>{t("scanner.adminScanner")}</Text>
           </View>
         </SafeAreaView>
 
@@ -117,14 +119,14 @@ export default function TicketScanner() {
           {!scanned && !validationLoading && (
             <View style={{ alignItems: 'center', paddingVertical: 20 }}>
               <Ionicons name="scan-outline" size={32} color="#fff" />
-              <Text style={{ color: '#fff', fontSize: 16, marginTop: 12, fontWeight: '600' }}>Align QR Code within the frame</Text>
+              <Text style={{ color: '#fff', fontSize: 16, marginTop: 12, fontWeight: '600' }}>{t("scanner.alignQrCode")}</Text>
             </View>
           )}
 
           {validationLoading && (
             <View style={{ alignItems: 'center', paddingVertical: 20 }}>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={{ color: '#fff', fontSize: 16, marginTop: 16, fontWeight: '600' }}>Verifying Ticket...</Text>
+              <Text style={{ color: '#fff', fontSize: 16, marginTop: 16, fontWeight: '600' }}>{t("scanner.verifyingTicket")}</Text>
             </View>
           )}
 
@@ -144,27 +146,27 @@ export default function TicketScanner() {
 
               {scanResult.valid && scanResult.ticket && (
                 <View style={{ backgroundColor: 'rgba(255,255,255,0.1)', padding: 16, borderRadius: 16, marginBottom: 20 }}>
-                  <Text style={{ color: '#fff', fontSize: 14, opacity: 0.8, marginBottom: 4 }}>Event</Text>
+                  <Text style={{ color: '#fff', fontSize: 14, opacity: 0.8, marginBottom: 4 }}>{t("scanner.event")}</Text>
                   <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700', marginBottom: 12 }}>
-                    {scanResult.ticket.event_id?.title || "Unknown Event"}
+                    {scanResult.ticket.event_id?.title || t("scanner.unknownEvent")}
                   </Text>
                   
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                     <View>
-                      <Text style={{ color: '#fff', fontSize: 12, opacity: 0.8, marginBottom: 2 }}>Seat Matrix</Text>
+                      <Text style={{ color: '#fff', fontSize: 12, opacity: 0.8, marginBottom: 2 }}>{t("scanner.seatMatrix")}</Text>
                       <Text style={{ color: colors.primary, fontSize: 16, fontWeight: '800' }}>
                         Seat #{scanResult.ticket.seat_id?.number || "?"}
                       </Text>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ color: '#fff', fontSize: 12, opacity: 0.8, marginBottom: 2 }}>Status</Text>
-                      <Text style={{ color: colors.success, fontSize: 16, fontWeight: '800' }}>Redeemed</Text>
+                      <Text style={{ color: '#fff', fontSize: 12, opacity: 0.8, marginBottom: 2 }}>{t("scanner.status")}</Text>
+                      <Text style={{ color: colors.success, fontSize: 16, fontWeight: '800' }}>{t("scanner.redeemed")}</Text>
                     </View>
                   </View>
                 </View>
               )}
 
-              <CustomButton title="Scan Next Ticket" onPress={resetScanner} />
+              <CustomButton title={t("scanner.scanNextTicket")} onPress={resetScanner} />
             </View>
           )}
 

@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   FlatList,
   Image,
@@ -17,7 +18,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
-import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CustomButton from "@/components/CustomButton";
@@ -243,12 +243,18 @@ const OnboardingItem = ({
         <View className="absolute inset-x-0 bottom-[-20px] flex-row justify-between px-8">
           <Animated.View
             style={[
-              techStyle, 
-              { backgroundColor: colors.primaryLight, borderColor: colors.primary }
+              techStyle,
+              {
+                backgroundColor: colors.primaryLight,
+                borderColor: colors.primary,
+              },
             ]}
             className="px-3 py-1 rounded-full border border-opacity-20"
           >
-            <Text style={{ color: colors.primary }} className="text-xs font-bold uppercase tracking-wider">
+            <Text
+              style={{ color: colors.primary }}
+              className="text-xs font-bold uppercase tracking-wider"
+            >
               {item.tech}
             </Text>
           </Animated.View>
@@ -256,11 +262,14 @@ const OnboardingItem = ({
           <Animated.View
             style={[
               featureStyle,
-              { backgroundColor: colors.card, borderColor: colors.border }
+              { backgroundColor: colors.card, borderColor: colors.border },
             ]}
             className="px-3 py-1 rounded-full border"
           >
-            <Text style={{ color: colors.subtext }} className="text-xs font-bold uppercase tracking-wider">
+            <Text
+              style={{ color: colors.subtext }}
+              className="text-xs font-bold uppercase tracking-wider"
+            >
               {item.feature}
             </Text>
           </Animated.View>
@@ -310,13 +319,19 @@ const OnboardingScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
-      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
+    >
+      <StatusBar style={theme === "dark" ? "light" : "dark"} />
       <TouchableOpacity
         onPress={() => router.replace("/(auth)/welcome" as any)}
         className="w-full items-end px-6 py-4"
       >
-        <Text style={{ color: colors.subtext }} className="text-base font-semibold opacity-70">
+        <Text
+          style={{ color: colors.subtext }}
+          className="text-base font-semibold opacity-70"
+        >
           {t("common.skip")}
         </Text>
       </TouchableOpacity>

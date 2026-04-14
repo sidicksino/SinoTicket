@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 export default function SeatSelection() {
   const params = useLocalSearchParams<{
@@ -28,6 +29,7 @@ export default function SeatSelection() {
   const router = useRouter();
   const { colors } = useTheme();
   const { authFetch } = useAuthFetch();
+  const { t } = useTranslation();
 
   const SEAT_COLORS = {
     available: colors.seatAvailable,
@@ -77,14 +79,14 @@ export default function SeatSelection() {
       if (selectedSeats.length < 10) {
         setSelectedSeats(prev => [...prev, seat]);
       } else {
-        Alert.alert("Limit Reached", "You can only select up to 10 seats.");
+        Alert.alert(t("seatSelection.limitReached"), t("seatSelection.maxSeatsMessage"));
       }
     }
   };
 
   const handleContinue = async () => {
     if (selectedSeats.length === 0) {
-      Alert.alert("Incomplete Selection", "Please select at least one seat.");
+      Alert.alert(t("seatSelection.incompleteSelection"), t("seatSelection.selectAtLeastOne"));
       return;
     }
 
@@ -114,7 +116,7 @@ export default function SeatSelection() {
         },
       } as any);
     } catch (err: any) {
-      Alert.alert("Reservation Failed", err.message || "Failed to reserve seats.");
+      Alert.alert(t("seatSelection.reservationFailed"), err.message || t("seatSelection.reserveFailedMessage"));
       refetch();
     } finally {
       setReserving(false);
@@ -169,16 +171,16 @@ export default function SeatSelection() {
           <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18 }} numberOfLines={1}>
             {params.event_title}
           </Text>
-          <Text style={{ color: colors.subtext, fontSize: 13 }}>{params.category_name} Section</Text>
+          <Text style={{ color: colors.subtext, fontSize: 13 }}>{params.category_name} {t("seatSelection.sectionSuffix")}</Text>
         </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={{ flexDirection: "row", justifyContent: "center", gap: 15, marginVertical: 20 }}>
           {[
-            { label: "Available", color: SEAT_COLORS.available },
-            { label: "Selected", color: SEAT_COLORS.selected },
-            { label: "Occupied",  color: SEAT_COLORS.booked },
+            { label: t("seatSelection.available"), color: SEAT_COLORS.available },
+            { label: t("seatSelection.selected"), color: SEAT_COLORS.selected },
+            { label: t("seatSelection.occupied"),  color: SEAT_COLORS.booked },
           ].map((l) => (
             <View key={l.label} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <View style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: l.color }} />
@@ -188,7 +190,7 @@ export default function SeatSelection() {
         </View>
 
         <View style={{ marginHorizontal: 40, height: 40, backgroundColor: colors.border, borderBottomLeftRadius: 50, borderBottomRightRadius: 50, alignItems: 'center', justifyContent: 'center', marginBottom: 40 }}>
-          <Text style={{ color: colors.subtext, fontSize: 10, fontWeight: '800', letterSpacing: 5 }}>STAGE</Text>
+          <Text style={{ color: colors.subtext, fontSize: 10, fontWeight: '800', letterSpacing: 5 }}>{t("seatSelection.stage")}</Text>
         </View>
 
         {loading ? (
@@ -209,8 +211,8 @@ export default function SeatSelection() {
 
       <SummaryBar
         title={`${currentTotal} XAF`}
-        subtitle={`${selectedSeats.length}/10 Seats Maximum`}
-        buttonLabel="Continue"
+        subtitle={`${selectedSeats.length}/10 ${t("seatSelection.seatsMaximum")}`}
+        buttonLabel={t("common.continue")}
         onPress={handleContinue}
         loading={reserving}
       />

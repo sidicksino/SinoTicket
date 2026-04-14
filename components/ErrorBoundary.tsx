@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { Component, ErrorInfo, ReactNode } from "react";
+import { withTranslation, WithTranslation } from "react-i18next";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-interface Props {
+interface Props extends WithTranslation {
   children?: ReactNode;
 }
 
@@ -33,13 +34,22 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <View style={styles.container}>
-          <Ionicons name="warning-outline" size={64} color="#EF4444" style={styles.icon} />
-          <Text style={styles.title}>Oops, something went wrong</Text>
+          <Ionicons
+            name="warning-outline"
+            size={64}
+            color="#EF4444"
+            style={styles.icon}
+          />
+          <Text style={styles.title}>
+            {this.props.t("errorBoundary.title")}
+          </Text>
           <Text style={styles.message}>
-            We&apos;re sorry, but an unexpected error occurred. Please try restarting the app.
+            {this.props.t("errorBoundary.message")}
           </Text>
           <TouchableOpacity style={styles.button} onPress={this.handleReset}>
-            <Text style={styles.buttonText}>Try Again</Text>
+            <Text style={styles.buttonText}>
+              {this.props.t("errorBoundary.retry")}
+            </Text>
           </TouchableOpacity>
         </View>
       );
@@ -86,3 +96,5 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
+
+export default withTranslation()(ErrorBoundary);

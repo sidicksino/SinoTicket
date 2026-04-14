@@ -99,7 +99,8 @@ const fr = {
     signUp: {
       create: "Creer",
       account: "Compte.",
-      subtitle: "Rejoignez SinoTicket aujourd'hui et accedez aux meilleurs evenements en ville.",
+      subtitle:
+        "Rejoignez SinoTicket aujourd'hui et accedez aux meilleurs evenements en ville.",
       fullName: "Nom complet",
       enterName: "Entrez votre nom",
       emailAddress: "Adresse e-mail",
@@ -123,20 +124,24 @@ const fr = {
       validation: {
         fullNameRequired: "Le nom complet est requis.",
         invalidEmail: "Veuillez saisir une adresse e-mail valide.",
-        passwordMinLength: "Le mot de passe doit contenir au moins 8 caracteres.",
+        passwordMinLength:
+          "Le mot de passe doit contenir au moins 8 caracteres.",
         passwordsDoNotMatch: "Les mots de passe ne correspondent pas.",
         emailAlreadyRegistered: "Cet e-mail est deja enregistre.",
-        emailAlreadyRegisteredClerk: "Cet e-mail est deja enregistre dans Clerk.",
+        emailAlreadyRegisteredClerk:
+          "Cet e-mail est deja enregistre dans Clerk.",
         verificationCodeRequired: "Veuillez saisir le code de verification.",
         invalidVerificationCode: "Code de verification invalide.",
-        weakPassword: "Ce mot de passe est trop courant. Choisissez-en un plus fort.",
+        weakPassword:
+          "Ce mot de passe est trop courant. Choisissez-en un plus fort.",
         genericError: "Une erreur est survenue. Veuillez reessayer.",
       },
     },
     signUpPhone: {
       create: "Creer",
       account: "Compte.",
-      subtitle: "Rejoignez SinoTicket aujourd'hui avec votre numero de telephone pour decouvrir les evenements en toute securite.",
+      subtitle:
+        "Rejoignez SinoTicket aujourd'hui avec votre numero de telephone pour decouvrir les evenements en toute securite.",
       fullName: "Nom complet",
       enterName: "Entrez votre nom",
       phoneNumber: "Numero de telephone",
@@ -152,7 +157,8 @@ const fr = {
     },
     welcome: {
       letsGetStarted: "Commencons",
-      subtitle: "Inscrivez-vous maintenant et obtenez vos billets en quelques secondes",
+      subtitle:
+        "Inscrivez-vous maintenant et obtenez vos billets en quelques secondes",
       signIn: "Se connecter",
       signUp: "S'inscrire",
     },
@@ -183,8 +189,10 @@ const fr = {
       reset: "Reinitialiser",
       forgot: "Mot de passe oublie",
       passwordQuestion: " ?",
-      codeSent: "Nous avons envoye un code a 6 chiffres a {{email}}. Entrez-le ci-dessous avec votre nouveau mot de passe.",
-      intro: "Pas de souci ! Entrez votre email ci-dessous et nous vous enverrons un code de reinitialisation.",
+      codeSent:
+        "Nous avons envoye un code a 6 chiffres a {{email}}. Entrez-le ci-dessous avec votre nouveau mot de passe.",
+      intro:
+        "Pas de souci ! Entrez votre email ci-dessous et nous vous enverrons un code de reinitialisation.",
       emailAddress: "Adresse e-mail",
       enterEmail: "Entrez votre e-mail",
       resetCode: "Code de reinitialisation",
@@ -195,7 +203,8 @@ const fr = {
       resetPassword: "Reinitialiser le mot de passe",
       rememberPassword: "Vous vous souvenez de votre mot de passe ?",
       validEmail: "Veuillez saisir une adresse e-mail valide.",
-      sendResetFailed: "Echec de l'envoi du lien de reinitialisation. Reessayez.",
+      sendResetFailed:
+        "Echec de l'envoi du lien de reinitialisation. Reessayez.",
       passwordMinLength: "Le mot de passe doit contenir au moins 8 caracteres.",
       resetSuccess: "Mot de passe reinitialise avec succes !",
       resetIncomplete: "Reinitialisation incomplete. Veuillez reessayer.",
@@ -206,7 +215,8 @@ const fr = {
       wallet: "Portefeuille",
       showingAvailable: "{{count}} billets disponibles",
       noTicketsTitle: "Aucun billet trouve",
-      noTicketsMessage: "Vos billets reserves apparaitront ici pour le scan sur place.",
+      noTicketsMessage:
+        "Vos billets reserves apparaitront ici pour le scan sur place.",
       eventTba: "Evenement a confirmer",
       tba: "A confirmer",
       active: "ACTIF",
@@ -274,11 +284,13 @@ const fr = {
       loadingProfile: "Chargement de votre profil...",
       tapToChangePhoto: "Touchez pour changer la photo",
       permissionRequired: "Permission requise",
-      photosPermissionMessage: "Nous avons besoin d'acceder a vos photos pour mettre a jour votre avatar.",
+      photosPermissionMessage:
+        "Nous avons besoin d'acceder a vos photos pour mettre a jour votre avatar.",
       fullName: "Nom complet",
       enterFullName: "Entrez votre nom complet",
       email: "E-mail",
-      emailManagedByProvider: "L'e-mail est gere par votre fournisseur de connexion",
+      emailManagedByProvider:
+        "L'e-mail est gere par votre fournisseur de connexion",
       phoneNumber: "Numero de telephone",
       phonePlaceholder: "+235 XX XX XX XX",
       saveChanges: "Enregistrer les modifications",
@@ -289,7 +301,8 @@ const fr = {
     },
     bookingSuccess: {
       title: "Reservation confirmee !",
-      subtitle: "Vos billets pour {{eventTitle}} ont ete emis et sont maintenant disponibles dans votre portefeuille.",
+      subtitle:
+        "Vos billets pour {{eventTitle}} ont ete emis et sont maintenant disponibles dans votre portefeuille.",
       tickets: "BILLETS",
       totalPaid: "TOTAL PAYE",
       seatAssignments: "PLACES ASSIGNEES",
@@ -319,6 +332,35 @@ const fr = {
       emptyMessage:
         "Vous n'avez aucune notification pour le moment. Lorsqu'il y en aura, elles apparaitront ici.",
       at: "a",
+    },
+    promoCarousel: {
+      badge: "ACTU",
+      slide1: {
+        title: "Innovation technologique",
+        subtitle:
+          "Decouvrez les dernieres fonctionnalites qui alimentent notre nouvelle plateforme",
+      },
+      slide2: {
+        title: "Experience fluide",
+        subtitle:
+          "Aucune double reservation grace a notre moteur en temps reel",
+      },
+      slide3: {
+        title: "Evenements premium",
+        subtitle:
+          "Reservez les meilleures places en toute securite, partout dans le monde",
+      },
+    },
+    errorBoundary: {
+      title: "Oups, une erreur s'est produite",
+      message:
+        "Nous sommes desoles, une erreur inattendue s'est produite. Veuillez redemarrer l'application.",
+      retry: "Reessayer",
+    },
+    ticketCategoryCard: {
+      selected: "SELECTIONNE",
+      seatsLeft_one: "{{count}} place restante",
+      seatsLeft_other: "{{count}} places restantes",
     },
     notFound: {
       title: "Oups !",

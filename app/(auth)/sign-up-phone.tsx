@@ -3,17 +3,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import React from "react";
 import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Use Animated.View directly — avoids the shared-value strict-mode warning
@@ -38,7 +38,12 @@ const SignUpPhone = () => {
         >
           <View className="flex-1 px-8 pt-8">
             {/* HEADER SECTION */}
-            <AnimatedView entering={FadeInDown.duration(800).delay(100).springify().damping(18)}>
+            <AnimatedView
+              entering={FadeInDown.duration(800)
+                .delay(100)
+                .springify()
+                .damping(18)}
+            >
               <View className="mb-8">
                 <View className="mb-5 h-14 w-14 items-center justify-center rounded-[20px] bg-[#0286FF]/10">
                   <Ionicons name="sparkles" size={28} color="#0286FF" />
@@ -57,7 +62,12 @@ const SignUpPhone = () => {
 
             {/* FORM SECTION */}
             <View className="w-full mt-2">
-              <AnimatedView entering={FadeInDown.duration(800).delay(200).springify().damping(18)}>
+              <AnimatedView
+                entering={FadeInDown.duration(800)
+                  .delay(200)
+                  .springify()
+                  .damping(18)}
+              >
                 <InputField
                   label={t("signUpPhone.fullName")}
                   placeholder={t("signUpPhone.enterName")}
@@ -65,7 +75,12 @@ const SignUpPhone = () => {
                   autoCapitalize="words"
                 />
               </AnimatedView>
-              <AnimatedView entering={FadeInDown.duration(800).delay(300).springify().damping(18)}>
+              <AnimatedView
+                entering={FadeInDown.duration(800)
+                  .delay(300)
+                  .springify()
+                  .damping(18)}
+              >
                 <InputField
                   label={t("signUpPhone.phoneNumber")}
                   placeholder={t("signUpPhone.enterPhoneNumber")}
@@ -74,7 +89,12 @@ const SignUpPhone = () => {
                   autoCapitalize="none"
                 />
               </AnimatedView>
-              <AnimatedView entering={FadeInDown.duration(800).delay(400).springify().damping(18)}>
+              <AnimatedView
+                entering={FadeInDown.duration(800)
+                  .delay(400)
+                  .springify()
+                  .damping(18)}
+              >
                 <InputField
                   label={t("signUpPhone.password")}
                   placeholder={t("signUpPhone.enterPassword")}
@@ -82,7 +102,12 @@ const SignUpPhone = () => {
                   secureTextEntry={true}
                 />
               </AnimatedView>
-              <AnimatedView entering={FadeInDown.duration(800).delay(400).springify().damping(18)}>
+              <AnimatedView
+                entering={FadeInDown.duration(800)
+                  .delay(400)
+                  .springify()
+                  .damping(18)}
+              >
                 <InputField
                   label={t("signUpPhone.confirmPassword")}
                   placeholder={t("signUpPhone.confirmYourPassword")}
@@ -93,7 +118,10 @@ const SignUpPhone = () => {
 
               {/* CALL TO ACTION BUTTON */}
               <AnimatedView
-                entering={FadeInDown.duration(800).delay(500).springify().damping(18)}
+                entering={FadeInDown.duration(800)
+                  .delay(500)
+                  .springify()
+                  .damping(18)}
                 style={{ marginTop: 24 }}
               >
                 <TouchableOpacity className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80">
@@ -105,8 +133,17 @@ const SignUpPhone = () => {
 
               {/* DIVIDER */}
               <AnimatedView
-                entering={FadeInDown.duration(800).delay(600).springify().damping(18)}
-                style={{ marginTop: 40, marginBottom: 24, flexDirection: "row", alignItems: "center", gap: 16 }}
+                entering={FadeInDown.duration(800)
+                  .delay(600)
+                  .springify()
+                  .damping(18)}
+                style={{
+                  marginTop: 40,
+                  marginBottom: 24,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 16,
+                }}
               >
                 <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
                 <Text className="text-[13px] font-bold text-[#94A3B8] uppercase tracking-widest">
@@ -117,8 +154,16 @@ const SignUpPhone = () => {
 
               {/* SOCIAL LOGIN */}
               <AnimatedView
-                entering={FadeInDown.duration(800).delay(700).springify().damping(18)}
-                style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 16 }}
+                entering={FadeInDown.duration(800)
+                  .delay(700)
+                  .springify()
+                  .damping(18)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 16,
+                }}
               >
                 <TouchableOpacity className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]">
                   <Image
@@ -127,9 +172,9 @@ const SignUpPhone = () => {
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] active:bg-[#F1F5F9]"
-                  onPress={() => router.push('/(auth)/sign-up')}
+                  onPress={() => router.push("/(auth)/sign-up")}
                 >
                   <Image
                     source={require("@/assets/icons/gmail-icon.png")}
@@ -141,8 +186,16 @@ const SignUpPhone = () => {
 
               {/* FOOTER */}
               <AnimatedView
-                entering={FadeInUp.duration(800).delay(800).springify().damping(18)}
-                style={{ marginTop: 40, flexDirection: "row", justifyContent: "center", alignItems: "center" }}
+                entering={FadeInUp.duration(800)
+                  .delay(800)
+                  .springify()
+                  .damping(18)}
+                style={{
+                  marginTop: 40,
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
               >
                 <Text className="text-[15px] font-medium text-[#64748B]">
                   {t("signUpPhone.alreadyHaveAccount")}{" "}

@@ -99,7 +99,8 @@ const en = {
     signUp: {
       create: "Create",
       account: "Account.",
-      subtitle: "Join SinoTicket today and unlock access to the best events in town.",
+      subtitle:
+        "Join SinoTicket today and unlock access to the best events in town.",
       fullName: "Full Name",
       enterName: "Enter your name",
       emailAddress: "Email Address",
@@ -126,17 +127,20 @@ const en = {
         passwordMinLength: "Password must be at least 8 characters.",
         passwordsDoNotMatch: "Passwords do not match.",
         emailAlreadyRegistered: "This email is already registered.",
-        emailAlreadyRegisteredClerk: "This email is already registered in Clerk.",
+        emailAlreadyRegisteredClerk:
+          "This email is already registered in Clerk.",
         verificationCodeRequired: "Please enter the verification code.",
         invalidVerificationCode: "Invalid verification code.",
-        weakPassword: "This password is too common. Please choose a stronger one.",
+        weakPassword:
+          "This password is too common. Please choose a stronger one.",
         genericError: "Something went wrong. Please try again.",
       },
     },
     signUpPhone: {
       create: "Create",
       account: "Account.",
-      subtitle: "Join SinoTicket today using your phone number to discover events safely.",
+      subtitle:
+        "Join SinoTicket today using your phone number to discover events safely.",
       fullName: "Full Name",
       enterName: "Enter your name",
       phoneNumber: "Phone Number",
@@ -183,8 +187,10 @@ const en = {
       reset: "Reset",
       forgot: "Forgot",
       passwordQuestion: "Password?",
-      codeSent: "We sent a 6-digit code to {{email}}. Enter it below with your new password.",
-      intro: "No worries! Enter your email below and we'll send you a reset code.",
+      codeSent:
+        "We sent a 6-digit code to {{email}}. Enter it below with your new password.",
+      intro:
+        "No worries! Enter your email below and we'll send you a reset code.",
       emailAddress: "Email Address",
       enterEmail: "Enter your email",
       resetCode: "Reset Code",
@@ -206,7 +212,8 @@ const en = {
       wallet: "Wallet",
       showingAvailable: "Showing {{count}} available tickets",
       noTicketsTitle: "No tickets found",
-      noTicketsMessage: "Your booked tickets will appear here for scanning at the venue.",
+      noTicketsMessage:
+        "Your booked tickets will appear here for scanning at the venue.",
       eventTba: "Event TBA",
       tba: "TBA",
       active: "ACTIVE",
@@ -274,7 +281,8 @@ const en = {
       loadingProfile: "Loading your profile...",
       tapToChangePhoto: "Tap to change photo",
       permissionRequired: "Permission Required",
-      photosPermissionMessage: "We need access to your photos to update your avatar.",
+      photosPermissionMessage:
+        "We need access to your photos to update your avatar.",
       fullName: "Full Name",
       enterFullName: "Enter your full name",
       email: "Email",
@@ -289,7 +297,8 @@ const en = {
     },
     bookingSuccess: {
       title: "Booking Confirmed!",
-      subtitle: "Your tickets for {{eventTitle}} have been issued and are now available in your wallet.",
+      subtitle:
+        "Your tickets for {{eventTitle}} have been issued and are now available in your wallet.",
       tickets: "TICKETS",
       totalPaid: "TOTAL PAID",
       seatAssignments: "SEAT ASSIGNMENTS",
@@ -319,6 +328,32 @@ const en = {
       emptyMessage:
         "You don't have any notifications right now. When you do, they'll appear here.",
       at: "at",
+    },
+    promoCarousel: {
+      badge: "NEWS",
+      slide1: {
+        title: "Tech Innovation",
+        subtitle: "Discover the latest features powering our new platform",
+      },
+      slide2: {
+        title: "Seamless Experience",
+        subtitle: "Zero double-booking guarantee with our real-time engine",
+      },
+      slide3: {
+        title: "Premium Events",
+        subtitle: "Book the best seats securely from anywhere in the world",
+      },
+    },
+    errorBoundary: {
+      title: "Oops, something went wrong",
+      message:
+        "We're sorry, but an unexpected error occurred. Please try restarting the app.",
+      retry: "Try Again",
+    },
+    ticketCategoryCard: {
+      selected: "SELECTED",
+      seatsLeft_one: "{{count}} seat left",
+      seatsLeft_other: "{{count}} seats left",
     },
     notFound: {
       title: "Oops!",

@@ -18,11 +18,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 export default function PersonalInfo() {
   const { colors } = useTheme();
   const { user: clerkUser } = useUser();
   const { authFetch } = useAuthFetch();
+  const { t } = useTranslation();
 
   const [name, setName] = useState(clerkUser?.fullName || "");
   const [phone, setPhone] = useState("");
@@ -63,7 +65,7 @@ export default function PersonalInfo() {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Required", "We need access to your photos to update your avatar.");
+      Alert.alert(t("personalInfo.permissionRequired"), t("personalInfo.photosPermissionMessage"));
       return;
     }
 
@@ -85,7 +87,7 @@ export default function PersonalInfo() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert("Validation", "Name cannot be empty.");
+      Alert.alert(t("personalInfo.validationTitle"), t("personalInfo.nameCannotBeEmpty"));
       return;
     }
 
@@ -106,11 +108,11 @@ export default function PersonalInfo() {
         body: JSON.stringify(body),
       });
 
-      Alert.alert("Success", "Your profile has been updated.", [
-        { text: "OK", onPress: () => router.back() },
+      Alert.alert(t("common.success"), t("personalInfo.profileUpdated"), [
+        { text: t("common.ok"), onPress: () => router.back() },
       ]);
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to update profile.");
+      Alert.alert(t("common.error"), err.message || t("personalInfo.updateFailed"));
     } finally {
       setSaving(false);
     }
@@ -159,7 +161,7 @@ export default function PersonalInfo() {
               marginRight: 40,
             }}
           >
-            Personal Information
+            {t("personalInfo.title")}
           </Text>
         </View>
 
@@ -171,7 +173,7 @@ export default function PersonalInfo() {
             <View style={{ paddingTop: 60, alignItems: "center" }}>
               <ActivityIndicator size="large" color={colors.primary} />
               <Text style={{ color: colors.subtext, marginTop: 12, fontSize: 14 }}>
-                Loading your profile…
+                {t("personalInfo.loadingProfile")}
               </Text>
             </View>
           ) : (
@@ -216,7 +218,7 @@ export default function PersonalInfo() {
                   </View>
                 </TouchableOpacity>
                 <Text style={{ color: colors.subtext, fontSize: 12, marginTop: 10 }}>
-                  Tap to change photo
+                  {t("personalInfo.tapToChangePhoto")}
                 </Text>
               </View>
 
@@ -230,7 +232,7 @@ export default function PersonalInfo() {
                   marginLeft: 4,
                 }}
               >
-                Full Name
+                {t("personalInfo.fullName")}
               </Text>
               <View
                 style={{
@@ -249,7 +251,7 @@ export default function PersonalInfo() {
                 <TextInput
                   value={name}
                   onChangeText={setName}
-                  placeholder="Enter your full name"
+                  placeholder={t("personalInfo.enterFullName")}
                   placeholderTextColor={colors.subtext}
                   style={{
                     flex: 1,
@@ -270,7 +272,7 @@ export default function PersonalInfo() {
                   marginLeft: 4,
                 }}
               >
-                Email
+                {t("personalInfo.email")}
               </Text>
               <View
                 style={{
@@ -293,7 +295,7 @@ export default function PersonalInfo() {
                 <Ionicons name="lock-closed-outline" size={16} color={colors.subtext} />
               </View>
               <Text style={{ fontSize: 12, color: colors.subtext, marginLeft: 4, marginBottom: 20 }}>
-                Email is managed by your sign-in provider
+                {t("personalInfo.emailManagedByProvider")}
               </Text>
 
               {/* ── PHONE FIELD ── */}
@@ -306,7 +308,7 @@ export default function PersonalInfo() {
                   marginLeft: 4,
                 }}
               >
-                Phone Number
+                {t("personalInfo.phoneNumber")}
               </Text>
               <View
                 style={{
@@ -325,7 +327,7 @@ export default function PersonalInfo() {
                 <TextInput
                   value={phone}
                   onChangeText={setPhone}
-                  placeholder="+235 XX XX XX XX"
+                  placeholder={t("personalInfo.phonePlaceholder")}
                   placeholderTextColor={colors.subtext}
                   keyboardType="phone-pad"
                   style={{
@@ -360,7 +362,7 @@ export default function PersonalInfo() {
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <Text style={{ color: "#fff", fontSize: 17, fontFamily: "Syne_700Bold" }}>
-                    Save Changes
+                    {t("personalInfo.saveChanges")}
                   </Text>
                 )}
               </TouchableOpacity>

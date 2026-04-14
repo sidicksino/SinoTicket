@@ -13,11 +13,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 export default function Notifications() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
   const { authFetch } = useAuthFetch();
+  const { t } = useTranslation();
 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,7 +178,7 @@ export default function Notifications() {
             color: colors.text,
           }}
         >
-          Notifications
+          {t("notificationsPage.title")}
         </Text>
         <TouchableOpacity onPress={handleMarkAllAsRead} style={{ padding: 8 }}>
           <Ionicons name="checkmark-done-outline" size={24} color={colors.primary} />
@@ -192,10 +194,10 @@ export default function Notifications() {
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 40 }}>
           <Ionicons name="notifications-off-outline" size={64} color={colors.border} style={{ marginBottom: 16 }} />
           <Text style={{ fontFamily: "Syne_700Bold", fontSize: 20, color: colors.text, marginBottom: 8, textAlign: 'center' }}>
-            No Notifications
+            {t("notificationsPage.emptyTitle")}
           </Text>
           <Text style={{ fontSize: 15, color: colors.subtext, textAlign: "center", lineHeight: 22 }}>
-            You don&apos;t have any notifications right now. When you do, they&apos;ll appear here.
+            {t("notificationsPage.emptyMessage")}
           </Text>
         </View>
       ) : (

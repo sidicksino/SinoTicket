@@ -1,5 +1,6 @@
 import { useTheme } from "@/context/ThemeContext";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface TicketCategoryCardProps {
@@ -17,6 +18,7 @@ export const TicketCategoryCard = ({
   selected,
   onSelect,
 }: TicketCategoryCardProps) => {
+  const { t } = useTranslation();
   const { colors } = useTheme();
 
   return (
@@ -35,15 +37,21 @@ export const TicketCategoryCard = ({
       <View style={styles.header}>
         <Text style={[styles.name, { color: colors.text }]}>{name}</Text>
         {selected && (
-          <View style={[styles.selectedBadge, { backgroundColor: colors.primary }]}>
-            <Text style={[styles.selectedText, { color: colors.white }]}>SELECTED</Text>
+          <View
+            style={[styles.selectedBadge, { backgroundColor: colors.primary }]}
+          >
+            <Text style={[styles.selectedText, { color: colors.white }]}>
+              {t("ticketCategoryCard.selected")}
+            </Text>
           </View>
         )}
       </View>
       <View style={styles.footer}>
-        <Text style={[styles.price, { color: colors.primary }]}>{price} XAF</Text>
+        <Text style={[styles.price, { color: colors.primary }]}>
+          {price} XAF
+        </Text>
         <Text style={[styles.available, { color: colors.subtext }]}>
-          {available} seats left
+          {t("ticketCategoryCard.seatsLeft", { count: available })}
         </Text>
       </View>
     </TouchableOpacity>

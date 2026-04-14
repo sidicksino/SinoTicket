@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomButton from "@/components/CustomButton";
+import { useTranslation } from "react-i18next";
 
 export default function BookingSuccess() {
   const params = useLocalSearchParams<{
@@ -22,6 +23,7 @@ export default function BookingSuccess() {
   
   const router = useRouter();
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -49,7 +51,7 @@ export default function BookingSuccess() {
             textAlign: 'center',
             marginBottom: 12 
           }}>
-            Booking Confirmed!
+            {t("bookingSuccess.title")}
           </Text>
           <Text style={{ 
             color: colors.subtext, 
@@ -57,7 +59,7 @@ export default function BookingSuccess() {
             textAlign: 'center',
             paddingHorizontal: 20 
           }}>
-            Your tickets for {params.event_title} have been issued and are now available in your wallet.
+            {t("bookingSuccess.subtitle", { eventTitle: params.event_title })}
           </Text>
         </View>
 
@@ -72,17 +74,17 @@ export default function BookingSuccess() {
         }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 }}>
             <View>
-              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '700', marginBottom: 4 }}>TICKETS</Text>
+              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '700', marginBottom: 4 }}>{t("bookingSuccess.tickets")}</Text>
               <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>{params.quantity}x {params.category_name}</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '700', marginBottom: 4 }}>TOTAL PAID</Text>
+              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '700', marginBottom: 4 }}>{t("bookingSuccess.totalPaid")}</Text>
               <Text style={{ color: colors.primary, fontSize: 16, fontWeight: '800' }}>{params.total_price} XAF</Text>
             </View>
           </View>
 
           <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 20 }}>
-            <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '700', marginBottom: 4 }}>SEAT ASSIGNMENTS</Text>
+            <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '700', marginBottom: 4 }}>{t("bookingSuccess.seatAssignments")}</Text>
             <Text style={{ color: colors.text, fontSize: 15, fontWeight: '600' }}>{params.seat_numbers}</Text>
           </View>
         </View>
@@ -90,7 +92,7 @@ export default function BookingSuccess() {
         {/* Actions */}
         <View style={{ gap: 16 }}>
           <CustomButton
-            title="View My Tickets"
+            title={t("bookingSuccess.viewMyTickets")}
             onPress={() => router.replace("/(root)/(tabs)/ticket")}
           />
           <TouchableOpacity 
@@ -100,7 +102,7 @@ export default function BookingSuccess() {
               alignItems: 'center' 
             }}
           >
-            <Text style={{ color: colors.subtext, fontSize: 16, fontWeight: '700' }}>Back to Home</Text>
+            <Text style={{ color: colors.subtext, fontSize: 16, fontWeight: '700' }}>{t("bookingSuccess.backToHome")}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
