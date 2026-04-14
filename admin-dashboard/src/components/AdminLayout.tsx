@@ -10,6 +10,8 @@ import {
   Sun,
   Ticket,
   Users,
+  Layers,
+  Armchair,
   type LucideIcon,
 } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
@@ -57,10 +59,16 @@ export default function AdminLayout() {
           <span className="text-xl font-bold tracking-tight text-text">SinoTicket</span>
         </div>
 
-        <nav className="flex flex-col gap-2 flex-1">
+        <nav className="flex flex-col gap-2 flex-1 overflow-y-auto">
           <SidebarItem to="/" icon={LayoutDashboard} label="Dashboard" />
           <SidebarItem to="/events" icon={Calendar} label="Events" />
           <SidebarItem to="/venues" icon={MapPin} label="Venues" />
+          
+          <div className="ml-4 pl-4 border-l-2 border-card-border flex flex-col gap-1 py-1">
+            <SidebarItem to="/sections" icon={Layers} label="Sections" />
+            <SidebarItem to="/seats" icon={Armchair} label="Seats" />
+          </div>
+
           <SidebarItem to="/users" icon={Users} label="Users" />
           
           <div className="mt-8 mb-2 px-4">

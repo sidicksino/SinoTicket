@@ -5,6 +5,8 @@ import AdminLayout from './components/AdminLayout';
 import DashboardHome from './pages/DashboardHome';
 import EventsManager from './pages/EventsManager';
 import VenuesManager from './pages/VenuesManager';
+import SectionsManager from './pages/SectionsManager';
+import SeatsManager from './pages/SeatsManager';
 import LoginScreen from './pages/LoginScreen';
 
 interface ProtectedAdminProps {
@@ -123,6 +125,8 @@ function App() {
               <Route index element={<DashboardHome />} />
               <Route path="events" element={<EventsManager />} />
               <Route path="venues" element={<VenuesManager />} />
+              <Route path="sections" element={<SectionsManager />} />
+              <Route path="seats" element={<SeatsManager />} />
               <Route path="*" element={
                 <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 bg-card rounded-3xl border border-card-border uppercase tracking-widest text-subtext/30 font-bold italic">
                   Coming Soon
