@@ -9,8 +9,11 @@ import {
   Edit,
   Trash2,
   Eye,
+  ImageIcon,
+  Upload,
 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { useRef } from 'react';
 
 // ─── Types ────────────────────────────────────────
 interface TicketCategory {
@@ -84,6 +87,12 @@ export default function EventsManager() {
   // Detail view
   const [viewEvent, setViewEvent] = useState<Event | null>(null);
 
+  // File upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [uploading, setUploading] = useState(false);
+
   // ─── Fetch data ─────────────────────────────────
   const fetchData = async () => {
     try {
@@ -128,6 +137,8 @@ export default function EventsManager() {
       ...EMPTY_FORM,
       venue_id: venues.length > 0 ? venues[0]._id : '',
     });
+    setSelectedFile(null);
+    setPreviewUrl('');
     setError('');
     setShowModal(true);
   };
@@ -147,8 +158,54 @@ export default function EventsManager() {
         quantity: tc.quantity,
       })) || [{ name: 'General Admission', price: 0, quantity: 100 }],
     });
+    setSelectedFile(null);
+    setPreviewUrl(event.imageUrl || '');
     setError('');
     setShowModal(true);
+  };
+
+  // ─── File Handling ──────────────────────────────
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!selectedFile) return formData.imageUrl;
+
+    setUploading(true);
+    try {
+      const token = await getToken();
+      const uploadFormData = new FormData();
+      uploadFormData.append('image', selectedFile);
+
+      const res = await fetch('http://localhost:5001/api/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: uploadFormData,
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        return data.imageUrl;
+      } else {
+        throw new Error(data.message || 'Image upload failed');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Image upload failed');
+      return null;
+    } finally {
+      setUploading(false);
+    }
   };
 
   // ─── Ticket category helpers ────────────────────
@@ -190,17 +247,19 @@ export default function EventsManager() {
 
     try {
       const token = await getToken();
-      const isEdit = !!editingEvent;
+      
+      // 1. Upload image if selected
+      const finalImageUrl = await uploadImage();
+      if (!finalImageUrl && selectedFile) return; // Error already set in uploadImage
 
+      const isEdit = !!editingEvent;
       const eventDate = formData.date ? new Date(formData.date) : new Date();
 
       const payload = {
         title: formData.title,
         description: formData.description,
         date: eventDate.toISOString(),
-        imageUrl:
-          formData.imageUrl ||
-          'https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800',
+        imageUrl: finalImageUrl || 'https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800',
         venue_id: formData.venue_id,
         category: formData.category,
         ticket_categories: formData.ticket_categories,
@@ -535,17 +594,38 @@ export default function EventsManager() {
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-text mb-2">
-                        Cover Image URL
+                        Event Image
                       </label>
                       <input
-                        type="url"
-                        placeholder="Optional URL"
-                        value={formData.imageUrl}
-                        onChange={(e) =>
-                          setFormData({ ...formData, imageUrl: e.target.value })
-                        }
-                        className="w-full px-4 py-3 bg-input-bg border border-card-border rounded-xl text-text placeholder:text-subtext/50 focus:ring-2 focus:ring-primary/30 focus:border-primary/50 outline-none"
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        className="hidden"
                       />
+                      <div 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="relative h-32 w-full bg-input-bg border-2 border-dashed border-card-border rounded-xl overflow-hidden cursor-pointer hover:border-primary/50 transition-all flex flex-col items-center justify-center group"
+                      >
+                        {previewUrl ? (
+                          <>
+                            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Upload className="text-white" size={24} />
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <ImageIcon className="text-subtext mb-2" size={24} />
+                            <span className="text-xs text-subtext font-bold uppercase tracking-widest">Click to upload</span>
+                          </>
+                        )}
+                        {uploading && (
+                          <div className="absolute inset-0 bg-card/60 flex items-center justify-center">
+                            <Loader2 className="text-primary animate-spin" size={24} />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -640,10 +720,10 @@ export default function EventsManager() {
               <button
                 form="event-form"
                 type="submit"
-                disabled={saving}
+                disabled={saving || uploading}
                 className="py-2.5 px-6 bg-primary text-white font-bold rounded-xl hover:brightness-110 disabled:opacity-70 flex items-center gap-2 transition-all min-w-[140px] justify-center"
               >
-                {saving ? (
+                {saving || uploading ? (
                   <Loader2 className="animate-spin" size={20} />
                 ) : editingEvent ? (
                   'Update Event'

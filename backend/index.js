@@ -12,6 +12,7 @@ const seatRouters = require('./routes/seatRoutes');
 const reservationRouters = require('./routes/reservationRoutes');
 const ticketRouters = require('./routes/ticketRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -50,6 +51,9 @@ app.use('/api/tickets', ticketRouters);
 
 // Notifications
 app.use('/api/notifications', notificationRoutes);
+
+// Uploads
+app.use('/api/upload', uploadRoutes);
 
 // Swagger Documentation
 const setupSwagger = require('./swagger/swaggerConfig');

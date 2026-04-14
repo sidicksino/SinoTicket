@@ -16,7 +16,7 @@ const getAdminUser = async (req) => {
 // @access  Private (Admin only)
 const addEvent = async (req, res) => {
   try {
-    const { title, description, date, venue_id, artist_lineup, ticket_categories, status } = req.body;
+    const { title, description, date, venue_id, artist_lineup, ticket_categories, status, imageUrl, category } = req.body;
 
     // Explicit Validation Check (More thorough)
     if (!title || !date || !Array.isArray(ticket_categories)) {
@@ -51,6 +51,8 @@ const addEvent = async (req, res) => {
       description,
       date,
       venue_id,
+      imageUrl,
+      category,
       status: status || 'Upcoming',
       artist_lineup: artist_lineup || [],
       ticket_categories: safeTickets,
@@ -157,7 +159,9 @@ const updateEvent = async (req, res) => {
       "venue_id",
       "status",
       "artist_lineup",
-      "ticket_categories"
+      "ticket_categories",
+      "imageUrl",
+      "category"
     ];
 
     const updates = {};

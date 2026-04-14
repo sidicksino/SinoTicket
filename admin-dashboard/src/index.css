@@ -1,71 +1,69 @@
 @import "tailwindcss";
 
+/* Tailwind CSS v4 Theme Configuration */
 @theme {
-  /* ─── Brand ─────────────────────────────── */
+  /* ─── Brand (static) ───────────────────────── */
   --color-primary:       #3B82F6;
   --color-primary-light: rgba(59,130,246,0.18);
 
-  /* ─── Surfaces (Dark theme) ─────────────── */
-  --color-background:    #0B0F19;
-  --color-card:          #121826;
-  --color-card-border:   #1F2937;
-  --color-input-bg:      #111827;
+  /* ─── Surfaces (dynamic via CSS vars) ──────── */
+  --color-background:    var(--th-background);
+  --color-card:          var(--th-card);
+  --color-card-border:   var(--th-card-border);
+  --color-input-bg:      var(--th-input-bg);
 
-  /* ─── Typography ─────────────────────────── */
-  --color-text:          #E5E7EB;
-  --color-subtext:       #9CA3AF;
-  --color-border:        #1F2937;
+  /* ─── Typography (dynamic) ─────────────────── */
+  --color-text:          var(--th-text);
+  --color-subtext:       var(--th-subtext);
+  --color-border:        var(--th-border);
 
-  /* ─── Tab bar ────────────────────────────── */
-  --color-tab-bar:       #0F172A;
-  --color-tab-bar-pill:  #1E293B;
-  --color-tab-bar-icon:  #6B7280;
-
-  /* ─── Overlays ───────────────────────────── */
+  /* ─── Overlays ─────────────────────────────── */
   --color-overlay:        rgba(0,0,0,0.35);
   --color-overlay-light:  rgba(0,0,0,0.20);
   --color-overlay-medium: rgba(0,0,0,0.55);
   --color-overlay-dark:   rgba(0,0,0,0.85);
 
-  /* ─── Seat States ────────────────────────── */
+  /* ─── Seat States ──────────────────────────── */
   --color-seat-available: #1F2937;
   --color-seat-selected:  #3B82F6;
   --color-seat-reserved:  #F59E0B;
   --color-seat-booked:    #EF4444;
 
-  /* ─── Feedback ───────────────────────────── */
+  /* ─── Feedback ─────────────────────────────── */
   --color-success:   #22C55E;
   --color-error:     #EF4444;
   --color-warning:   #F59E0B;
 
-  /* ─── Base ───────────────────────────────── */
+  /* ─── Base ─────────────────────────────────── */
   --color-white:       #FFFFFF;
   --color-black:       #000000;
 }
 
-/* ─── Dark theme (default) ───────────────────────────── */
+/* ─── Dark theme (default) ─────────────────────────── */
 :root, .dark {
-  --bg-background:    #0B0F19;
-  --bg-card:          #121826;
-  --bg-card-border:   #1F2937;
-  --bg-input-bg:      #111827;
-  --text-text:        #E5E7EB;
-  --text-subtext:     #9CA3AF;
-  --text-border:      #1F2937;
+  --th-background:    #0B0F19;
+  --th-card:          #121826;
+  --th-card-border:   #1F2937;
+  --th-input-bg:      #111827;
+  --th-text:          #E5E7EB;
+  --th-subtext:       #9CA3AF;
+  --th-border:        #1F2937;
+  color-scheme: dark;
 }
 
-/* ─── Light theme ─────────────────────────────────────── */
+/* ─── Light theme ──────────────────────────────────── */
 .light {
-  --bg-background:    #F9FAFB;
-  --bg-card:          #FFFFFF;
-  --bg-card-border:   #E5E7EB;
-  --bg-input-bg:      #F3F4F6;
-  --text-text:        #111827;
-  --text-subtext:     #6B7280;
-  --text-border:      #E5E7EB;
+  --th-background:    #F9FAFB;
+  --th-card:          #FFFFFF;
+  --th-card-border:   #E5E7EB;
+  --th-input-bg:      #F3F4F6;
+  --th-text:          #111827;
+  --th-subtext:       #6B7280;
+  --th-border:        #E5E7EB;
+  color-scheme: light;
 }
 
-/* ─── Animations ─────────────────────────────────────── */
+/* ─── Animations ───────────────────────────────────── */
 .animate-orbit {
   animation: orbit calc(var(--duration) * 1s) linear infinite;
 }
@@ -84,12 +82,11 @@
   100% { transform: rotate(360deg) translateY(calc(var(--radius) * 1px)) rotate(-360deg); }
 }
 
-/* ─── Reset & Base ───────────────────────────────────── */
+/* ─── Reset & Base ─────────────────────────────────── */
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -101,9 +98,9 @@ body {
   display: flex;
   min-width: 320px;
   min-height: 100vh;
-  background-color: var(--bg-background, #0B0F19);
-  color: var(--text-text, #E5E7EB);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  background-color: var(--th-background);
+  color: var(--th-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
