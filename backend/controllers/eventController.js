@@ -3,11 +3,15 @@ const Event = require('../models/Event');
 const Venue = require('../models/Venue');
 const mongoose = require('mongoose');
 
+const { clerkClient } = require('@clerk/express');
+
 // Helper to confirm admin
 const getAdminUser = async (req) => {
   if (!req.auth || !req.auth.userId) return null;
+  const clerkUser = await clerkClient.users.getUser(req.auth.userId);
+  const role = clerkUser.publicMetadata?.role;
+  if (role !== 'Admin' && role !== 'admin') return null;
   const user = await User.findOne({ user_id: req.auth.userId });
-  if (!user || user.role !== 'Admin') return null;
   return user;
 };
 

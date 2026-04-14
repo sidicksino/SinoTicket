@@ -4,11 +4,20 @@ const Section = require('../models/Section');
 const Seat = require('../models/Seat');
 const mongoose = require('mongoose');
 
+const { clerkClient } = require('@clerk/express');
+
 // Helper function to get MongoDB User from Clerk auth and verify Admin role
 const getAdminUser = async (clerkUserId) => {
   if (!clerkUserId) return null;
-  const user = await User.findOne({ user_id: clerkUserId });
-  return user?.role === 'Admin' ? user : null;
+  try {
+    const clerkUser = await clerkClient.users.getUser(clerkUserId);
+    const role = clerkUser.publicMetadata?.role;
+    if (role !== 'Admin' && role !== 'admin') return null;
+    const user = await User.findOne({ user_id: clerkUserId });
+    return user;
+  } catch {
+    return null;
+  }
 };
 
 // @desc    Add a new section

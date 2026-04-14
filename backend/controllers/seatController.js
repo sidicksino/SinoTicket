@@ -4,11 +4,20 @@ const Venue = require('../models/Venue');
 const Seat = require('../models/Seat');
 const mongoose = require('mongoose');
 
+const { clerkClient } = require('@clerk/express');
+
 // Helper
 const getAdminUser = async (clerkUserId) => {
   if (!clerkUserId) return null;
-  const user = await User.findOne({ user_id: clerkUserId });
-  return user?.role === 'Admin' ? user : null;
+  try {
+    const clerkUser = await clerkClient.users.getUser(clerkUserId);
+    const role = clerkUser.publicMetadata?.role;
+    if (role !== 'Admin' && role !== 'admin') return null;
+    const user = await User.findOne({ user_id: clerkUserId });
+    return user;
+  } catch {
+    return null;
+  }
 };
 
 // @desc    Generate massive seats for a section

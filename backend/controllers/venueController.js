@@ -1,11 +1,15 @@
 const User = require('../models/User');
 const Venue = require('../models/Venue');
 
+const { clerkClient } = require('@clerk/express');
+
 // Helper function to get MongoDB User from Clerk auth and verify Admin role
 const getAdminUser = async (req) => {
   if (!req.auth || !req.auth.userId) return null;
+  const clerkUser = await clerkClient.users.getUser(req.auth.userId);
+  const role = clerkUser.publicMetadata?.role;
+  if (role !== 'Admin' && role !== 'admin') return null;
   const user = await User.findOne({ user_id: req.auth.userId });
-  if (!user || user.role !== 'Admin') return null;
   return user;
 };
 
