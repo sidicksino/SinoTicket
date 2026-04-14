@@ -16,6 +16,11 @@ import { useAuth } from '@clerk/clerk-react';
 import { useRef } from 'react';
 
 // ─── Types ────────────────────────────────────────
+interface Artist {
+  name: string;
+  time: string;
+}
+
 interface TicketCategory {
   name: string;
   price: number;
@@ -40,6 +45,7 @@ interface Event {
   status?: string;
   venue_id?: Venue;
   ticket_categories?: TicketCategory[];
+  artist_lineup?: Artist[];
 }
 
 interface EventFormData {
@@ -50,6 +56,7 @@ interface EventFormData {
   venue_id: string;
   category: string;
   ticket_categories: TicketCategory[];
+  artist_lineup: Artist[];
 }
 
 const EMPTY_FORM: EventFormData = {
@@ -60,6 +67,7 @@ const EMPTY_FORM: EventFormData = {
   venue_id: '',
   category: 'Music',
   ticket_categories: [{ name: 'General Admission', price: 0, quantity: 100 }],
+  artist_lineup: [],
 };
 
 const CATEGORIES = ['Music', 'Sports', 'Cultural', 'Business', 'Fashion'];
@@ -157,6 +165,10 @@ export default function EventsManager() {
         price: tc.price,
         quantity: tc.quantity,
       })) || [{ name: 'General Admission', price: 0, quantity: 100 }],
+      artist_lineup: event.artist_lineup?.map((a) => ({
+        name: a.name,
+        time: a.time,
+      })) || [],
     });
     setSelectedFile(null);
     setPreviewUrl(event.imageUrl || '');
@@ -239,6 +251,33 @@ export default function EventsManager() {
     setFormData({ ...formData, ticket_categories: updated });
   };
 
+  // ─── Artist lineup helpers ──────────────────────
+  const addArtist = () => {
+    setFormData({
+      ...formData,
+      artist_lineup: [
+        ...formData.artist_lineup,
+        { name: '', time: '' },
+      ],
+    });
+  };
+
+  const updateArtist = (
+    index: number,
+    field: keyof Artist,
+    value: string
+  ) => {
+    const updated = [...formData.artist_lineup];
+    updated[index][field] = value;
+    setFormData({ ...formData, artist_lineup: updated });
+  };
+
+  const removeArtist = (index: number) => {
+    const updated = [...formData.artist_lineup];
+    updated.splice(index, 1);
+    setFormData({ ...formData, artist_lineup: updated });
+  };
+
   // ─── Save (create / update) ─────────────────────
   const handleSave = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -263,6 +302,7 @@ export default function EventsManager() {
         venue_id: formData.venue_id,
         category: formData.category,
         ticket_categories: formData.ticket_categories,
+        artist_lineup: formData.artist_lineup,
       };
 
       const url = isEdit
@@ -645,6 +685,57 @@ export default function EventsManager() {
                   />
                 </div>
 
+                {/* Artist Lineup */}
+                <div className="pt-6 border-t border-card-border">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="font-bold text-text">Artist Lineup</h4>
+                    <button
+                      type="button"
+                      onClick={addArtist}
+                      className="text-sm font-bold text-primary hover:text-primary/80"
+                    >
+                      + Add Artist
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {formData.artist_lineup.length === 0 ? (
+                      <p className="text-xs text-subtext italic">No artists added yet.</p>
+                    ) : (
+                      formData.artist_lineup.map((artist, index) => (
+                        <div key={index} className="flex gap-2 items-center">
+                          <input
+                            type="text"
+                            placeholder="Artist Name"
+                            required
+                            value={artist.name}
+                            onChange={(e) =>
+                              updateArtist(index, 'name', e.target.value)
+                            }
+                            className="flex-1 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Time (e.g. 8:00 PM)"
+                            value={artist.time}
+                            onChange={(e) =>
+                              updateArtist(index, 'time', e.target.value)
+                            }
+                            className="w-40 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeArtist(index)}
+                            className="p-2 text-error hover:bg-error/10 rounded-lg transition-colors"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
                 {/* Tickets */}
                 <div className="pt-6 border-t border-card-border">
                   <div className="flex justify-between items-center mb-4">
@@ -756,7 +847,7 @@ export default function EventsManager() {
               </button>
             </div>
 
-            <div className="p-6 -mt-8 relative space-y-4">
+            <div className="p-6 -mt-8 relative space-y-4 max-h-[70vh] overflow-y-auto">
               <div className="flex items-start justify-between gap-4">
                 <h3 className="text-xl font-bold text-text">{viewEvent.title}</h3>
                 <span className={`text-xs font-bold px-2.5 py-1 rounded-lg flex-shrink-0 ${getStatusBadge(viewEvent).cls}`}>
@@ -792,27 +883,48 @@ export default function EventsManager() {
                 </div>
               </div>
 
+              {/* Artist Lineup View */}
+              {viewEvent.artist_lineup && viewEvent.artist_lineup.length > 0 && (
+                <div className="pt-4 border-t border-card-border">
+                  <h4 className="text-sm font-bold text-text mb-3">Artist Lineup</h4>
+                  <div className="space-y-3">
+                    {viewEvent.artist_lineup.map((artist, i) => (
+                      <div key={i} className="flex justify-between items-center text-sm bg-card-border/10 p-2.5 rounded-xl border border-card-border/30">
+                        <div className="font-bold text-text">{artist.name}</div>
+                        <div className="text-xs text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-md">
+                          {artist.time}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Tickets breakdown */}
               {viewEvent.ticket_categories && viewEvent.ticket_categories.length > 0 && (
                 <div className="pt-4 border-t border-card-border">
-                  <h4 className="text-sm font-bold text-text mb-3">Ticket Categories</h4>
-                  <div className="space-y-2">
+                  <h4 className="text-sm font-bold text-text mb-3">Sales Breakdown</h4>
+                  <div className="space-y-3">
                     {viewEvent.ticket_categories.map((tc, i) => {
                       const tcPct = tc.quantity === 0 ? 0 : Math.round(((tc.sold || 0) / tc.quantity) * 100);
                       return (
-                        <div key={i} className="flex items-center gap-3">
-                          <span className="text-sm text-text font-medium flex-1">{tc.name}</span>
-                          <span className="text-xs text-subtext font-bold">
-                            {(tc.sold || 0)}/{tc.quantity}
-                          </span>
-                          <span className="text-xs font-bold text-primary">
-                            {tc.price.toLocaleString()} XAF
-                          </span>
-                          <div className="w-16 h-1.5 bg-card-border rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${tcPct > 80 ? 'bg-success' : 'bg-primary'}`}
-                              style={{ width: `${tcPct}%` }}
-                            />
+                        <div key={i} className="space-y-1.5">
+                          <div className="flex justify-between text-xs font-bold">
+                            <span className="text-text">{tc.name}</span>
+                            <span className="text-subtext">
+                              {(tc.sold || 0)}/{tc.quantity} Sold
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-2 bg-card-border rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-500 ${tcPct > 80 ? 'bg-success' : 'bg-primary'}`}
+                                style={{ width: `${tcPct}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-bold text-primary min-w-[60px] text-right">
+                              {tc.price.toLocaleString()} XAF
+                            </span>
                           </div>
                         </div>
                       );
@@ -821,19 +933,19 @@ export default function EventsManager() {
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-4 sticky bottom-0 bg-card pb-2">
                 <button
                   onClick={() => {
                     setViewEvent(null);
                     openEdit(viewEvent);
                   }}
-                  className="flex-1 py-2.5 bg-primary/10 text-primary font-bold rounded-xl hover:bg-primary/20 transition-colors text-sm"
+                  className="flex-1 py-3 bg-primary text-white font-bold rounded-xl hover:brightness-110 active:scale-[0.98] transition-all text-sm"
                 >
                   Edit Event
                 </button>
                 <button
                   onClick={() => setViewEvent(null)}
-                  className="flex-1 py-2.5 bg-card-border/30 text-subtext font-bold rounded-xl hover:bg-card-border/50 transition-colors text-sm"
+                  className="flex-1 py-3 bg-card-border/30 text-subtext font-bold rounded-xl hover:bg-card-border/50 transition-colors text-sm"
                 >
                   Close
                 </button>
