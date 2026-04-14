@@ -19,16 +19,28 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Event } from "@/types/type";
-
-const CATEGORIES = ["All", "Music", "Sports", "Cultural", "Business", "Fashion"];
+import { useTranslation } from "react-i18next";
 
 export default function Home() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { t } = useTranslation();
+
+  const CATEGORIES = useMemo(
+    () => [
+      t("home.categories.all"),
+      t("home.categories.music"),
+      t("home.categories.sports"),
+      t("home.categories.cultural"),
+      t("home.categories.business"),
+      t("home.categories.fashion"),
+    ],
+    [t]
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState(t("home.categories.all"));
   const [showFilters, setShowFilters] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -50,8 +62,29 @@ export default function Home() {
     setHasMore(true);
   }, [debouncedSearch, selectedCategory]);
 
+  useEffect(() => {
+    setSelectedCategory((prev) =>
+      CATEGORIES.includes(prev) ? prev : t("home.categories.all")
+    );
+  }, [CATEGORIES, t]);
+
+  const categoryToApiValue = useMemo(
+    () =>
+      new Map<string, string>([
+        [t("home.categories.all"), "All"],
+        [t("home.categories.music"), "Music"],
+        [t("home.categories.sports"), "Sports"],
+        [t("home.categories.cultural"), "Cultural"],
+        [t("home.categories.business"), "Business"],
+        [t("home.categories.fashion"), "Fashion"],
+      ]),
+    [t]
+  );
+
+  const selectedCategoryApi = categoryToApiValue.get(selectedCategory) ?? "All";
+
   const apiUrl = `/api/events?limit=20&page=${page}${debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
-    }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
+    }${selectedCategoryApi !== "All" ? `&category=${selectedCategoryApi}` : ""}`;
 
   const { data, loading, error, refetch } = useFetch<{ success: boolean; events: Event[] }>(apiUrl, false);
 
@@ -92,7 +125,7 @@ export default function Home() {
     }
   }, [loading]);
 
-  const isDefaultView = !debouncedSearch && selectedCategory === "All";
+  const isDefaultView = !debouncedSearch && selectedCategoryApi === "All";
   const featuredEvents = events.slice(0, 3);
   const listEvents = useMemo(
     () => (isDefaultView ? events.slice(3) : events),
@@ -141,11 +174,11 @@ export default function Home() {
               <Text style={{ color: colors.primary, fontSize: 10, fontWeight: "700" }}>{item.category}</Text>
             </View>
             <Text style={{ color: colors.subtext, fontSize: 12 }}>
-              {item.date ? new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBA"}
+              {item.date ? new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : t("home.tba")}
             </Text>
           </View>
           <Text style={{ color: colors.subtext, fontSize: 12 }}>
-            {item.venue_id?.name || "Venue TBA"}
+            {item.venue_id?.name || t("home.venueTba")}
           </Text>
         </View>
         <View style={{ width: 36, height: 36, borderRadius: 999, backgroundColor: colors.primaryLight, alignItems: "center", justifyContent: "center" }}>
@@ -153,7 +186,7 @@ export default function Home() {
         </View>
       </TouchableOpacity>
     ),
-    [colors, navigateToEvent]
+    [colors, navigateToEvent, t]
   );
 
   // ── Everything above the events list ──
@@ -176,11 +209,11 @@ export default function Home() {
             borderColor: colors.border,
           }}
         >
-          <Ionicons name="search" size={20} color={colors.subtext} />
-          <TextInput
-            placeholder="Search events, artists..."
-            placeholderTextColor={colors.subtext}
-            value={searchQuery}
+            <Ionicons name="search" size={20} color={colors.subtext} />
+            <TextInput
+              placeholder={t("home.searchPlaceholder")}
+              placeholderTextColor={colors.subtext}
+              value={searchQuery}
             onChangeText={setSearchQuery}
             style={{ flex: 1, marginLeft: 10, fontSize: 15, color: colors.text }}
           />
@@ -249,16 +282,16 @@ export default function Home() {
           }}
         >
           <Text style={{ fontFamily: "Syne_700Bold", fontSize: 20, color: colors.text }}>
-            {isDefaultView ? "Upcoming Events" : "Results"}
+            {isDefaultView ? t("home.upcomingEvents") : t("home.results")}
           </Text>
         </View>
 
         {/* ── ERROR ── */}
         {!loading && error && (
           <View style={{ marginHorizontal: 24, padding: 20, backgroundColor: colors.card, borderRadius: 16, alignItems: 'center' }}>
-            <Text style={{ color: colors.subtext, textAlign: "center", marginBottom: 12 }}>Could not connect to server.</Text>
+            <Text style={{ color: colors.subtext, textAlign: "center", marginBottom: 12 }}>{t("home.couldNotConnect")}</Text>
             <TouchableOpacity onPress={refetch} style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 }}>
-              <Text style={{ color: colors.white, fontWeight: "700" }}>Retry Connection</Text>
+              <Text style={{ color: colors.white, fontWeight: "700" }}>{t("home.retryConnection")}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -333,7 +366,7 @@ export default function Home() {
                       <Text style={{ color: colors.white, opacity: 0.75, fontSize: 12, marginLeft: 5 }}>
                         {item.date
                           ? new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-                          : "TBA"}
+                          : t("home.tba")}
                       </Text>
                     </View>
                   </View>
@@ -352,13 +385,27 @@ export default function Home() {
                 paddingHorizontal: 24,
               }}
             >
-              More Events
+               {t("home.moreEvents")}
             </Text>
           </>
         )}
       </View>
     ),
-    [colors, searchQuery, showFilters, selectedCategory, isDefaultView, loading, error, events, featuredEvents, navigateToEvent, refetch]
+    [
+      CATEGORIES,
+      colors,
+      error,
+      events,
+      featuredEvents,
+      isDefaultView,
+      loading,
+      navigateToEvent,
+      refetch,
+      searchQuery,
+      selectedCategory,
+      showFilters,
+      t,
+    ]
   );
 
   return (
@@ -386,8 +433,8 @@ export default function Home() {
             </View>
           ) : !error && events.length === 0 ? (
             <EmptyState
-              title="No events found"
-              message="No events found matching your criteria. Try adjusting your search or filters."
+              title={t("home.noEventsTitle")}
+              message={t("home.noEventsMessage")}
               marginTop={40}
             />
           ) : null

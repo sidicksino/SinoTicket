@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   ScrollView,
@@ -13,11 +14,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const PAYMENT_METHODS = [
-  { id: "MobileMoney", label: "Mobile Money", icon: "phone-portrait-outline" },
-  { id: "Card", label: "Credit / Debit Card", icon: "card-outline" },
-];
 
 export default function Checkout() {
   const params = useLocalSearchParams<{
@@ -32,6 +28,12 @@ export default function Checkout() {
   const router = useRouter();
   const { colors } = useTheme();
   const { authFetch } = useAuthFetch();
+  const { t } = useTranslation();
+
+  const paymentMethods = [
+    { id: "MobileMoney", label: t("checkout.mobileMoney"), icon: "phone-portrait-outline" },
+    { id: "Card", label: t("checkout.card"), icon: "card-outline" },
+  ];
 
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,7 +43,7 @@ export default function Checkout() {
   const handleCheckout = async () => {
     if (!selectedMethod) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      Alert.alert("Payment Method", "Please select a payment method.");
+      Alert.alert(t("checkout.paymentMethod"), t("checkout.selectPaymentMethod"));
       return;
     }
     setLoading(true);
@@ -70,7 +72,7 @@ export default function Checkout() {
       } as any);
     } catch (err: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("Checkout Failed", err.message || "Something went wrong during payment.");
+      Alert.alert(t("checkout.checkoutFailed"), err.message || t("checkout.paymentFailed"));
     } finally {
       setLoading(false);
     }
@@ -84,13 +86,13 @@ export default function Checkout() {
           <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 16 }}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 20 }}>Review Order</Text>
+          <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 20 }}>{t("checkout.reviewOrder")}</Text>
         </View>
 
         <View style={{ paddingHorizontal: 24 }}>
           {/* Order Summary Card */}
           <View style={{ backgroundColor: colors.card, borderRadius: 24, padding: 24, borderWidth: 1, borderColor: colors.cardBorder, marginBottom: 32, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 4 }}>
-            <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "800", letterSpacing: 1, marginBottom: 12, textTransform: "uppercase" }}>Order Summary</Text>
+            <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "800", letterSpacing: 1, marginBottom: 12, textTransform: "uppercase" }}>{t("checkout.orderSummary")}</Text>
             
             <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 22, marginBottom: 8 }}>
               {params.event_title}
@@ -99,12 +101,12 @@ export default function Checkout() {
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
               <Ionicons name="ticket-outline" size={16} color={colors.subtext} />
               <Text style={{ color: colors.subtext, fontSize: 14, marginLeft: 6 }}>
-                {params.quantity}x {params.category_name} (Seats: {params.seat_numbers})
+                {params.quantity}x {params.category_name} ({t("checkout.seats")}: {params.seat_numbers})
               </Text>
             </View>
 
             <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>Total Amount</Text>
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>{t("checkout.totalAmount")}</Text>
               <Text style={{ color: colors.primary, fontFamily: "Syne_700Bold", fontSize: 24 }}>
                 {params.total_price} XAF
               </Text>
@@ -112,8 +114,8 @@ export default function Checkout() {
           </View>
 
           {/* Payment Methods */}
-          <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>Secure Payment</Text>
-          {PAYMENT_METHODS.map((method) => {
+          <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>{t("checkout.securePayment")}</Text>
+          {paymentMethods.map((method) => {
             const selected = selectedMethod === method.id;
             return (
               <TouchableOpacity
@@ -147,7 +149,7 @@ export default function Checkout() {
           <View style={{ marginTop: 20, padding: 16, backgroundColor: colors.card, borderRadius: 16, flexDirection: 'row', alignItems: 'center' }}>
             <Ionicons name="shield-checkmark-outline" size={20} color={colors.success} />
             <Text style={{ marginLeft: 10, fontSize: 12, color: colors.subtext, flex: 1 }}>
-              Your payment is encrypted and secure. By clicking Pay Now, you agree to the Terms of Service.
+              {t("checkout.paymentSecurityNote")}
             </Text>
           </View>
         </View>
@@ -156,8 +158,8 @@ export default function Checkout() {
       {/* Sticky Pay Button */}
       <SummaryBar
         title={`${params.total_price} XAF`}
-        subtitle="Final Total"
-        buttonLabel="Pay Now"
+        subtitle={t("checkout.finalTotal")}
+        buttonLabel={t("checkout.payNow")}
         onPress={handleCheckout}
         loading={loading}
       />

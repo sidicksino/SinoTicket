@@ -5,11 +5,13 @@ import { router } from "expo-router";
 import React from "react";
 import { DimensionValue, Image, Text, View, useWindowDimensions } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Welcome = () => {
     const { height } = useWindowDimensions();
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const imageHeight = height * 0.45;
 
     return (
@@ -29,10 +31,10 @@ const Welcome = () => {
                 <View className="w-full mt-8">
                     <Animated.View entering={FadeInDown.duration(800).delay(200).springify().damping(14)}>
                         <Text className="text-[36px] font-syne font-extrabold mb-3 text-center leading-[42px]" style={{ color: colors.text }}>
-                            Let&apos;s get{"\n"}started
+                            {t("welcome.letsGetStarted")}
                         </Text>
                         <Text className="text-[16px] text-center font-medium px-4 leading-6" style={{ color: colors.subtext }}>
-                            Sign up now and get your tickets in seconds fast and easy
+                            {t("welcome.subtitle")}
                         </Text>
                     </Animated.View>
 
@@ -42,7 +44,7 @@ const Welcome = () => {
                             onPress={() => router.push("/(auth)/sign-up" as any)}
                         />
                         <CustomButton
-                            title="Sign In"
+                            title={t("welcome.signIn")}
                             bgVariant="outline"
                             textVariant="primary"
                             onPress={() => router.push("/(auth)/sign-in" as any)}

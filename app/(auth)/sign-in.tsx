@@ -1,7 +1,7 @@
 import InputField from "@/components/InputField";
-import { useClerk, useSignIn } from "@clerk/expo";
 import { useTheme } from "@/context/ThemeContext";
 import useSocialAuth from "@/hooks/useSocialAuth";
+import { useClerk, useSignIn } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import React from "react";
@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -27,6 +28,7 @@ const SignIn = () => {
   const router = useRouter();
   const { handleGoogleAuth, loading: googleLoading } = useSocialAuth();
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -41,7 +43,7 @@ const SignIn = () => {
     setIsSubmitting(true);
 
     if (!emailAddress) {
-      setApiError("Email or phone number is required.");
+      setApiError(t("auth.emailOrPhoneRequired"));
       setIsSubmitting(false);
       return;
     }
@@ -49,7 +51,7 @@ const SignIn = () => {
     if (emailAddress.includes("@")) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(emailAddress)) {
-        setApiError("Please enter a valid email address.");
+        setApiError(t("auth.invalidEmail"));
         setIsSubmitting(false);
         return;
       }
@@ -65,8 +67,8 @@ const SignIn = () => {
         const msg =
           (error as any).errors?.[0]?.longMessage ||
           (error as any).errors?.[0]?.message ||
-          "Log in failed.";
-        Alert.alert("Error", msg);
+          t("auth.loginFailed");
+        Alert.alert(t("common.error"), msg);
         setApiError(msg);
         return;
       }
@@ -82,13 +84,13 @@ const SignIn = () => {
           setIsMfaPending(true);
         } catch (mfaErr: any) {
           const msg =
-            mfaErr.errors?.[0]?.longMessage || "Failed to send verification code.";
-          Alert.alert("Error", msg);
+            mfaErr.errors?.[0]?.longMessage || t("auth.failedToSendCode");
+          Alert.alert(t("common.error"), msg);
           setApiError(msg);
         }
       } else {
-        Alert.alert("Error", "Log in failed. Please try again.");
-        setApiError("Log in failed.");
+        Alert.alert(t("common.error"), t("auth.loginFailedRetry"));
+        setApiError(t("auth.loginFailed"));
       }
     } catch (err: any) {
       console.error("Sign in error:", JSON.stringify(err, null, 2));
@@ -96,8 +98,8 @@ const SignIn = () => {
         err.errors?.[0]?.longMessage ||
         err.errors?.[0]?.message ||
         err.message ||
-        "An error occurred.";
-      Alert.alert("Error", msg);
+        t("auth.unexpectedError");
+      Alert.alert(t("common.error"), msg);
       setApiError(msg);
     } finally {
       setIsSubmitting(false);
@@ -117,7 +119,7 @@ const SignIn = () => {
         }
         router.replace("/(root)/(tabs)/home");
       } else {
-        Alert.alert("Error", "Verification attempt not complete.");
+        Alert.alert(t("common.error"), t("auth.verificationNotComplete"));
       }
     } catch (err: any) {
       console.error("Verify error:", JSON.stringify(err, null, 2));
@@ -125,8 +127,8 @@ const SignIn = () => {
         err.errors?.[0]?.longMessage ||
         err.errors?.[0]?.message ||
         err.message ||
-        "An error occurred.";
-      Alert.alert("Error", msg);
+        t("auth.unexpectedError");
+      Alert.alert(t("common.error"), msg);
       setApiError(msg);
     } finally {
       setIsSubmitting(false);
@@ -138,11 +140,11 @@ const SignIn = () => {
       <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
         <View className="flex-1 px-8 pt-16">
           <Text className="font-syne text-[32px] font-black mb-4" style={{ color: colors.text }}>
-            Verify Account
+            {t("auth.verifyAccount")}
           </Text>
           <InputField
-            label="Verification Code"
-            placeholder="Enter your verification code"
+            label={t("auth.verificationCode")}
+            placeholder={t("auth.enterVerificationCode")}
             icon="key-outline"
             keyboardType="numeric"
             value={code}
@@ -160,7 +162,7 @@ const SignIn = () => {
             {isSubmitting ? (
               <ActivityIndicator color={colors.white} />
             ) : (
-              <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>Verify</Text>
+              <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>{t("auth.verify")}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -183,7 +185,6 @@ const SignIn = () => {
           keyboardDismissMode="on-drag"
         >
           <View className="flex-1 px-8 pt-8">
-            {/* HEADER SECTION */}
             <Animated.View
               entering={FadeInDown.duration(800).delay(100).springify().damping(18)}
             >
@@ -191,24 +192,23 @@ const SignIn = () => {
                 <Ionicons name="log-in-outline" size={32} color={colors.primary} />
               </View>
               <Text className="font-syne text-[42px] font-black leading-tight" style={{ color: colors.text }}>
-                Welcome
+                {t("auth.welcome")}
               </Text>
               <Text className="font-syne text-[42px] font-black leading-tight mb-4" style={{ color: colors.primary }}>
-                Back.
+                {t("auth.back")}
               </Text>
               <Text className="mb-8 text-[16px] font-medium leading-relaxed" style={{ color: colors.subtext }}>
-                Log in to SinoTicket to manage your tickets and discover fantastic events.
+                {t("auth.signInSubtitle")}
               </Text>
             </Animated.View>
 
-            {/* FORM SECTION */}
             <View className="w-full mt-2">
               <Animated.View
                 entering={FadeInDown.duration(800).delay(200).springify().damping(18)}
               >
                 <InputField
-                  label="Email or Phone Number"
-                  placeholder="Enter email or phone"
+                  label={t("auth.emailOrPhone")}
+                  placeholder={t("auth.enterEmailOrPhone")}
                   icon="person-outline"
                   autoCapitalize="none"
                   value={emailAddress}
@@ -220,8 +220,8 @@ const SignIn = () => {
                 entering={FadeInDown.duration(800).delay(300).springify().damping(18)}
               >
                 <InputField
-                  label="Password"
-                  placeholder="Enter your password"
+                  label={t("auth.password")}
+                  placeholder={t("auth.enterPassword")}
                   icon="lock-closed-outline"
                   secureTextEntry={true}
                   value={password}
@@ -235,7 +235,7 @@ const SignIn = () => {
               >
                 <Link href="/(auth)/forgot-password">
                   <Text className="text-[14px] font-bold" style={{ color: colors.primary }}>
-                    Forgot Password?
+                    {t("auth.forgotPassword")}
                   </Text>
                 </Link>
               </Animated.View>
@@ -252,7 +252,7 @@ const SignIn = () => {
                   {isLoading ? (
                     <ActivityIndicator color={colors.white} />
                   ) : (
-                    <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>Log In</Text>
+                    <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>{t("auth.logIn")}</Text>
                   )}
                 </TouchableOpacity>
                 {apiError ? (
@@ -263,19 +263,17 @@ const SignIn = () => {
               </Animated.View>
             </View>
 
-            {/* DIVIDER */}
             <Animated.View
               entering={FadeInDown.duration(800).delay(600).springify().damping(18)}
               style={styles.divider}
             >
               <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
               <Text className="text-[13px] font-bold uppercase tracking-widest" style={{ color: colors.subtext }}>
-                Or continue with
+                {t("auth.orContinueWith")}
               </Text>
               <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
             </Animated.View>
 
-            {/* SOCIAL LOGIN */}
             <Animated.View
               entering={FadeInDown.duration(800).delay(700).springify().damping(18)}
               style={styles.socialRow}
@@ -298,17 +296,16 @@ const SignIn = () => {
               </TouchableOpacity>
             </Animated.View>
 
-            {/* FOOTER */}
             <Animated.View
               entering={FadeInUp.duration(800).delay(800).springify().damping(18)}
               style={styles.footer}
             >
               <Text className="text-[15px] font-medium" style={{ color: colors.subtext }}>
-                Don&apos;t have an account?{" "}
+                {t("auth.dontHaveAccount")}{" "}
               </Text>
               <Link href="/(auth)/sign-up">
                 <Text className="text-[15px] font-bold" style={{ color: colors.primary }}>
-                  Sign Up
+                  {t("auth.signUp")}
                 </Text>
               </Link>
             </Animated.View>

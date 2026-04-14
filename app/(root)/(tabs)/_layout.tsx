@@ -1,9 +1,11 @@
 import { useTheme } from '@/context/ThemeContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Icon, Label, NativeTabs, VectorIcon } from 'expo-router/unstable-native-tabs';
+import { useTranslation } from "react-i18next";
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <NativeTabs
@@ -29,7 +31,7 @@ export default function TabLayout() {
           sf="house"
           androidSrc={<VectorIcon family={MaterialIcons} name="home" />}
         />
-        <Label>Home</Label>
+        <Label>{t("tabs.home")}</Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="ticket">
@@ -37,7 +39,7 @@ export default function TabLayout() {
           sf="ticket"
           androidSrc={<VectorIcon family={MaterialIcons} name="local-activity" />}
         />
-        <Label>Tickets</Label>
+        <Label>{t("tabs.tickets")}</Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="history">
@@ -45,7 +47,7 @@ export default function TabLayout() {
           sf="clock"
           androidSrc={<VectorIcon family={MaterialIcons} name="history" />}
         />
-        <Label>History</Label>
+        <Label>{t("tabs.history")}</Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="profile">
@@ -53,9 +55,8 @@ export default function TabLayout() {
           sf="person"
           androidSrc={<VectorIcon family={MaterialIcons} name="person" />}
         />
-        <Label>Profile</Label>
+        <Label>{t("tabs.profile")}</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
-

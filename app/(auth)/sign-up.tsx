@@ -19,6 +19,7 @@ import {
   View,
 } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const AnimatedView = Animated.View;
@@ -30,6 +31,7 @@ const CLERK_ERRORS = {
 } as const;
 
 const SignUp = () => {
+  const { t } = useTranslation();
   const { signUp } = useSignUp();
   const { isLoaded: authLoaded } = useAuth();
   const { setActive } = useClerk();
@@ -44,16 +46,17 @@ const SignUp = () => {
   const [code, setCode] = React.useState("");
   const [pendingVerification, setPendingVerification] = React.useState(false);
   const [apiError, setApiError] = React.useState("");
+  const [showLoginInstead, setShowLoginInstead] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const validate = (): string | null => {
-    if (!fullName.trim()) return "Full name is required.";
+    if (!fullName.trim()) return t("signUp.validation.fullNameRequired");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress))
-      return "Please enter a valid email address.";
+      return t("signUp.validation.invalidEmail");
     if (password.length < 8)
-      return "Password must be at least 8 characters.";
+      return t("signUp.validation.passwordMinLength");
     if (password !== confirmPassword)
-      return "Passwords do not match.";
+      return t("signUp.validation.passwordsDoNotMatch");
     return null;
   };
 
@@ -61,17 +64,17 @@ const SignUp = () => {
     const code = err?.errors?.[0]?.code ?? "";
     switch (code) {
       case CLERK_ERRORS.EMAIL_EXISTS:
-        return "An account with this email already exists.";
+        return t("signUp.validation.emailAlreadyRegistered");
       case CLERK_ERRORS.INVALID_EMAIL:
-        return "Please enter a valid email address.";
+        return t("signUp.validation.invalidEmail");
       case CLERK_ERRORS.WEAK_PASSWORD:
-        return "This password is too common. Please choose a stronger one.";
+        return t("signUp.validation.weakPassword");
       default:
         return (
           err?.errors?.[0]?.longMessage ||
           err?.errors?.[0]?.message ||
           err?.message ||
-          "Something went wrong. Please try again."
+          t("signUp.validation.genericError")
         );
     }
   };
@@ -81,6 +84,7 @@ const SignUp = () => {
     if (!signUp || isSubmitting) return;
 
     setApiError("");
+    setShowLoginInstead(false);
 
     const validationError = validate();
     if (validationError) {
@@ -119,20 +123,23 @@ const SignUp = () => {
 
     } catch (err: any) {
       if (err.message === "EMAIL_EXISTS_IN_DB") {
-        setApiError("This email is already registered.");
+        setApiError(t("signUp.validation.emailAlreadyRegistered"));
+        setShowLoginInstead(true);
         Alert.alert(
-          "Account Already Exists",
-          "This email is already registered. Would you like to log in instead?",
+          t("signUp.accountAlreadyExistsTitle"),
+          t("signUp.accountAlreadyExistsMessage"),
           [
-            { text: "Cancel", style: "cancel" },
-            { text: "Log In", onPress: () => router.replace("/(auth)/sign-in") },
+            { text: t("common.cancel"), style: "cancel" },
+            { text: t("auth.logIn"), onPress: () => router.replace("/(auth)/sign-in") },
           ]
         );
       } else if (err?.errors?.[0]?.code === CLERK_ERRORS.EMAIL_EXISTS) {
         // Fallback for race conditions if the email was created in Clerk but not our DB yet
-        setApiError("This email is already registered in Clerk.");
+        setApiError(t("signUp.validation.emailAlreadyRegisteredClerk"));
+        setShowLoginInstead(true);
       } else {
         setApiError(resolveClerkError(err));
+        setShowLoginInstead(false);
       }
     } finally {
       setIsSubmitting(false);
@@ -143,11 +150,13 @@ const SignUp = () => {
     if (!signUp || isSubmitting) return;
 
     if (!code.trim()) {
-      setApiError("Please enter the verification code.");
+      setApiError(t("signUp.validation.verificationCodeRequired"));
+      setShowLoginInstead(false);
       return;
     }
 
     setApiError("");
+    setShowLoginInstead(false);
     setIsSubmitting(true);
 
     try {
@@ -158,8 +167,9 @@ const SignUp = () => {
         setApiError(
           (error as any)?.errors?.[0]?.longMessage ||
           (error as any)?.errors?.[0]?.message ||
-          "Invalid verification code."
+          t("signUp.validation.invalidVerificationCode")
         );
+        setShowLoginInstead(false);
         return;
       }
 
@@ -183,12 +193,14 @@ const SignUp = () => {
         router.replace("/(root)/(tabs)/home");
       } else {
         setApiError(
-          "Sign-up incomplete. Missing: " +
+          `${t("auth.verificationNotComplete")} ` +
           ((signUp as any).missingFields?.join(", ") || "unknown fields")
         );
+        setShowLoginInstead(false);
       }
     } catch (err: any) {
       setApiError(resolveClerkError(err));
+      setShowLoginInstead(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -210,26 +222,27 @@ const SignUp = () => {
               <Ionicons name="mail-unread-outline" size={28} color={colors.primary} />
             </View>
             <Text className="font-syne text-[32px] font-black leading-tight" style={{ color: colors.text }}>
-              Check Your
+              {t("signUp.checkYour")}
             </Text>
             <Text className="font-syne text-[32px] font-black leading-tight mb-3" style={{ color: colors.primary }}>
-              Email.
+              {t("signUp.email")}
             </Text>
             <Text className="text-[15px] font-medium" style={{ color: colors.subtext }}>
-              We sent a 6-digit code to{" "}
+              {t("signUp.codeSent")} {" "}
               <Text className="font-bold" style={{ color: colors.text }}>{emailAddress}</Text>
             </Text>
           </View>
 
           <InputField
-            label="Verification Code"
-            placeholder="Enter 6-digit code"
+            label={t("auth.verificationCode")}
+            placeholder={t("signUp.enterCode")}
             icon="key-outline"
             keyboardType="numeric"
             value={code}
             onChangeText={(val) => {
               setCode(val);
               setApiError("");
+              setShowLoginInstead(false);
             }}
           />
 
@@ -249,7 +262,7 @@ const SignUp = () => {
               <ActivityIndicator color={colors.white} />
             ) : (
               <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>
-                Verify Email
+                {t("signUp.verifyEmail")}
               </Text>
             )}
           </TouchableOpacity>
@@ -259,7 +272,7 @@ const SignUp = () => {
             className="mt-4 items-center"
           >
             <Text className="text-[14px] font-medium" style={{ color: colors.subtext }}>
-              ← Go back and change email
+              {"<- "}{t("signUp.changeEmail")}
             </Text>
           </TouchableOpacity>
         </View>
@@ -293,13 +306,13 @@ const SignUp = () => {
                   <Ionicons name="sparkles" size={28} color={colors.primary} />
                 </View>
                 <Text className="font-syne text-[42px] font-black leading-tight" style={{ color: colors.text }}>
-                  Create
+                  {t("signUp.create")}
                 </Text>
                 <Text className="font-syne text-[42px] font-black leading-tight mb-4" style={{ color: colors.primary }}>
-                  Account.
+                  {t("signUp.account")}
                 </Text>
                 <Text className="text-[16px] font-medium leading-relaxed" style={{ color: colors.subtext }}>
-                  Join SinoTicket today and unlock access to the best events in town.
+                  {t("signUp.subtitle")}
                 </Text>
               </View>
             </AnimatedView>
@@ -310,12 +323,12 @@ const SignUp = () => {
                 entering={FadeInDown.duration(800).delay(200).springify().damping(18)}
               >
                 <InputField
-                  label="Full Name"
-                  placeholder="Enter your name"
+                  label={t("signUp.fullName")}
+                  placeholder={t("signUp.enterName")}
                   icon="person-outline"
                   autoCapitalize="words"
                   value={fullName}
-                  onChangeText={(val) => { setFullName(val); setApiError(""); }}
+                  onChangeText={(val) => { setFullName(val); setApiError(""); setShowLoginInstead(false); }}
                 />
               </AnimatedView>
 
@@ -323,13 +336,13 @@ const SignUp = () => {
                 entering={FadeInDown.duration(800).delay(300).springify().damping(18)}
               >
                 <InputField
-                  label="Email Address"
-                  placeholder="Enter your email"
+                  label={t("signUp.emailAddress")}
+                  placeholder={t("signUp.enterEmail")}
                   icon="mail-outline"
                   keyboardType="email-address"
                   autoCapitalize="none"
                   value={emailAddress}
-                  onChangeText={(val) => { setEmailAddress(val); setApiError(""); }}
+                  onChangeText={(val) => { setEmailAddress(val); setApiError(""); setShowLoginInstead(false); }}
                 />
               </AnimatedView>
 
@@ -337,12 +350,12 @@ const SignUp = () => {
                 entering={FadeInDown.duration(800).delay(400).springify().damping(18)}
               >
                 <InputField
-                  label="Password"
-                  placeholder="Enter your password"
+                  label={t("signUp.password")}
+                  placeholder={t("signUp.enterPassword")}
                   icon="lock-closed-outline"
                   secureTextEntry={true}
                   value={password}
-                  onChangeText={(val) => { setPassword(val); setApiError(""); }}
+                  onChangeText={(val) => { setPassword(val); setApiError(""); setShowLoginInstead(false); }}
                 />
               </AnimatedView>
 
@@ -350,12 +363,12 @@ const SignUp = () => {
                 entering={FadeInDown.duration(800).delay(450).springify().damping(18)}
               >
                 <InputField
-                  label="Confirm Password"
-                  placeholder="Confirm your password"
+                  label={t("signUp.confirmPassword")}
+                  placeholder={t("signUp.confirmYourPassword")}
                   icon="lock-closed-outline"
                   secureTextEntry={true}
                   value={confirmPassword}
-                  onChangeText={(val) => { setConfirmPassword(val); setApiError(""); }}
+                  onChangeText={(val) => { setConfirmPassword(val); setApiError(""); setShowLoginInstead(false); }}
                 />
               </AnimatedView>
 
@@ -373,7 +386,7 @@ const SignUp = () => {
                     <ActivityIndicator color={colors.white} />
                   ) : (
                     <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>
-                      Sign Up
+                      {t("signUp.signUp")}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -383,13 +396,13 @@ const SignUp = () => {
                     <Text className="font-medium text-[13px] text-center" style={{ color: colors.error }}>
                       {apiError}
                     </Text>
-                    {apiError.includes("already exists") && (
+                    {showLoginInstead && (
                       <TouchableOpacity
                         onPress={() => router.push("/(auth)/sign-in")}
                         className="mt-2 items-center"
                       >
                         <Text className="font-bold text-[13px]" style={{ color: colors.primary }}>
-                          Log in instead →
+                          {t("signUp.logInInstead")}{" ->"}
                         </Text>
                       </TouchableOpacity>
                     )}
@@ -410,7 +423,7 @@ const SignUp = () => {
               >
                 <View className="h-[1px] flex-1" style={{ backgroundColor: colors.border }} />
                 <Text className="text-[13px] font-bold uppercase tracking-widest" style={{ color: colors.subtext }}>
-                  Or continue with
+                  {t("auth.orContinueWith")}
                 </Text>
                 <View className="h-[1px] flex-1" style={{ backgroundColor: colors.border }} />
               </AnimatedView>
@@ -465,11 +478,11 @@ const SignUp = () => {
                 }}
               >
                 <Text className="text-[15px] font-medium" style={{ color: colors.subtext }}>
-                  Already have an account?{" "}
+                  {t("signUp.alreadyHaveAccount")} {" "}
                 </Text>
                 <Link href="/(auth)/sign-in">
                   <Text className="text-[15px] font-bold" style={{ color: colors.primary }}>
-                    Log In
+                    {t("auth.logIn")}
                   </Text>
                 </Link>
               </AnimatedView>

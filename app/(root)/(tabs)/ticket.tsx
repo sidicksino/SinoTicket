@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Compact true QR-code display
@@ -42,15 +43,16 @@ const QRDisplay = React.memo(function QRDisplay({ code, colors }: { code: string
 
 const TicketItem = React.memo(({ item, isExpanded, onToggle }: { item: any; isExpanded: boolean; onToggle: () => void }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const event = typeof item.event_id === "object" ? item.event_id : null;
   const seat = typeof item.seat_id === "object" ? item.seat_id : null;
   const section = seat && typeof seat.section_id === "object" ? seat.section_id : null;
 
-  const eventTitle = event?.title || "Event TBA";
+  const eventTitle = event?.title || t("ticket.eventTba");
   const eventImage = event?.imageUrl || "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=800";
-  const eventDate = event?.date ? new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBA";
-  const eventTime = event?.date ? new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "TBA";
+  const eventDate = event?.date ? new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : t("ticket.tba");
+  const eventTime = event?.date ? new Date(event.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : t("ticket.tba");
 
   return (
     <View style={{ marginBottom: 20 }}>
@@ -76,7 +78,7 @@ const TicketItem = React.memo(({ item, isExpanded, onToggle }: { item: any; isEx
           <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)' }} />
           
           <View style={{ position: 'absolute', top: 16, right: 16, backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}>
-            <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}>{item.status?.toUpperCase() || "ACTIVE"}</Text>
+            <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}>{item.status?.toUpperCase() || t("ticket.active")}</Text>
           </View>
 
           <View style={{ position: 'absolute', bottom: 16, left: 20 }}>
@@ -92,12 +94,12 @@ const TicketItem = React.memo(({ item, isExpanded, onToggle }: { item: any; isEx
         <View style={{ padding: 20, backgroundColor: colors.card }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <View>
-              <Text style={{ color: colors.subtext, fontSize: 10, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' }}>Section</Text>
-              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 4 }}>{section?.name || "Standard"}</Text>
+              <Text style={{ color: colors.subtext, fontSize: 10, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' }}>{t("ticket.section")}</Text>
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 4 }}>{section?.name || t("ticket.standard")}</Text>
             </View>
             <View>
-              <Text style={{ color: colors.subtext, fontSize: 10, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' }}>Seat</Text>
-              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 4 }}>Row {seat?.row || "0"} • #{seat?.number || "0"}</Text>
+              <Text style={{ color: colors.subtext, fontSize: 10, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' }}>{t("ticket.seat")}</Text>
+              <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700', marginTop: 4 }}>{t("ticket.row")} {seat?.row || "0"} • #{seat?.number || "0"}</Text>
             </View>
             <TouchableOpacity onPress={onToggle} style={{ backgroundColor: colors.primaryLight, padding: 8, borderRadius: 12 }}>
               <Ionicons name={isExpanded ? "chevron-up" : "qr-code-outline"} size={20} color={colors.primary} />
@@ -115,6 +117,7 @@ TicketItem.displayName = "TicketItem";
 
 export default function TicketWallet() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const { authFetch } = useAuthFetch();
   const { isSignedIn, isLoaded } = useAuth();
   
@@ -139,11 +142,11 @@ export default function TicketWallet() {
   useEffect(() => { loadTickets(); }, [loadTickets]);
 
   const renderEmpty = () => (
-    <EmptyState 
-      icon="ticket-outline"
-      title="No tickets found"
-      message="Your booked tickets will appear here for scanning at the venue."
-    />
+      <EmptyState 
+        icon="ticket-outline"
+        title={t("ticket.noTicketsTitle")}
+        message={t("ticket.noTicketsMessage")}
+      />
   );
 
   if (!isLoaded || loading) {
@@ -156,9 +159,11 @@ export default function TicketWallet() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <AppHeader subtitle="Your tickets," displayName="Wallet" />
+      <AppHeader subtitle={t("ticket.yourTickets")} displayName={t("ticket.wallet")} />
       <View style={{ paddingHorizontal: 24, paddingBottom: 8 }}>
-        <Text style={{ color: colors.subtext, fontSize: 14, marginTop: 4 }}>Showing {tickets.length} available tickets</Text>
+        <Text style={{ color: colors.subtext, fontSize: 14, marginTop: 4 }}>
+          {t("ticket.showingAvailable", { count: tickets.length })}
+        </Text>
       </View>
 
       <FlatList

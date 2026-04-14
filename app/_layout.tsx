@@ -4,7 +4,7 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { LogBox } from "react-native";
 import "react-native-reanimated";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
@@ -12,6 +12,7 @@ import "../global.css";
 import { tokenCache } from "../lib/auth";
 import * as WebBrowser from "expo-web-browser";
 import { ErrorBoundary } from "../components/ErrorBoundary";
+import { initializeI18n } from "@/i18n";
 
 export { ErrorBoundary };
 
@@ -50,6 +51,24 @@ export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Syne_700Bold,
   });
+  const [i18nReady, setI18nReady] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const setupLocalization = async () => {
+      await initializeI18n();
+      if (isMounted) {
+        setI18nReady(true);
+      }
+    };
+
+    setupLocalization();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded) {
@@ -60,7 +79,7 @@ export default function RootLayout() {
     }
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded || !i18nReady) return null;
 
   return (
     <ThemeProvider>

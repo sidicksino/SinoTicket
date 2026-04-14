@@ -8,6 +8,7 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 interface AppHeaderProps {
   /** Optional subtitle shown above the user's name. Defaults to "Welcome back," */
@@ -20,6 +21,7 @@ export default function AppHeader({ subtitle = "Welcome back,", displayName }: A
   const { colors } = useTheme();
   const { user } = useUser();
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Fetch backend user data so updated name/photo are reflected immediately
   const { data, refetch } = useFetch<{ success: boolean; user: UserType }>("/api/users/me", true);
@@ -38,8 +40,12 @@ export default function AppHeader({ subtitle = "Welcome back,", displayName }: A
 
   // Prioritise backend name → prop override → Clerk → fallback
   const backendFirstName = backendUser?.name?.split(" ")[0];
-  const name = displayName ?? backendFirstName ?? (user?.firstName ? user.firstName.split(" ")[0] : "Guest");
+  const name =
+    displayName ??
+    backendFirstName ??
+    (user?.firstName ? user.firstName.split(" ")[0] : t("profile.guestUser"));
   const avatarUri = backendUser?.profile_photo || user?.imageUrl || "https://avatar.iran.liara.run/public/32";
+  const resolvedSubtitle = subtitle === "Welcome back," ? t("appHeader.welcomeBack") : subtitle;
 
   return (
     <View
@@ -75,7 +81,7 @@ export default function AppHeader({ subtitle = "Welcome back,", displayName }: A
 
         <View style={{ marginLeft: 12 }}>
           <Text style={{ color: colors.subtext, fontSize: 13, fontWeight: "500", marginBottom: 2 }}>
-            {subtitle}
+            {resolvedSubtitle}
           </Text>
           <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 20 }}>
             {name}

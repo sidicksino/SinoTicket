@@ -17,6 +17,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import CustomButton from "@/components/CustomButton";
@@ -270,11 +271,23 @@ const OnboardingItem = ({
 };
 
 const OnboardingScreen = () => {
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
   const flatListRef = useRef<FlatList>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollX = useSharedValue(0);
   const { theme, colors } = useTheme();
+
+  const translatedSlides: OnboardingSlide[] = onboarding.map((slide, index) => {
+    const key = `onboarding.slide${index + 1}`;
+    return {
+      ...slide,
+      title: t(`${key}.title`),
+      description: t(`${key}.description`),
+      tech: t(`${key}.tech`),
+      feature: t(`${key}.feature`),
+    };
+  });
 
   const onScrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -304,14 +317,14 @@ const OnboardingScreen = () => {
         className="w-full items-end px-6 py-4"
       >
         <Text style={{ color: colors.subtext }} className="text-base font-semibold opacity-70">
-          Skip
+          {t("common.skip")}
         </Text>
       </TouchableOpacity>
 
       <View className="flex-1">
         <Animated.FlatList
           ref={flatListRef}
-          data={onboarding as OnboardingSlide[]}
+          data={translatedSlides}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item, index }) => (
             <OnboardingItem
@@ -348,7 +361,7 @@ const OnboardingScreen = () => {
 
       <View className="w-full px-6 pb-8">
         <CustomButton
-          title={isLastSlide ? "Get Started" : "Next"}
+          title={isLastSlide ? t("common.getStarted") : t("common.next")}
           onPress={handleNext}
           className="mt-0"
         />

@@ -114,7 +114,12 @@ const updateMe = async (req, res) => {
 
     console.log('📝 updateMe received fields:', Object.keys(req.body));
 
-    const { name, phone_number, profile_photo } = req.body;
+    const existingUser = await User.findOne({ user_id: userId });
+    if (!existingUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { name, phone_number, profile_photo, preferences } = req.body;
     const updateFields = {};
 
     // ── 1. Sync name to Clerk ──
@@ -158,11 +163,22 @@ const updateMe = async (req, res) => {
       updateFields.phone_number = phone_number.trim() || null;
     }
 
+    // ── 4. Preferences (backend only) ──
+    if (preferences !== undefined) {
+      if (typeof preferences !== 'object' || Array.isArray(preferences) || preferences === null) {
+        return res.status(400).json({ error: 'preferences must be an object' });
+      }
+      updateFields.preferences = {
+        ...(existingUser.preferences || {}),
+        ...preferences,
+      };
+    }
+
     if (Object.keys(updateFields).length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
     }
 
-    // ── 4. Save to MongoDB ──
+    // ── 5. Save to MongoDB ──
     const updatedUser = await User.findOneAndUpdate(
       { user_id: userId },
       updateFields,

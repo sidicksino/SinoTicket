@@ -16,12 +16,14 @@ import {
   View,
 } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const ForgotPassword = () => {
   const { client, setActive } = useClerk();
   const signIn = client.signIn;
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [email, setEmail] = React.useState("");
   const [code, setCode] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
@@ -34,7 +36,7 @@ const ForgotPassword = () => {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      setError("Please enter a valid email address.");
+      setError(t("forgotPassword.validEmail"));
       return;
     }
 
@@ -52,9 +54,9 @@ const ForgotPassword = () => {
         err.errors?.[0]?.longMessage ||
         err.errors?.[0]?.message ||
         err.message ||
-        "Failed to send reset link. Please try again.";
+        t("forgotPassword.sendResetFailed");
       setError(msg);
-      Alert.alert("Error", msg);
+      Alert.alert(t("common.error"), msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -64,7 +66,7 @@ const ForgotPassword = () => {
     if (!signIn || isSubmitting || !code.trim() || !newPassword.trim()) return;
 
     if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters long.");
+      setError(t("forgotPassword.passwordMinLength"));
       return;
     }
 
@@ -80,19 +82,19 @@ const ForgotPassword = () => {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        Alert.alert("Success", "Password reset successfully!");
+        Alert.alert(t("common.success"), t("forgotPassword.resetSuccess"));
         router.replace("/(auth)/sign-in");
       } else {
-        setError("Password reset incomplete. Please try again.");
+        setError(t("forgotPassword.resetIncomplete"));
       }
     } catch (err: any) {
       const msg =
         err.errors?.[0]?.longMessage ||
         err.errors?.[0]?.message ||
         err.message ||
-        "Invalid reset code or password.";
+        t("forgotPassword.invalidReset");
       setError(msg);
-      Alert.alert("Error", msg);
+      Alert.alert(t("common.error"), msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -130,15 +132,15 @@ const ForgotPassword = () => {
                 <Ionicons name="lock-closed" size={32} color={colors.primary} />
               </View>
               <Text className="font-syne text-[42px] font-black leading-tight" style={{ color: colors.text }}>
-                {isSuccess ? "Reset" : "Forgot"}
+                {isSuccess ? t("forgotPassword.reset") : t("forgotPassword.forgot")}
               </Text>
               <Text className="font-syne text-[42px] font-black leading-tight mb-4" style={{ color: colors.primary }}>
-                Password?
+                {t("forgotPassword.passwordQuestion")}
               </Text>
               <Text className="mb-8 text-[16px] font-medium leading-relaxed" style={{ color: colors.subtext }}>
                 {isSuccess 
-                  ? `We sent a 6-digit code to ${email}. Enter it below with your new password.`
-                  : "No worries! Enter your email below and we'll send you a reset code."}
+                  ? t("forgotPassword.codeSent", { email })
+                  : t("forgotPassword.intro")}
               </Text>
             </Animated.View>
 
@@ -147,8 +149,8 @@ const ForgotPassword = () => {
               {!isSuccess ? (
                 <Animated.View entering={FadeInDown.duration(800).delay(200).springify().damping(18)}>
                   <InputField
-                    label="Email Address"
-                    placeholder="Enter your email"
+                    label={t("forgotPassword.emailAddress")}
+                    placeholder={t("forgotPassword.enterEmail")}
                     icon="mail-outline"
                     autoCapitalize="none"
                     keyboardType="email-address"
@@ -159,16 +161,16 @@ const ForgotPassword = () => {
               ) : (
                 <Animated.View entering={FadeInDown.duration(800).delay(200).springify().damping(18)}>
                   <InputField
-                    label="Reset Code"
-                    placeholder="Enter 6-digit code"
+                    label={t("forgotPassword.resetCode")}
+                    placeholder={t("forgotPassword.enterCode")}
                     icon="key-outline"
                     keyboardType="numeric"
                     value={code}
                     onChangeText={(val) => { setCode(val); setError(""); }}
                   />
                   <InputField
-                    label="New Password"
-                    placeholder="Enter new password"
+                    label={t("forgotPassword.newPassword")}
+                    placeholder={t("forgotPassword.enterNewPassword")}
                     icon="lock-closed-outline"
                     secureTextEntry={true}
                     value={newPassword}
@@ -198,9 +200,9 @@ const ForgotPassword = () => {
                     {isSubmitting ? (
                       <ActivityIndicator color={colors.white} />
                     ) : (
-                      <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>
-                        Send Reset Code
-                      </Text>
+                        <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>
+                        {t("forgotPassword.sendResetCode")}
+                        </Text>
                     )}
                   </TouchableOpacity>
                 ) : (
@@ -213,9 +215,9 @@ const ForgotPassword = () => {
                     {isSubmitting ? (
                       <ActivityIndicator color={colors.white} />
                     ) : (
-                      <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>
-                        Reset Password
-                      </Text>
+                        <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>
+                        {t("forgotPassword.resetPassword")}
+                        </Text>
                     )}
                   </TouchableOpacity>
                 )}
@@ -228,11 +230,11 @@ const ForgotPassword = () => {
               style={styles.footer}
             >
               <Text className="text-[15px] font-medium" style={{ color: colors.subtext }}>
-                Remember your password?{" "}
+                {t("forgotPassword.rememberPassword")}{" "}
               </Text>
               <Link href="/(auth)/sign-in">
                 <Text className="text-[15px] font-bold" style={{ color: colors.primary }}>
-                  Log In
+                  {t("auth.logIn")}
                 </Text>
               </Link>
             </Animated.View>

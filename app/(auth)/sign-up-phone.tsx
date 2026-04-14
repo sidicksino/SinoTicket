@@ -13,6 +13,7 @@ import {
 } from "react-native";
 
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Use Animated.View directly — avoids the shared-value strict-mode warning
@@ -20,6 +21,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const AnimatedView = Animated.View;
 
 const SignUpPhone = () => {
+  const { t } = useTranslation();
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       {/* KeyboardAvoidingView belongs here — once, at the screen level */}
@@ -41,13 +44,13 @@ const SignUpPhone = () => {
                   <Ionicons name="sparkles" size={28} color="#0286FF" />
                 </View>
                 <Text className="font-syne text-[42px] font-black text-[#0F172A] leading-tight">
-                  Create
+                  {t("signUpPhone.create")}
                 </Text>
                 <Text className="font-syne text-[42px] font-black text-[#0286FF] leading-tight mb-4">
-                  Account.
+                  {t("signUpPhone.account")}
                 </Text>
                 <Text className="text-[16px] font-medium text-[#64748B] leading-relaxed">
-                  Join SinoTicket today using your phone number to discover events safely.
+                  {t("signUpPhone.subtitle")}
                 </Text>
               </View>
             </AnimatedView>
@@ -56,16 +59,16 @@ const SignUpPhone = () => {
             <View className="w-full mt-2">
               <AnimatedView entering={FadeInDown.duration(800).delay(200).springify().damping(18)}>
                 <InputField
-                  label="Full Name"
-                  placeholder="Enter your name"
+                  label={t("signUpPhone.fullName")}
+                  placeholder={t("signUpPhone.enterName")}
                   icon="person-outline"
                   autoCapitalize="words"
                 />
               </AnimatedView>
               <AnimatedView entering={FadeInDown.duration(800).delay(300).springify().damping(18)}>
                 <InputField
-                  label="Phone Number"
-                  placeholder="Enter your phone number"
+                  label={t("signUpPhone.phoneNumber")}
+                  placeholder={t("signUpPhone.enterPhoneNumber")}
                   icon="call-outline"
                   keyboardType="phone-pad"
                   autoCapitalize="none"
@@ -73,16 +76,16 @@ const SignUpPhone = () => {
               </AnimatedView>
               <AnimatedView entering={FadeInDown.duration(800).delay(400).springify().damping(18)}>
                 <InputField
-                  label="Password"
-                  placeholder="Enter your password"
+                  label={t("signUpPhone.password")}
+                  placeholder={t("signUpPhone.enterPassword")}
                   icon="lock-closed-outline"
                   secureTextEntry={true}
                 />
               </AnimatedView>
               <AnimatedView entering={FadeInDown.duration(800).delay(400).springify().damping(18)}>
                 <InputField
-                  label="Confirm Password"
-                  placeholder="Confirm your password"
+                  label={t("signUpPhone.confirmPassword")}
+                  placeholder={t("signUpPhone.confirmYourPassword")}
                   icon="lock-closed-outline"
                   secureTextEntry={true}
                 />
@@ -95,7 +98,7 @@ const SignUpPhone = () => {
               >
                 <TouchableOpacity className="w-full h-[60px] bg-[#0286FF] rounded-full flex items-center justify-center shadow-lg shadow-[#0286FF]/40 active:opacity-80">
                   <Text className="text-white font-syne font-bold text-[18px]">
-                    Sign Up
+                    {t("signUpPhone.signUp")}
                   </Text>
                 </TouchableOpacity>
               </AnimatedView>
@@ -107,7 +110,7 @@ const SignUpPhone = () => {
               >
                 <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
                 <Text className="text-[13px] font-bold text-[#94A3B8] uppercase tracking-widest">
-                  Or continue with
+                  {t("signUpPhone.orContinueWith")}
                 </Text>
                 <View className="h-[1px] flex-1 bg-[#E2E8F0]" />
               </AnimatedView>
@@ -142,11 +145,11 @@ const SignUpPhone = () => {
                 style={{ marginTop: 40, flexDirection: "row", justifyContent: "center", alignItems: "center" }}
               >
                 <Text className="text-[15px] font-medium text-[#64748B]">
-                  Already have an account?{" "}
+                  {t("signUpPhone.alreadyHaveAccount")}{" "}
                 </Text>
                 <Link href="/(auth)/sign-in">
                   <Text className="text-[15px] font-bold text-[#0286FF]">
-                    Log In
+                    {t("signUpPhone.logIn")}
                   </Text>
                 </Link>
               </AnimatedView>
