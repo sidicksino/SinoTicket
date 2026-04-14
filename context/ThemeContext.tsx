@@ -3,27 +3,32 @@ import { useColorScheme } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { Colors, ThemeColors } from "@/constants/colors";
 
-type Theme = "light" | "dark";
+type ThemePreference = "light" | "dark" | "system";
+type ResolvedTheme = "light" | "dark";
 
 type ThemeContextType = {
-  theme: Theme;
+  theme: ResolvedTheme;
+  themePreference: ThemePreference;
   colors: ThemeColors;
+  setThemePreference: (mode: ThemePreference) => void;
   toggleTheme: () => void;
   isDark: boolean;
 };
 
-const THEME_STORAGE_KEY = "sinoticket_theme"; // SecureStore keys are just strings
+const THEME_STORAGE_KEY = "sinoticket_theme";
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: "light",
+  themePreference: "system",
   colors: Colors.light,
+  setThemePreference: () => {},
   toggleTheme: () => {},
   isDark: false,
 });
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const deviceScheme = useColorScheme();
-  const [theme, setTheme] = useState<Theme>(deviceScheme === "dark" ? "dark" : "light");
+  const deviceScheme = useColorScheme() ?? "light";
+  const [themePref, setThemePref] = useState<ThemePreference>("system");
   const [loaded, setLoaded] = useState(false);
 
   // Load persisted preference on mount
@@ -31,8 +36,8 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const loadTheme = async () => {
       try {
         const saved = await SecureStore.getItemAsync(THEME_STORAGE_KEY);
-        if (saved === "light" || saved === "dark") {
-          setTheme(saved);
+        if (saved === "light" || saved === "dark" || saved === "system") {
+          setThemePref(saved as ThemePreference);
         }
       } catch (e) {
         console.error("Error loading theme:", e);
@@ -43,21 +48,30 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     loadTheme();
   }, []);
 
-  const toggleTheme = () => {
-    setTheme((prev) => {
-      const next = prev === "light" ? "dark" : "light";
-      SecureStore.setItemAsync(THEME_STORAGE_KEY, next);
-      return next;
-    });
+  const setThemePreference = (mode: ThemePreference) => {
+    setThemePref(mode);
+    SecureStore.setItemAsync(THEME_STORAGE_KEY, mode);
   };
 
-  const colors = Colors[theme];
-  const isDark = theme === "dark";
+  const toggleTheme = () => {
+    setThemePreference(themePref === "light" ? "dark" : themePref === "dark" ? "system" : "light");
+  };
+
+  const resolvedTheme: ResolvedTheme = themePref === "system" ? deviceScheme : themePref;
+  const colors = Colors[resolvedTheme];
+  const isDark = resolvedTheme === "dark";
 
   if (!loaded) return null;
 
   return (
-    <ThemeContext.Provider value={{ theme, colors, toggleTheme, isDark }}>
+    <ThemeContext.Provider value={{ 
+      theme: resolvedTheme, 
+      themePreference: themePref,
+      colors, 
+      setThemePreference, 
+      toggleTheme, 
+      isDark 
+    }}>
       {children}
     </ThemeContext.Provider>
   );

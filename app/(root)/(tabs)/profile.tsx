@@ -12,7 +12,7 @@ import { Alert, ScrollView, Switch, Text, TouchableOpacity, View } from "react-n
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Profile() {
-  const { colors, isDark, toggleTheme } = useTheme();
+  const { colors, isDark, themePreference, setThemePreference } = useTheme();
   const { user: clerkUser } = useUser();
   const { signOut } = useClerk();
 
@@ -151,16 +151,37 @@ export default function Profile() {
           </Text>
           <View style={{ shadowColor: colors.shadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 2, marginBottom: 28 }}>
             <SettingsRow
-              icon={isDark ? "moon-outline" : "sunny-outline"}
-              title="Dark Mode"
+              icon={themePreference === 'system' ? "phone-portrait-outline" : isDark ? "moon-outline" : "sunny-outline"}
+              title="Appearance"
               isFirst
               rightElement={
-                <Switch
-                  value={isDark}
-                  onValueChange={toggleTheme}
-                  trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={colors.white}
-                />
+                <View style={{ flexDirection: "row", backgroundColor: colors.inputBg, borderRadius: 8, padding: 2 }}>
+                  {(["light", "system", "dark"] as const).map((mode) => (
+                    <TouchableOpacity
+                      key={mode}
+                      onPress={() => setThemePreference(mode)}
+                      style={{
+                        paddingHorizontal: 10,
+                        paddingVertical: 6,
+                        borderRadius: 6,
+                        backgroundColor: themePreference === mode ? colors.card : "transparent",
+                        shadowColor: themePreference === mode ? colors.shadow : "transparent",
+                        shadowOpacity: themePreference === mode ? 0.05 : 0,
+                        shadowRadius: 2,
+                        elevation: themePreference === mode ? 2 : 0,
+                      }}
+                    >
+                      <Text style={{
+                        fontSize: 12,
+                        fontWeight: themePreference === mode ? "700" : "500",
+                        color: themePreference === mode ? colors.text : colors.subtext,
+                        textTransform: "capitalize"
+                      }}>
+                        {mode === "system" ? "Auto" : mode}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               }
             />
             <SettingsRow
