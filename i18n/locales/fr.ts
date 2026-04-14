@@ -334,7 +334,7 @@ const fr = {
       at: "a",
     },
     promoCarousel: {
-      badge: "ACTU",
+      badge: "NOUVEAU",
       slide1: {
         title: "Innovation technologique",
         subtitle:

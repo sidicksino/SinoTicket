@@ -2,6 +2,7 @@ import { useAuth } from '@clerk/clerk-react';
 import { DollarSign, Ticket, TrendingUp, Users, type LucideIcon, Loader2, Calendar } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useTranslation } from '../i18n';
 
 interface StatCardProps {
   label: string;
@@ -40,6 +41,7 @@ const formatNumber = (num: number) => new Intl.NumberFormat('en-US').format(num)
 
 export default function DashboardHome() {
   const { getToken } = useAuth();
+  const { t } = useTranslation();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -68,7 +70,7 @@ export default function DashboardHome() {
     return (
         <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-primary">
             <Loader2 className="animate-spin w-10 h-10" />
-            <p className="text-subtext font-bold animate-pulse">Aggregating live data...</p>
+            <p className="text-subtext font-bold animate-pulse">{t('dashboard.loading')}</p>
         </div>
     );
   }
@@ -76,49 +78,49 @@ export default function DashboardHome() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div>
-        <h2 className="text-2xl font-bold text-text">Dashboard Overview</h2>
-        <p className="text-subtext mt-1">Welcome back! Here is what's happening with SinoTicket today.</p>
+        <h2 className="text-2xl font-bold text-text">{t('dashboard.overview')}</h2>
+        <p className="text-subtext mt-1">{t('dashboard.welcomeMessage')}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          label="Total Revenue" 
+          label={t('dashboard.stats.totalRevenue')} 
           value={`${formatNumber(stats.totalRevenue)} XAF`} 
-          description="Total earnings historically"
+          description={t('dashboard.stats.revenueDesc')}
           icon={DollarSign}
           trend={stats.totalRevenue > 0 ? 12 : 0}
         />
         <StatCard 
-          label="Tickets Sold" 
+          label={t('dashboard.stats.ticketsSold')} 
           value={formatNumber(stats.totalTickets)} 
-          description="Active tickets issued"
+          description={t('dashboard.stats.ticketsDesc')}
           icon={Ticket}
           trend={stats.totalTickets > 0 ? 8 : 0}
         />
         <StatCard 
-          label="Active Users" 
+          label={t('dashboard.stats.activeUsers')} 
           value={formatNumber(stats.totalUsers)} 
-          description="Registered profiles"
+          description={t('dashboard.stats.usersDesc')}
           icon={Users}
           trend={stats.totalUsers > 0 ? 5 : 0}
         />
         <StatCard 
-          label="Total Events" 
+          label={t('dashboard.stats.totalEvents')} 
           value={formatNumber(stats.totalEvents)} 
-          description="Events orchestrated"
+          description={t('dashboard.stats.eventsDesc')}
           icon={TrendingUp}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Chart View */}
-        <div className="bg-card p-6 md:p-8 rounded-3xl border border-card-border min-h-[400px] flex flex-col">
+        <div className="bg-card p-6 md:p-8 rounded-3xl border border-card-border min-h-100 flex flex-col">
           <div className="mb-6">
-            <h3 className="text-lg font-bold text-text mb-1">Recent Trajectory</h3>
-            <p className="text-xs text-subtext">Estimated ticket demand over trailing 6 months.</p>
+            <h3 className="text-lg font-bold text-text mb-1">{t('dashboard.chart.title')}</h3>
+            <p className="text-xs text-subtext">{t('dashboard.chart.subtitle')}</p>
           </div>
           
-          <div className="flex-1 w-full min-h-[300px]">
+          <div className="flex-1 w-full min-h-75">
              <ResponsiveContainer width="100%" height="100%">
                  <AreaChart data={stats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                      <defs>
@@ -147,8 +149,8 @@ export default function DashboardHome() {
         {/* Latest Events */}
         <div className="bg-card p-6 md:p-8 rounded-3xl border border-card-border flex flex-col">
           <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-text">Latest Events</h3>
-              <button className="text-sm text-primary font-bold">View All</button>
+              <h3 className="text-lg font-bold text-text">{t('dashboard.latestEvents')}</h3>
+              <button className="text-sm text-primary font-bold">{t('dashboard.viewAll')}</button>
           </div>
           
           <div className="space-y-4 flex-1">
@@ -168,7 +170,7 @@ export default function DashboardHome() {
                         {new Date(event.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })} • {event.venue_name}
                      </p>
                    </div>
-                   <div className="text-right flex-shrink-0 w-24">
+                   <div className="text-right shrink-0 w-24">
                      <div className="font-bold text-text text-sm">{event.soldPercentage}% Sold</div>
                      <div className="w-full h-1.5 bg-card-border rounded-full mt-1.5 overflow-hidden">
                        <div className="bg-primary h-full rounded-full transition-all duration-1000" style={{ width: `${event.soldPercentage}%` }}></div>
@@ -179,7 +181,7 @@ export default function DashboardHome() {
             ) : (
                 <div className="text-center py-10 text-subtext">
                     <Calendar className="mx-auto h-12 w-12 opacity-30 mb-3" />
-                    <p className="font-bold">No events created yet.</p>
+                <p className="font-bold">{t('dashboard.noEvents')}</p>
                 </div>
             )}
           </div>

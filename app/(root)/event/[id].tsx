@@ -9,6 +9,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Dimensions,
@@ -28,6 +29,7 @@ export default function EventDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
   // Selection State
@@ -51,12 +53,12 @@ export default function EventDetail() {
   if (error || !event) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: "red", fontSize: 16, marginBottom: 16 }}>Could not load event.</Text>
+        <Text style={{ color: "red", fontSize: 16, marginBottom: 16 }}>{t("eventDetail.couldNotLoad")}</Text>
         <TouchableOpacity onPress={refetch} style={{ backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, marginBottom: 12 }}>
-          <Text style={{ color: colors.white, fontWeight: "700" }}>Retry Connection</Text>
+          <Text style={{ color: colors.white, fontWeight: "700" }}>{t("home.retryConnection")}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.back()} style={{ padding: 12 }}>
-          <Text style={{ color: colors.subtext, fontWeight: "700" }}>Go Back</Text>
+          <Text style={{ color: colors.subtext, fontWeight: "700" }}>{t("common.goBack")}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -134,10 +136,10 @@ export default function EventDetail() {
           <View style={{ position: 'absolute', bottom: 20, left: 24, right: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <View style={{ flex: 1, paddingRight: 16 }}>
               <Text style={{ color: colors.subtext, fontSize: 13, fontWeight: "700", marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
-                Show
+                {t("eventDetail.show")}
               </Text>
               <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28, marginBottom: 4, lineHeight: 32 }}>{event.title}</Text>
-              <Text style={{ color: colors.subtext, fontSize: 16, fontWeight: "500" }}>{event.venue_id?.name || "Venue TBA"}</Text>
+              <Text style={{ color: colors.subtext, fontSize: 16, fontWeight: "500" }}>{event.venue_id?.name || t("home.venueTba")}</Text>
             </View>
             <BlurView intensity={isDark ? 60 : 80} tint={isDark ? "dark" : "light"} style={{ borderRadius: 16, overflow: 'hidden', paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
               <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' }}>
@@ -155,7 +157,7 @@ export default function EventDetail() {
           {/* Info row */}
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 32 }}>
             <BlurView intensity={isDark ? 20 : 60} tint={isDark ? "dark" : "light"} style={{ flex: 1, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginRight: 8, overflow: 'hidden', backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
-              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '600', marginBottom: 4 }}>Start</Text>
+              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '600', marginBottom: 4 }}>{t("eventDetail.start")}</Text>
               <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 16 }}>
                 {eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </Text>
@@ -165,7 +167,7 @@ export default function EventDetail() {
           {/* Tickets Pricing */}
           {event.ticket_categories && event.ticket_categories.length > 0 && (
             <View style={{ marginBottom: 32 }}>
-              <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>Tickets</Text>
+              <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>{t("eventDetail.tickets")}</Text>
               {event.ticket_categories.map((cat: any, index: number) => (
                 <View key={cat.category_id || cat.name || index} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)", padding: 16, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
                   <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>{cat.name}</Text>
@@ -177,15 +179,15 @@ export default function EventDetail() {
 
           {/* Description */}
           <View style={{ marginBottom: 32 }}>
-            <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>Description</Text>
+            <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>{t("eventDetail.description")}</Text>
             <Text style={{ color: colors.subtext, fontSize: 15, lineHeight: 24, fontWeight: '400' }}>
-              {event.description || "Steve-O's Bucket List Tour is a multimedia comedy experience that blends stand-up routines with video footage of extreme stunts many of which were deemed too outrageous or explicit for his previous work on Jackass."}
+              {event.description || t("eventDetail.fallbackDescription")}
             </Text>
           </View>
 
           {/* Location Placeholder */}
           <View style={{ marginBottom: 32 }}>
-            <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>Location</Text>
+            <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>{t("eventDetail.location")}</Text>
             <View style={{ width: '100%', height: 160, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.overlayLight }}>
               <Image
                 source={{ uri: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800" }}
@@ -212,7 +214,7 @@ export default function EventDetail() {
           style={{ width: '100%', height: 60, backgroundColor: "#4CAF50", borderRadius: 30, justifyContent: 'center', alignItems: 'center', shadowColor: "#4CAF50", shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 }}
           activeOpacity={0.8}
         >
-          <Text style={{ color: '#FFF', fontFamily: "Syne_700Bold", fontSize: 18 }}>Book Now</Text>
+          <Text style={{ color: '#FFF', fontFamily: "Syne_700Bold", fontSize: 18 }}>{t("eventDetail.bookNow")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -231,8 +233,8 @@ export default function EventDetail() {
           <View style={{ marginTop: 'auto', backgroundColor: colors.background, padding: 24, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingBottom: 50 }}>
             <View style={{ width: 40, height: 4, backgroundColor: colors.border, alignSelf: 'center', borderRadius: 2, marginBottom: 24 }} />
 
-            <Text style={{ fontSize: 22, fontFamily: "Syne_700Bold", color: colors.text, marginBottom: 8 }}>Select Tickets</Text>
-            <Text style={{ fontSize: 14, color: colors.subtext, marginBottom: 24 }}>Pick your preferred seating category</Text>
+            <Text style={{ fontSize: 22, fontFamily: "Syne_700Bold", color: colors.text, marginBottom: 8 }}>{t("eventDetail.selectTickets")}</Text>
+            <Text style={{ fontSize: 14, color: colors.subtext, marginBottom: 24 }}>{t("eventDetail.pickPreferredCategory")}</Text>
 
             <ScrollView style={{ maxHeight: 350 }} showsVerticalScrollIndicator={false}>
               {event.ticket_categories?.map((cat: any) => (
@@ -254,8 +256,8 @@ export default function EventDetail() {
               <View style={{ marginTop: 24 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                   <View>
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>Quantity</Text>
-                    <Text style={{ fontSize: 12, color: colors.subtext }}>Max 10 per order</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>{t("eventDetail.quantity")}</Text>
+                    <Text style={{ fontSize: 12, color: colors.subtext }}>{t("eventDetail.maxPerOrder")}</Text>
                   </View>
                   <QuantitySelector
                     quantity={quantity}
@@ -267,7 +269,7 @@ export default function EventDetail() {
                 <SummaryBar
                   title={`${totalPrice} XAF`}
                   subtitle={`${quantity}x ${selectedCategory.name}`}
-                  buttonLabel="Select Seats"
+                  buttonLabel={t("eventDetail.selectSeats")}
                   onPress={handleSelectSeats}
                 />
               </View>

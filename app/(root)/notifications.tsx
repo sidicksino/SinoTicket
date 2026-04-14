@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   FlatList,
@@ -13,7 +14,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTranslation } from "react-i18next";
 
 export default function Notifications() {
   const { colors, isDark } = useTheme();
@@ -42,7 +42,7 @@ export default function Notifications() {
   useFocusEffect(
     useCallback(() => {
       loadNotifications();
-    }, [loadNotifications])
+    }, [loadNotifications]),
   );
 
   const onRefresh = () => {
@@ -50,7 +50,11 @@ export default function Notifications() {
     loadNotifications();
   };
 
-  const handleMarkAsRead = async (id: string, currentlyRead: boolean, link?: string) => {
+  const handleMarkAsRead = async (
+    id: string,
+    currentlyRead: boolean,
+    link?: string,
+  ) => {
     if (link) {
       router.push(link as any);
     }
@@ -59,7 +63,7 @@ export default function Notifications() {
 
     // Optimistic UI Update
     setNotifications((prev) =>
-      prev.map((n) => (n._id === id ? { ...n, is_read: true } : n))
+      prev.map((n) => (n._id === id ? { ...n, is_read: true } : n)),
     );
 
     try {
@@ -68,7 +72,7 @@ export default function Notifications() {
       console.log("Failed to mark as read", err);
       // Revert if failed
       setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, is_read: false } : n))
+        prev.map((n) => (n._id === id ? { ...n, is_read: false } : n)),
       );
     }
   };
@@ -87,9 +91,14 @@ export default function Notifications() {
 
   const renderIcon = (type: string) => {
     switch (type) {
-      case 'BOOKING': return <Ionicons name="ticket" size={20} color={colors.primary} />;
-      case 'PROMO': return <Ionicons name="pricetag" size={20} color="#E91E63" />;
-      default: return <Ionicons name="notifications" size={20} color={colors.primary} />;
+      case "BOOKING":
+        return <Ionicons name="ticket" size={20} color={colors.primary} />;
+      case "PROMO":
+        return <Ionicons name="pricetag" size={20} color="#E91E63" />;
+      default:
+        return (
+          <Ionicons name="notifications" size={20} color={colors.primary} />
+        );
     }
   };
 
@@ -103,7 +112,11 @@ export default function Notifications() {
         style={{
           flexDirection: "row",
           padding: 16,
-          backgroundColor: isUnread ? (isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(76, 175, 80, 0.05)") : "transparent",
+          backgroundColor: isUnread
+            ? isDark
+              ? "rgba(255, 255, 255, 0.05)"
+              : "rgba(76, 175, 80, 0.05)"
+            : "transparent",
           borderBottomWidth: 1,
           borderBottomColor: colors.border + "40",
         }}
@@ -125,19 +138,50 @@ export default function Notifications() {
         </View>
 
         <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
-            <Text style={{ fontFamily: "Syne_700Bold", fontSize: 16, color: colors.text }}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 4,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: "Syne_700Bold",
+                fontSize: 16,
+                color: colors.text,
+              }}
+            >
               {item.title}
             </Text>
             {isUnread && (
-              <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary, marginTop: 4 }} />
+              <View
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: colors.primary,
+                  marginTop: 4,
+                }}
+              />
             )}
           </View>
           <Text style={{ color: colors.subtext, fontSize: 14, lineHeight: 20 }}>
             {item.message}
           </Text>
-          <Text style={{ color: colors.subtext, fontSize: 12, marginTop: 8, opacity: 0.6 }}>
-            {new Date(item.createdAt).toLocaleDateString()} at {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <Text
+            style={{
+              color: colors.subtext,
+              fontSize: 12,
+              marginTop: 8,
+              opacity: 0.6,
+            }}
+          >
+            {new Date(item.createdAt).toLocaleDateString()} at{" "}
+            {new Date(item.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </Text>
         </View>
       </TouchableOpacity>
@@ -181,22 +225,55 @@ export default function Notifications() {
           {t("notificationsPage.title")}
         </Text>
         <TouchableOpacity onPress={handleMarkAllAsRead} style={{ padding: 8 }}>
-          <Ionicons name="checkmark-done-outline" size={24} color={colors.primary} />
+          <Ionicons
+            name="checkmark-done-outline"
+            size={24}
+            color={colors.primary}
+          />
         </TouchableOpacity>
       </View>
 
       {/* ── CONTENT ── */}
       {loading ? (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : notifications.length === 0 ? (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 40 }}>
-          <Ionicons name="notifications-off-outline" size={64} color={colors.border} style={{ marginBottom: 16 }} />
-          <Text style={{ fontFamily: "Syne_700Bold", fontSize: 20, color: colors.text, marginBottom: 8, textAlign: 'center' }}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 40,
+          }}
+        >
+          <Ionicons
+            name="notifications-off-outline"
+            size={64}
+            color={colors.border}
+            style={{ marginBottom: 16 }}
+          />
+          <Text
+            style={{
+              fontFamily: "Syne_700Bold",
+              fontSize: 20,
+              color: colors.text,
+              marginBottom: 8,
+              textAlign: "center",
+            }}
+          >
             {t("notificationsPage.emptyTitle")}
           </Text>
-          <Text style={{ fontSize: 15, color: colors.subtext, textAlign: "center", lineHeight: 22 }}>
+          <Text
+            style={{
+              fontSize: 15,
+              color: colors.subtext,
+              textAlign: "center",
+              lineHeight: 22,
+            }}
+          >
             {t("notificationsPage.emptyMessage")}
           </Text>
         </View>
@@ -206,7 +283,11 @@ export default function Notifications() {
           keyExtractor={(item) => item._id}
           renderItem={renderItem}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+            />
           }
           contentContainerStyle={{ paddingBottom: 40 }}
         />

@@ -3,7 +3,8 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAuthFetch, useFetch } from "@/lib/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -14,7 +15,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTranslation } from "react-i18next";
 
 export default function SeatSelection() {
   const params = useLocalSearchParams<{
@@ -25,7 +25,7 @@ export default function SeatSelection() {
     price: string;
     category_name: string;
   }>();
-  
+
   const router = useRouter();
   const { colors } = useTheme();
   const { authFetch } = useAuthFetch();
@@ -33,37 +33,40 @@ export default function SeatSelection() {
 
   const SEAT_COLORS = {
     available: colors.seatAvailable,
-    selected:  colors.seatSelected,
-    reserved:  colors.seatReserved,
-    booked:    colors.seatBooked,
+    selected: colors.seatSelected,
+    reserved: colors.seatReserved,
+    booked: colors.seatBooked,
   };
-
 
   const [selectedSeats, setSelectedSeats] = useState<any[]>([]);
   const [reserving, setReserving] = useState(false);
 
   const { data, loading, refetch } = useFetch<any>(
     `/api/seats?section_id=${params.section_id}&limit=200`,
-    false
+    false,
   );
 
   const { data: reservationsData } = useFetch<any>(
     `/api/reservations/me`,
-    true
+    true,
   );
 
   const seats = data?.success && Array.isArray(data?.seats) ? data.seats : [];
 
   // Pre-populate selections if user already has active reservations for this event
   useEffect(() => {
-    if (reservationsData?.success && Array.isArray(reservationsData?.reservations)) {
+    if (
+      reservationsData?.success &&
+      Array.isArray(reservationsData?.reservations)
+    ) {
       const myReservations = reservationsData.reservations
         .filter((r: any) => {
-          const resEventId = typeof r.event_id === 'object' ? r.event_id?._id : r.event_id;
+          const resEventId =
+            typeof r.event_id === "object" ? r.event_id?._id : r.event_id;
           return resEventId === params.event_id;
         })
         .map((r: any) => r.seat_id);
-      
+
       if (myReservations.length > 0) {
         setSelectedSeats(myReservations);
       }
@@ -71,52 +74,64 @@ export default function SeatSelection() {
   }, [reservationsData, params.event_id]);
 
   const handleSeatPress = (seat: any) => {
-    const isSelected = selectedSeats.find(s => s._id === seat._id);
-    
+    const isSelected = selectedSeats.find((s) => s._id === seat._id);
+
     if (isSelected) {
-      setSelectedSeats(prev => prev.filter(s => s._id !== seat._id));
+      setSelectedSeats((prev) => prev.filter((s) => s._id !== seat._id));
     } else {
       if (selectedSeats.length < 10) {
-        setSelectedSeats(prev => [...prev, seat]);
+        setSelectedSeats((prev) => [...prev, seat]);
       } else {
-        Alert.alert(t("seatSelection.limitReached"), t("seatSelection.maxSeatsMessage"));
+        Alert.alert(
+          t("seatSelection.limitReached"),
+          t("seatSelection.maxSeatsMessage"),
+        );
       }
     }
   };
 
   const handleContinue = async () => {
     if (selectedSeats.length === 0) {
-      Alert.alert(t("seatSelection.incompleteSelection"), t("seatSelection.selectAtLeastOne"));
+      Alert.alert(
+        t("seatSelection.incompleteSelection"),
+        t("seatSelection.selectAtLeastOne"),
+      );
       return;
     }
 
     setReserving(true);
     try {
       const reservations = await Promise.all(
-        selectedSeats.map(seat => 
+        selectedSeats.map((seat) =>
           authFetch("/api/reservations/reserve", {
             method: "POST",
-            body: JSON.stringify({ event_id: params.event_id, seat_id: seat._id }),
-          })
-        )
+            body: JSON.stringify({
+              event_id: params.event_id,
+              seat_id: seat._id,
+            }),
+          }),
+        ),
       );
 
-      const reservationIds = reservations.map(r => r.reservation._id);
+      const reservationIds = reservations.map((r) => r.reservation._id);
       const actualQuantity = selectedSeats.length;
-      
+
       router.push({
         pathname: "/checkout",
-        params: { 
-          reservation_ids: JSON.stringify(reservationIds), 
-          seat_numbers: selectedSeats.map(s => s.number).join(", "),
+        params: {
+          reservation_ids: JSON.stringify(reservationIds),
+          seat_numbers: selectedSeats.map((s) => s.number).join(", "),
           event_title: params.event_title,
           total_price: (parseInt(params.price) * actualQuantity).toString(),
           category_name: params.category_name,
-          quantity: actualQuantity.toString()
+          quantity: actualQuantity.toString(),
         },
       } as any);
     } catch (err: any) {
-      Alert.alert(t("seatSelection.reservationFailed"), err.message || t("seatSelection.reserveFailedMessage"));
+      Alert.alert(
+        t("seatSelection.reservationFailed"),
+        err.message || t("seatSelection.reserveFailedMessage"),
+      );
       refetch();
     } finally {
       setReserving(false);
@@ -124,11 +139,12 @@ export default function SeatSelection() {
   };
 
   const renderSeat = ({ item }: { item: any }) => {
-    const isSelected = selectedSeats.find(s => s._id === item._id);
-    const isOccupied = item.status !== 'available';
-    
+    const isSelected = selectedSeats.find((s) => s._id === item._id);
+    const isOccupied = item.status !== "available";
+
     let color = SEAT_COLORS.available;
-    if (isOccupied) color = (SEAT_COLORS as any)[item.status] || SEAT_COLORS.booked;
+    if (isOccupied)
+      color = (SEAT_COLORS as any)[item.status] || SEAT_COLORS.booked;
     if (isSelected) color = SEAT_COLORS.selected;
 
     return (
@@ -148,11 +164,18 @@ export default function SeatSelection() {
           opacity: isOccupied && !isSelected ? 0.6 : 1,
         }}
       >
-        <Text style={{ 
-          color: isSelected || item.status === 'booked' || item.status === 'reserved' ? colors.white : colors.text, 
-          fontSize: 12, 
-          fontWeight: "700" 
-        }}>
+        <Text
+          style={{
+            color:
+              isSelected ||
+              item.status === "booked" ||
+              item.status === "reserved"
+                ? colors.white
+                : colors.text,
+            fontSize: 12,
+            fontWeight: "700",
+          }}
+        >
           {item.number}
         </Text>
       </TouchableOpacity>
@@ -163,40 +186,111 @@ export default function SeatSelection() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 16 }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 16 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 20,
+          paddingVertical: 16,
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{ marginRight: 16 }}
+        >
           <Ionicons name="close" size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18 }} numberOfLines={1}>
+          <Text
+            style={{
+              color: colors.text,
+              fontFamily: "Syne_700Bold",
+              fontSize: 18,
+            }}
+            numberOfLines={1}
+          >
             {params.event_title}
           </Text>
-          <Text style={{ color: colors.subtext, fontSize: 13 }}>{params.category_name} {t("seatSelection.sectionSuffix")}</Text>
+          <Text style={{ color: colors.subtext, fontSize: 13 }}>
+            {params.category_name} {t("seatSelection.sectionSuffix")}
+          </Text>
         </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{ flexDirection: "row", justifyContent: "center", gap: 15, marginVertical: 20 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            gap: 15,
+            marginVertical: 20,
+          }}
+        >
           {[
-            { label: t("seatSelection.available"), color: SEAT_COLORS.available },
+            {
+              label: t("seatSelection.available"),
+              color: SEAT_COLORS.available,
+            },
             { label: t("seatSelection.selected"), color: SEAT_COLORS.selected },
-            { label: t("seatSelection.occupied"),  color: SEAT_COLORS.booked },
+            { label: t("seatSelection.occupied"), color: SEAT_COLORS.booked },
           ].map((l) => (
-            <View key={l.label} style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <View style={{ width: 12, height: 12, borderRadius: 3, backgroundColor: l.color }} />
-              <Text style={{ color: colors.subtext, fontSize: 11, fontWeight: '600' }}>{l.label}</Text>
+            <View
+              key={l.label}
+              style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+            >
+              <View
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 3,
+                  backgroundColor: l.color,
+                }}
+              />
+              <Text
+                style={{
+                  color: colors.subtext,
+                  fontSize: 11,
+                  fontWeight: "600",
+                }}
+              >
+                {l.label}
+              </Text>
             </View>
           ))}
         </View>
 
-        <View style={{ marginHorizontal: 40, height: 40, backgroundColor: colors.border, borderBottomLeftRadius: 50, borderBottomRightRadius: 50, alignItems: 'center', justifyContent: 'center', marginBottom: 40 }}>
-          <Text style={{ color: colors.subtext, fontSize: 10, fontWeight: '800', letterSpacing: 5 }}>{t("seatSelection.stage")}</Text>
+        <View
+          style={{
+            marginHorizontal: 40,
+            height: 40,
+            backgroundColor: colors.border,
+            borderBottomLeftRadius: 50,
+            borderBottomRightRadius: 50,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 40,
+          }}
+        >
+          <Text
+            style={{
+              color: colors.subtext,
+              fontSize: 10,
+              fontWeight: "800",
+              letterSpacing: 5,
+            }}
+          >
+            {t("seatSelection.stage")}
+          </Text>
         </View>
 
         {loading ? (
-          <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
+          <ActivityIndicator
+            size="large"
+            color={colors.primary}
+            style={{ marginTop: 40 }}
+          />
         ) : (
-          <View style={{ paddingHorizontal: 10, alignItems: 'center' }}>
+          <View style={{ paddingHorizontal: 10, alignItems: "center" }}>
             <FlatList
               data={seats}
               keyExtractor={(s) => s._id}

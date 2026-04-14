@@ -6,6 +6,7 @@ import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Alert,
@@ -18,7 +19,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTranslation } from "react-i18next";
 
 export default function PersonalInfo() {
   const { colors } = useTheme();
@@ -65,7 +65,10 @@ export default function PersonalInfo() {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert(t("personalInfo.permissionRequired"), t("personalInfo.photosPermissionMessage"));
+      Alert.alert(
+        t("personalInfo.permissionRequired"),
+        t("personalInfo.photosPermissionMessage"),
+      );
       return;
     }
 
@@ -87,7 +90,10 @@ export default function PersonalInfo() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert(t("personalInfo.validationTitle"), t("personalInfo.nameCannotBeEmpty"));
+      Alert.alert(
+        t("personalInfo.validationTitle"),
+        t("personalInfo.nameCannotBeEmpty"),
+      );
       return;
     }
 
@@ -112,14 +118,20 @@ export default function PersonalInfo() {
         { text: t("common.ok"), onPress: () => router.back() },
       ]);
     } catch (err: any) {
-      Alert.alert(t("common.error"), err.message || t("personalInfo.updateFailed"));
+      Alert.alert(
+        t("common.error"),
+        err.message || t("personalInfo.updateFailed"),
+      );
     } finally {
       setSaving(false);
     }
   };
 
   // Determine the display image
-  const displayImage = avatarUri || clerkUser?.imageUrl || "https://avatar.iran.liara.run/public/32";
+  const displayImage =
+    avatarUri ||
+    clerkUser?.imageUrl ||
+    "https://avatar.iran.liara.run/public/32";
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
@@ -172,7 +184,9 @@ export default function PersonalInfo() {
           {!loaded ? (
             <View style={{ paddingTop: 60, alignItems: "center" }}>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={{ color: colors.subtext, marginTop: 12, fontSize: 14 }}>
+              <Text
+                style={{ color: colors.subtext, marginTop: 12, fontSize: 14 }}
+              >
                 {t("personalInfo.loadingProfile")}
               </Text>
             </View>
@@ -217,7 +231,9 @@ export default function PersonalInfo() {
                     <Ionicons name="camera" size={14} color="#fff" />
                   </View>
                 </TouchableOpacity>
-                <Text style={{ color: colors.subtext, fontSize: 12, marginTop: 10 }}>
+                <Text
+                  style={{ color: colors.subtext, fontSize: 12, marginTop: 10 }}
+                >
                   {t("personalInfo.tapToChangePhoto")}
                 </Text>
               </View>
@@ -247,7 +263,12 @@ export default function PersonalInfo() {
                   marginBottom: 20,
                 }}
               >
-                <Ionicons name="person-outline" size={20} color={colors.subtext} style={{ marginRight: 12 }} />
+                <Ionicons
+                  name="person-outline"
+                  size={20}
+                  color={colors.subtext}
+                  style={{ marginRight: 12 }}
+                />
                 <TextInput
                   value={name}
                   onChangeText={setName}
@@ -288,13 +309,36 @@ export default function PersonalInfo() {
                   opacity: 0.6,
                 }}
               >
-                <Ionicons name="mail-outline" size={20} color={colors.subtext} style={{ marginRight: 12 }} />
-                <Text style={{ flex: 1, fontSize: 16, color: colors.subtext, fontWeight: "500" }}>
+                <Ionicons
+                  name="mail-outline"
+                  size={20}
+                  color={colors.subtext}
+                  style={{ marginRight: 12 }}
+                />
+                <Text
+                  style={{
+                    flex: 1,
+                    fontSize: 16,
+                    color: colors.subtext,
+                    fontWeight: "500",
+                  }}
+                >
                   {clerkUser?.emailAddresses?.[0]?.emailAddress || "—"}
                 </Text>
-                <Ionicons name="lock-closed-outline" size={16} color={colors.subtext} />
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={16}
+                  color={colors.subtext}
+                />
               </View>
-              <Text style={{ fontSize: 12, color: colors.subtext, marginLeft: 4, marginBottom: 20 }}>
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: colors.subtext,
+                  marginLeft: 4,
+                  marginBottom: 20,
+                }}
+              >
                 {t("personalInfo.emailManagedByProvider")}
               </Text>
 
@@ -323,7 +367,12 @@ export default function PersonalInfo() {
                   marginBottom: 36,
                 }}
               >
-                <Ionicons name="call-outline" size={20} color={colors.subtext} style={{ marginRight: 12 }} />
+                <Ionicons
+                  name="call-outline"
+                  size={20}
+                  color={colors.subtext}
+                  style={{ marginRight: 12 }}
+                />
                 <TextInput
                   value={phone}
                   onChangeText={setPhone}
@@ -361,7 +410,13 @@ export default function PersonalInfo() {
                 {saving ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={{ color: "#fff", fontSize: 17, fontFamily: "Syne_700Bold" }}>
+                  <Text
+                    style={{
+                      color: "#fff",
+                      fontSize: 17,
+                      fontFamily: "Syne_700Bold",
+                    }}
+                  >
                     {t("personalInfo.saveChanges")}
                   </Text>
                 )}
