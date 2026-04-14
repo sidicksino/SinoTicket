@@ -1,15 +1,15 @@
-import { useState, useEffect, type ReactNode } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { SignedIn, SignedOut, useAuth, useUser } from "@clerk/clerk-react";
+import { useEffect, useState, type ReactNode } from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import AdminLayout from './components/AdminLayout';
 import DashboardHome from './pages/DashboardHome';
 import EventsManager from './pages/EventsManager';
-import VenuesManager from './pages/VenuesManager';
-import SectionsManager from './pages/SectionsManager';
+import LoginScreen from './pages/LoginScreen';
 import SeatsManager from './pages/SeatsManager';
+import SectionsManager from './pages/SectionsManager';
 import TicketsManager from './pages/TicketsManager';
 import UsersManager from './pages/UsersManager';
-import LoginScreen from './pages/LoginScreen';
+import VenuesManager from './pages/VenuesManager';
 
 interface ProtectedAdminProps {
   children: ReactNode;
@@ -24,9 +24,9 @@ function ProtectedAdmin({ children }: ProtectedAdminProps) {
 
   useEffect(() => {
     if (!user) return;
-    
+
     const role = user.publicMetadata?.role as string | undefined;
-    
+
     if (role === 'Admin' || role === 'admin') {
       setIsAdmin(true);
     } else {
@@ -55,8 +55,8 @@ function ProtectedAdmin({ children }: ProtectedAdminProps) {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
-         <div className="w-10 h-10 border-4 border-card-border border-t-primary rounded-full animate-spin"></div>
-         <p className="text-subtext font-medium animate-pulse">Verifying Access...</p>
+        <div className="w-10 h-10 border-4 border-card-border border-t-primary rounded-full animate-spin"></div>
+        <p className="text-subtext font-medium animate-pulse">Verifying Access...</p>
       </div>
     );
   }
@@ -68,7 +68,7 @@ function ProtectedAdmin({ children }: ProtectedAdminProps) {
           {/* Icon */}
           <div className="w-16 h-16 bg-error/10 border border-error/20 rounded-2xl flex items-center justify-center mx-auto mb-5">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-error" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+              <circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-error mb-2">Access Denied</h1>
@@ -85,7 +85,7 @@ function ProtectedAdmin({ children }: ProtectedAdminProps) {
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="relative w-8 h-8">
               <svg className="w-8 h-8 -rotate-90" viewBox="0 0 36 36">
-                <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" className="text-card-border" strokeWidth="3"/>
+                <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" className="text-card-border" strokeWidth="3" />
                 <circle
                   cx="18" cy="18" r="15" fill="none"
                   stroke="currentColor" className="text-error" strokeWidth="3"
