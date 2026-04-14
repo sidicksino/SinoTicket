@@ -1,6 +1,6 @@
-import { useState, useEffect, type FormEvent } from 'react';
-import { Plus, MapPin, Edit, Trash2, X, Loader2, Building2 } from 'lucide-react';
 import { useAuth } from '@clerk/clerk-react';
+import { Building2, Edit, Loader2, MapPin, Plus, Trash2, X } from 'lucide-react';
+import { useEffect, useState, type FormEvent } from 'react';
 
 interface Venue {
   _id: string;
@@ -276,7 +276,7 @@ export default function VenuesManager() {
                     onChange={(e) =>
                       setFormData({ ...formData, location: e.target.value })
                     }
-                    placeholder="e.g. Warda, Yaoundé"
+                    placeholder="e.g. N'Djamena, Tchad"
                     className="w-full px-4 py-3 bg-input-bg border border-card-border rounded-xl text-text placeholder:text-subtext/50 focus:ring-2 focus:ring-primary/30 focus:border-primary/50 font-medium outline-none transition-all"
                   />
                 </div>

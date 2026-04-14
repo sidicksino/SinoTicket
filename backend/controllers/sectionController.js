@@ -145,7 +145,7 @@ const updateSection = async (req, res) => {
       }
     }
 
-    const updatedSection = await Section.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+    const updatedSection = await Section.findByIdAndUpdate(req.params.id, updates, { returnDocument: 'after', runValidators: true });
 
     res.status(200).json({ success: true, section: updatedSection });
   } catch (error) {

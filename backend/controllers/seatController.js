@@ -126,7 +126,7 @@ const updateSeat = async (req, res) => {
         return res.status(403).json({ success: false, message: "Forbidden: You don't own this venue" });
     }
 
-    const updatedSeat = await Seat.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    const updatedSeat = await Seat.findByIdAndUpdate(req.params.id, { status }, { returnDocument: 'after' });
     res.status(200).json({ success: true, seat: updatedSeat });
   } catch (error) {
     console.error("Error updating seat:", error);

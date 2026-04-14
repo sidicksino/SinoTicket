@@ -76,6 +76,12 @@ const getEvents = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
+    // Automate status updates for past events
+    await Event.updateMany(
+      { date: { $lt: new Date() }, status: { $ne: 'Ended' } },
+      { $set: { status: 'Ended' } }
+    );
+
     const query = {};
     
     // Default to upcoming events unless specifically asked for 'all' or a specific status
@@ -133,6 +139,12 @@ const getEventById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Event not found' });
     }
 
+    // Refresh status if date passed
+    if (new Date(event.date) < new Date() && event.status !== 'Ended') {
+      event.status = 'Ended';
+      await event.save();
+    }
+
     res.status(200).json({ success: true, event });
   } catch (error) {
     console.error("Error:", error);
@@ -174,7 +186,7 @@ const updateEvent = async (req, res) => {
     const updatedEvent = await Event.findByIdAndUpdate(
       req.params.id,
       updates,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!updatedEvent) return res.status(404).json({ success: false, message: 'Event not found' });

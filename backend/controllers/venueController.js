@@ -72,7 +72,7 @@ const updateVenue = async (req, res) => {
     const updatedVenue = await Venue.findByIdAndUpdate(
       id,
       { name, location, capacity, map_data },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (!updatedVenue) {
