@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import en from './locales/en';
-import fr from './locales/fr';
+import { useMemo } from "react";
+import en from "./locales/en";
+import fr from "./locales/fr";
 
 const resources = {
   en,
@@ -21,18 +21,18 @@ type PathSegments<T> = T extends object
     }[keyof T]
   : never;
 
-type TranslationKey = PathSegments<(typeof resources)['en']>;
+type TranslationKey = PathSegments<(typeof resources)["en"]>;
 
 const resolveLocale = (): Locale => {
-  if (typeof navigator === 'undefined') {
-    return 'en';
+  if (typeof navigator === "undefined") {
+    return "en";
   }
 
-  return navigator.language.toLowerCase().startsWith('fr') ? 'fr' : 'en';
+  return navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en";
 };
 
 const getValue = (locale: Locale, key: string): string => {
-  const parts = key.split('.');
+  const parts = key.split(".");
   let current: any = resources[locale];
 
   for (const part of parts) {
@@ -42,21 +42,25 @@ const getValue = (locale: Locale, key: string): string => {
     }
   }
 
-  return typeof current === 'string' ? current : key;
+  return typeof current === "string" ? current : key;
 };
 
 export const useTranslation = () => {
   const locale = resolveLocale();
 
   return useMemo(() => {
-    const t = (key: TranslationKey, params?: Record<string, string | number>) => {
+    const t = (
+      key: TranslationKey,
+      params?: Record<string, string | number>,
+    ) => {
       const template = getValue(locale, key);
       if (!params) {
         return template;
       }
 
       return Object.entries(params).reduce(
-        (output, [paramKey, value]) => output.replaceAll(`{{${paramKey}}}`, String(value)),
+        (output, [paramKey, value]) =>
+          output.replaceAll(`{{${paramKey}}}`, String(value)),
         template,
       );
     };

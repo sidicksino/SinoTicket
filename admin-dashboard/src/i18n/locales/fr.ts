@@ -2,7 +2,8 @@ const fr = {
   dashboard: {
     loading: "Aggregation des donnees en direct...",
     overview: "Apercu du tableau de bord",
-    welcomeMessage: "Bon retour ! Voici ce qui se passe aujourd'hui sur SinoTicket.",
+    welcomeMessage:
+      "Bon retour ! Voici ce qui se passe aujourd'hui sur SinoTicket.",
     stats: {
       totalRevenue: "Revenu total",
       revenueDesc: "Total des gains historiques",

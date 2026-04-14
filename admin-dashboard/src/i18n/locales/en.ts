@@ -2,7 +2,8 @@ const en = {
   dashboard: {
     loading: "Aggregating live data...",
     overview: "Dashboard Overview",
-    welcomeMessage: "Welcome back! Here is what's happening with SinoTicket today.",
+    welcomeMessage:
+      "Welcome back! Here is what's happening with SinoTicket today.",
     stats: {
       totalRevenue: "Total Revenue",
       revenueDesc: "Total earnings historically",

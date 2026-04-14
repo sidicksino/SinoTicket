@@ -3,9 +3,11 @@ import { SummaryBar } from "@/components/Booking/SummaryBar";
 import { TicketCategoryCard } from "@/components/Booking/TicketCategoryCard";
 import { useTheme } from "@/context/ThemeContext";
 import { useFetch } from "@/lib/fetch";
+import { Event } from "@/types/type";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -19,9 +21,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Image } from "expo-image";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Event } from "@/types/type";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -37,14 +40,24 @@ export default function EventDetail() {
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
 
-  const { data, loading, error, refetch } = useFetch<{ success: boolean; event: Event }>(`/api/events/${id}`, false);
+  const { data, loading, error, refetch } = useFetch<{
+    success: boolean;
+    event: Event;
+  }>(`/api/events/${id}`, false);
   const event = data?.success ? data.event : null;
 
   const eventDate = new Date(event?.date || Date.now());
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: colors.background,
+        }}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -52,13 +65,35 @@ export default function EventDetail() {
 
   if (error || !event) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: "red", fontSize: 16, marginBottom: 16 }}>{t("eventDetail.couldNotLoad")}</Text>
-        <TouchableOpacity onPress={refetch} style={{ backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, marginBottom: 12 }}>
-          <Text style={{ color: colors.white, fontWeight: "700" }}>{t("home.retryConnection")}</Text>
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: colors.background,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ color: "red", fontSize: 16, marginBottom: 16 }}>
+          {t("eventDetail.couldNotLoad")}
+        </Text>
+        <TouchableOpacity
+          onPress={refetch}
+          style={{
+            backgroundColor: colors.primary,
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            borderRadius: 12,
+            marginBottom: 12,
+          }}
+        >
+          <Text style={{ color: colors.white, fontWeight: "700" }}>
+            {t("home.retryConnection")}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.back()} style={{ padding: 12 }}>
-          <Text style={{ color: colors.subtext, fontWeight: "700" }}>{t("common.goBack")}</Text>
+          <Text style={{ color: colors.subtext, fontWeight: "700" }}>
+            {t("common.goBack")}
+          </Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -82,7 +117,7 @@ export default function EventDetail() {
         quantity: quantity.toString(),
         price: selectedCategory.price.toString(),
         event_title: event.title,
-        category_name: selectedCategory.name
+        category_name: selectedCategory.name,
       },
     } as any);
   };
@@ -92,60 +127,158 @@ export default function EventDetail() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Fixed Top Actions (Back & Share) */}
-      <View style={{ 
-        position: 'absolute', 
-        top: Math.max(insets.top, 20), 
-        left: 20, 
-        right: 20, 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        zIndex: 100 
-      }}>
-        <BlurView intensity={isDark ? 50 : 80} tint={isDark ? "dark" : "light"} style={{ borderRadius: 24, overflow: 'hidden' }}>
-          <TouchableOpacity onPress={() => router.back()} style={{ padding: 12 }}>
-            <Ionicons name="chevron-back" size={24} color={isDark ? "#fff" : "#000"} />
+      <View
+        style={{
+          position: "absolute",
+          top: Math.max(insets.top, 20),
+          left: 20,
+          right: 20,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          zIndex: 100,
+        }}
+      >
+        <BlurView
+          intensity={isDark ? 50 : 80}
+          tint={isDark ? "dark" : "light"}
+          style={{ borderRadius: 24, overflow: "hidden" }}
+        >
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={{ padding: 12 }}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={24}
+              color={isDark ? "#fff" : "#000"}
+            />
           </TouchableOpacity>
         </BlurView>
 
-        <BlurView intensity={isDark ? 50 : 80} tint={isDark ? "dark" : "light"} style={{ borderRadius: 24, overflow: 'hidden' }}>
+        <BlurView
+          intensity={isDark ? 50 : 80}
+          tint={isDark ? "dark" : "light"}
+          style={{ borderRadius: 24, overflow: "hidden" }}
+        >
           <TouchableOpacity style={{ padding: 12 }}>
-            <Ionicons name="share-social-outline" size={24} color={isDark ? "#fff" : "#000"} />
+            <Ionicons
+              name="share-social-outline"
+              size={24}
+              color={isDark ? "#fff" : "#000"}
+            />
           </TouchableOpacity>
         </BlurView>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 150 }}
+      >
         {/* Hero Image Section */}
         <View style={{ height: SCREEN_HEIGHT * 0.55, width: "100%" }}>
           <Image
-            source={{ uri: event.imageUrl || "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800" }}
+            source={{
+              uri:
+                event.imageUrl ||
+                "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800",
+            }}
             style={{ width: "100%", height: "100%", position: "absolute" }}
             contentFit="cover"
             transition={300}
             cachePolicy="memory-disk"
           />
           <LinearGradient
-            colors={['transparent', isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)', colors.background]}
+            colors={[
+              "transparent",
+              isDark ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.9)",
+              colors.background,
+            ]}
             locations={[0.4, 0.8, 1]}
-            style={{ position: 'absolute', width: '100%', height: '100%' }}
+            style={{ position: "absolute", width: "100%", height: "100%" }}
           />
 
-        {/* The Top Actions were moved outside ScrollView */}
+          {/* The Top Actions were moved outside ScrollView */}
 
           {/* Overlaid Title Area */}
-          <View style={{ position: 'absolute', bottom: 20, left: 24, right: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+          <View
+            style={{
+              position: "absolute",
+              bottom: 20,
+              left: 24,
+              right: 24,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+            }}
+          >
             <View style={{ flex: 1, paddingRight: 16 }}>
-              <Text style={{ color: colors.subtext, fontSize: 13, fontWeight: "700", marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+              <Text
+                style={{
+                  color: colors.subtext,
+                  fontSize: 13,
+                  fontWeight: "700",
+                  marginBottom: 6,
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
+                }}
+              >
                 {t("eventDetail.show")}
               </Text>
-              <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 28, marginBottom: 4, lineHeight: 32 }}>{event.title}</Text>
-              <Text style={{ color: colors.subtext, fontSize: 16, fontWeight: "500" }}>{event.venue_id?.name || t("home.venueTba")}</Text>
-            </View>
-            <BlurView intensity={isDark ? 60 : 80} tint={isDark ? "dark" : "light"} style={{ borderRadius: 16, overflow: 'hidden', paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
-              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' }}>
-                {eventDate.toLocaleString('default', { month: 'short' })}
+              <Text
+                style={{
+                  color: colors.text,
+                  fontFamily: "Syne_700Bold",
+                  fontSize: 28,
+                  marginBottom: 4,
+                  lineHeight: 32,
+                }}
+              >
+                {event.title}
               </Text>
-              <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 22, marginTop: 2 }}>
+              <Text
+                style={{
+                  color: colors.subtext,
+                  fontSize: 16,
+                  fontWeight: "500",
+                }}
+              >
+                {event.venue_id?.name || t("home.venueTba")}
+              </Text>
+            </View>
+            <BlurView
+              intensity={isDark ? 60 : 80}
+              tint={isDark ? "dark" : "light"}
+              style={{
+                borderRadius: 16,
+                overflow: "hidden",
+                paddingVertical: 12,
+                paddingHorizontal: 16,
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: 1,
+                borderColor: isDark
+                  ? "rgba(255,255,255,0.1)"
+                  : "rgba(0,0,0,0.05)",
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.subtext,
+                  fontSize: 12,
+                  fontWeight: "700",
+                  textTransform: "uppercase",
+                }}
+              >
+                {eventDate.toLocaleString("default", { month: "short" })}
+              </Text>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontFamily: "Syne_700Bold",
+                  fontSize: 22,
+                  marginTop: 2,
+                }}
+              >
                 {eventDate.getDate()}
               </Text>
             </BlurView>
@@ -155,11 +288,49 @@ export default function EventDetail() {
         {/* Content Body */}
         <View style={{ paddingHorizontal: 24, paddingTop: 12 }}>
           {/* Info row */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 32 }}>
-            <BlurView intensity={isDark ? 20 : 60} tint={isDark ? "dark" : "light"} style={{ flex: 1, borderRadius: 16, paddingVertical: 16, alignItems: 'center', marginRight: 8, overflow: 'hidden', backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
-              <Text style={{ color: colors.subtext, fontSize: 12, fontWeight: '600', marginBottom: 4 }}>{t("eventDetail.start")}</Text>
-              <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 16 }}>
-                {eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 32,
+            }}
+          >
+            <BlurView
+              intensity={isDark ? 20 : 60}
+              tint={isDark ? "dark" : "light"}
+              style={{
+                flex: 1,
+                borderRadius: 16,
+                paddingVertical: 16,
+                alignItems: "center",
+                marginRight: 8,
+                overflow: "hidden",
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.05)"
+                  : "rgba(0,0,0,0.05)",
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.subtext,
+                  fontSize: 12,
+                  fontWeight: "600",
+                  marginBottom: 4,
+                }}
+              >
+                {t("eventDetail.start")}
+              </Text>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontFamily: "Syne_700Bold",
+                  fontSize: 16,
+                }}
+              >
+                {eventDate.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </Text>
             </BlurView>
           </View>
@@ -167,11 +338,53 @@ export default function EventDetail() {
           {/* Tickets Pricing */}
           {event.ticket_categories && event.ticket_categories.length > 0 && (
             <View style={{ marginBottom: 32 }}>
-              <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>{t("eventDetail.tickets")}</Text>
+              <Text
+                style={{
+                  color: colors.text,
+                  fontFamily: "Syne_700Bold",
+                  fontSize: 18,
+                  marginBottom: 16,
+                }}
+              >
+                {t("eventDetail.tickets")}
+              </Text>
               {event.ticket_categories.map((cat: any, index: number) => (
-                <View key={cat.category_id || cat.name || index} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)", padding: 16, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)" }}>
-                  <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>{cat.name}</Text>
-                  <Text style={{ color: colors.primary || "#4CAF50", fontFamily: "Syne_700Bold", fontSize: 16 }}>{cat.price} XAF</Text>
+                <View
+                  key={cat.category_id || cat.name || index}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    backgroundColor: isDark
+                      ? "rgba(255,255,255,0.03)"
+                      : "rgba(0,0,0,0.02)",
+                    padding: 16,
+                    borderRadius: 16,
+                    marginBottom: 8,
+                    borderWidth: 1,
+                    borderColor: isDark
+                      ? "rgba(255,255,255,0.05)"
+                      : "rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: colors.text,
+                      fontSize: 16,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {cat.name}
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.primary || "#4CAF50",
+                      fontFamily: "Syne_700Bold",
+                      fontSize: 16,
+                    }}
+                  >
+                    {cat.price} XAF
+                  </Text>
                 </View>
               ))}
             </View>
@@ -179,23 +392,72 @@ export default function EventDetail() {
 
           {/* Description */}
           <View style={{ marginBottom: 32 }}>
-            <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>{t("eventDetail.description")}</Text>
-            <Text style={{ color: colors.subtext, fontSize: 15, lineHeight: 24, fontWeight: '400' }}>
+            <Text
+              style={{
+                color: colors.text,
+                fontFamily: "Syne_700Bold",
+                fontSize: 18,
+                marginBottom: 16,
+              }}
+            >
+              {t("eventDetail.description")}
+            </Text>
+            <Text
+              style={{
+                color: colors.subtext,
+                fontSize: 15,
+                lineHeight: 24,
+                fontWeight: "400",
+              }}
+            >
               {event.description || t("eventDetail.fallbackDescription")}
             </Text>
           </View>
 
           {/* Location Placeholder */}
           <View style={{ marginBottom: 32 }}>
-            <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 18, marginBottom: 16 }}>{t("eventDetail.location")}</Text>
-            <View style={{ width: '100%', height: 160, borderRadius: 24, overflow: 'hidden', backgroundColor: colors.overlayLight }}>
+            <Text
+              style={{
+                color: colors.text,
+                fontFamily: "Syne_700Bold",
+                fontSize: 18,
+                marginBottom: 16,
+              }}
+            >
+              {t("eventDetail.location")}
+            </Text>
+            <View
+              style={{
+                width: "100%",
+                height: 160,
+                borderRadius: 24,
+                overflow: "hidden",
+                backgroundColor: colors.overlayLight,
+              }}
+            >
               <Image
-                source={{ uri: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800" }}
+                source={{
+                  uri: "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800",
+                }}
                 style={{ width: "100%", height: "100%" }}
                 contentFit="cover"
               />
-              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center' }}>
-                <Ionicons name="location" size={32} color={colors.primary || "#4CAF50"} />
+              <View
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons
+                  name="location"
+                  size={32}
+                  color={colors.primary || "#4CAF50"}
+                />
               </View>
             </View>
           </View>
@@ -203,18 +465,45 @@ export default function EventDetail() {
       </ScrollView>
 
       {/* Floating CTA */}
-      <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: Math.max(insets.bottom, 24), paddingTop: 40, paddingHorizontal: 24, alignItems: 'center' }}>
+      <View
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          paddingBottom: Math.max(insets.bottom, 24),
+          paddingTop: 40,
+          paddingHorizontal: 24,
+          alignItems: "center",
+        }}
+      >
         <LinearGradient
-          colors={['transparent', colors.background, colors.background]}
+          colors={["transparent", colors.background, colors.background]}
           locations={[0, 0.9, 1]}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
         />
         <TouchableOpacity
           onPress={handleBookNow}
-          style={{ width: '100%', height: 60, backgroundColor: "#4CAF50", borderRadius: 30, justifyContent: 'center', alignItems: 'center', shadowColor: "#4CAF50", shadowOpacity: 0.3, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 }}
+          style={{
+            width: "100%",
+            height: 60,
+            backgroundColor: "#4CAF50",
+            borderRadius: 30,
+            justifyContent: "center",
+            alignItems: "center",
+            shadowColor: "#4CAF50",
+            shadowOpacity: 0.3,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 5,
+          }}
           activeOpacity={0.8}
         >
-          <Text style={{ color: '#FFF', fontFamily: "Syne_700Bold", fontSize: 18 }}>{t("eventDetail.bookNow")}</Text>
+          <Text
+            style={{ color: "#FFF", fontFamily: "Syne_700Bold", fontSize: 18 }}
+          >
+            {t("eventDetail.bookNow")}
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -230,13 +519,47 @@ export default function EventDetail() {
           activeOpacity={1}
           onPress={() => setIsModalVisible(false)}
         >
-          <View style={{ marginTop: 'auto', backgroundColor: colors.background, padding: 24, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingBottom: 50 }}>
-            <View style={{ width: 40, height: 4, backgroundColor: colors.border, alignSelf: 'center', borderRadius: 2, marginBottom: 24 }} />
+          <View
+            style={{
+              marginTop: "auto",
+              backgroundColor: colors.background,
+              padding: 24,
+              borderTopLeftRadius: 30,
+              borderTopRightRadius: 30,
+              paddingBottom: 50,
+            }}
+          >
+            <View
+              style={{
+                width: 40,
+                height: 4,
+                backgroundColor: colors.border,
+                alignSelf: "center",
+                borderRadius: 2,
+                marginBottom: 24,
+              }}
+            />
 
-            <Text style={{ fontSize: 22, fontFamily: "Syne_700Bold", color: colors.text, marginBottom: 8 }}>{t("eventDetail.selectTickets")}</Text>
-            <Text style={{ fontSize: 14, color: colors.subtext, marginBottom: 24 }}>{t("eventDetail.pickPreferredCategory")}</Text>
+            <Text
+              style={{
+                fontSize: 22,
+                fontFamily: "Syne_700Bold",
+                color: colors.text,
+                marginBottom: 8,
+              }}
+            >
+              {t("eventDetail.selectTickets")}
+            </Text>
+            <Text
+              style={{ fontSize: 14, color: colors.subtext, marginBottom: 24 }}
+            >
+              {t("eventDetail.pickPreferredCategory")}
+            </Text>
 
-            <ScrollView style={{ maxHeight: 350 }} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={{ maxHeight: 350 }}
+              showsVerticalScrollIndicator={false}
+            >
               {event.ticket_categories?.map((cat: any) => (
                 <TicketCategoryCard
                   key={cat.category_id || cat.name}
@@ -254,15 +577,36 @@ export default function EventDetail() {
 
             {selectedCategory && (
               <View style={{ marginTop: 24 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 24,
+                  }}
+                >
                   <View>
-                    <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>{t("eventDetail.quantity")}</Text>
-                    <Text style={{ fontSize: 12, color: colors.subtext }}>{t("eventDetail.maxPerOrder")}</Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "700",
+                        color: colors.text,
+                      }}
+                    >
+                      {t("eventDetail.quantity")}
+                    </Text>
+                    <Text style={{ fontSize: 12, color: colors.subtext }}>
+                      {t("eventDetail.maxPerOrder")}
+                    </Text>
                   </View>
                   <QuantitySelector
                     quantity={quantity}
-                    onIncrement={() => setQuantity(prev => Math.min(prev + 1, 10))}
-                    onDecrement={() => setQuantity(prev => Math.max(prev - 1, 1))}
+                    onIncrement={() =>
+                      setQuantity((prev) => Math.min(prev + 1, 10))
+                    }
+                    onDecrement={() =>
+                      setQuantity((prev) => Math.max(prev - 1, 1))
+                    }
                   />
                 </View>
 

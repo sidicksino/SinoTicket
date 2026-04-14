@@ -1,8 +1,23 @@
-import { useAuth } from '@clerk/clerk-react';
-import { DollarSign, Ticket, TrendingUp, Users, type LucideIcon, Loader2, Calendar } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { useTranslation } from '../i18n';
+import { useAuth } from "@clerk/clerk-react";
+import {
+    Calendar,
+    DollarSign,
+    Loader2,
+    Ticket,
+    TrendingUp,
+    Users,
+    type LucideIcon,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import {
+    Area,
+    AreaChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts";
+import { useTranslation } from "../i18n";
 
 interface StatCardProps {
   label: string;
@@ -12,7 +27,13 @@ interface StatCardProps {
   trend?: number;
 }
 
-function StatCard({ label, value, description, icon: Icon, trend }: StatCardProps) {
+function StatCard({
+  label,
+  value,
+  description,
+  icon: Icon,
+  trend,
+}: StatCardProps) {
   return (
     <div className="bg-card p-6 rounded-3xl border border-card-border shadow-sm">
       <div className="flex justify-between items-start mb-4">
@@ -20,12 +41,15 @@ function StatCard({ label, value, description, icon: Icon, trend }: StatCardProp
           <Icon size={24} />
         </div>
         {trend !== undefined && trend !== 0 && (
-          <span className={`text-xs font-bold px-2 py-1 rounded-lg ${
-            trend > 0
-              ? 'bg-success/10 text-success'
-              : 'bg-error/10 text-error'
-          }`}>
-            {trend > 0 ? '+' : ''}{trend}%
+          <span
+            className={`text-xs font-bold px-2 py-1 rounded-lg ${
+              trend > 0
+                ? "bg-success/10 text-success"
+                : "bg-error/10 text-error"
+            }`}
+          >
+            {trend > 0 ? "+" : ""}
+            {trend}%
           </span>
         )}
       </div>
@@ -37,7 +61,8 @@ function StatCard({ label, value, description, icon: Icon, trend }: StatCardProp
 }
 
 // Format numbers easily
-const formatNumber = (num: number) => new Intl.NumberFormat('en-US').format(num);
+const formatNumber = (num: number) =>
+  new Intl.NumberFormat("en-US").format(num);
 
 export default function DashboardHome() {
   const { getToken } = useAuth();
@@ -46,68 +71,72 @@ export default function DashboardHome() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-      const fetchStats = async () => {
-          try {
-              const token = await getToken();
-              const res = await fetch('http://localhost:5001/api/dashboard/stats', {
-                  headers: { Authorization: `Bearer ${token}` }
-              });
-              const data = await res.json();
-              if (data.success) {
-                  setStats(data.stats);
-              }
-          } catch (err) {
-              console.error("Error fetching stats", err);
-          } finally {
-              setLoading(false);
-          }
-      };
-      
-      fetchStats();
+    const fetchStats = async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch("http://localhost:5001/api/dashboard/stats", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data.success) {
+          setStats(data.stats);
+        }
+      } catch (err) {
+        console.error("Error fetching stats", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
   }, []);
 
   if (loading || !stats) {
     return (
-        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-primary">
-            <Loader2 className="animate-spin w-10 h-10" />
-            <p className="text-subtext font-bold animate-pulse">{t('dashboard.loading')}</p>
-        </div>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-primary">
+        <Loader2 className="animate-spin w-10 h-10" />
+        <p className="text-subtext font-bold animate-pulse">
+          {t("dashboard.loading")}
+        </p>
+      </div>
     );
   }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div>
-        <h2 className="text-2xl font-bold text-text">{t('dashboard.overview')}</h2>
-        <p className="text-subtext mt-1">{t('dashboard.welcomeMessage')}</p>
+        <h2 className="text-2xl font-bold text-text">
+          {t("dashboard.overview")}
+        </h2>
+        <p className="text-subtext mt-1">{t("dashboard.welcomeMessage")}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard 
-          label={t('dashboard.stats.totalRevenue')} 
-          value={`${formatNumber(stats.totalRevenue)} XAF`} 
-          description={t('dashboard.stats.revenueDesc')}
+        <StatCard
+          label={t("dashboard.stats.totalRevenue")}
+          value={`${formatNumber(stats.totalRevenue)} XAF`}
+          description={t("dashboard.stats.revenueDesc")}
           icon={DollarSign}
           trend={stats.totalRevenue > 0 ? 12 : 0}
         />
-        <StatCard 
-          label={t('dashboard.stats.ticketsSold')} 
-          value={formatNumber(stats.totalTickets)} 
-          description={t('dashboard.stats.ticketsDesc')}
+        <StatCard
+          label={t("dashboard.stats.ticketsSold")}
+          value={formatNumber(stats.totalTickets)}
+          description={t("dashboard.stats.ticketsDesc")}
           icon={Ticket}
           trend={stats.totalTickets > 0 ? 8 : 0}
         />
-        <StatCard 
-          label={t('dashboard.stats.activeUsers')} 
-          value={formatNumber(stats.totalUsers)} 
-          description={t('dashboard.stats.usersDesc')}
+        <StatCard
+          label={t("dashboard.stats.activeUsers")}
+          value={formatNumber(stats.totalUsers)}
+          description={t("dashboard.stats.usersDesc")}
           icon={Users}
           trend={stats.totalUsers > 0 ? 5 : 0}
         />
-        <StatCard 
-          label={t('dashboard.stats.totalEvents')} 
-          value={formatNumber(stats.totalEvents)} 
-          description={t('dashboard.stats.eventsDesc')}
+        <StatCard
+          label={t("dashboard.stats.totalEvents")}
+          value={formatNumber(stats.totalEvents)}
+          description={t("dashboard.stats.eventsDesc")}
           icon={TrendingUp}
         />
       </div>
@@ -116,73 +145,138 @@ export default function DashboardHome() {
         {/* Chart View */}
         <div className="bg-card p-6 md:p-8 rounded-3xl border border-card-border min-h-100 flex flex-col">
           <div className="mb-6">
-            <h3 className="text-lg font-bold text-text mb-1">{t('dashboard.chart.title')}</h3>
-            <p className="text-xs text-subtext">{t('dashboard.chart.subtitle')}</p>
+            <h3 className="text-lg font-bold text-text mb-1">
+              {t("dashboard.chart.title")}
+            </h3>
+            <p className="text-xs text-subtext">
+              {t("dashboard.chart.subtitle")}
+            </p>
           </div>
-          
+
           <div className="flex-1 w-full min-h-75">
-             <ResponsiveContainer width="100%" height="100%">
-                 <AreaChart data={stats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                     <defs>
-                         <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                             <stop offset="5%" stopColor="#FB6900" stopOpacity={0.3}/>
-                             <stop offset="95%" stopColor="#FB6900" stopOpacity={0}/>
-                         </linearGradient>
-                         <linearGradient id="colorVisitors" x1="0" y1="0" x2="0" y2="1">
-                             <stop offset="5%" stopColor="#A88BFA" stopOpacity={0.3}/>
-                             <stop offset="95%" stopColor="#A88BFA" stopOpacity={0}/>
-                         </linearGradient>
-                     </defs>
-                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#888888', fontSize: 12, fontWeight: 'bold' }} dy={10} />
-                     <YAxis axisLine={false} tickLine={false} tick={{ fill: '#888888', fontSize: 12 }} />
-                     <Tooltip 
-                        contentStyle={{ backgroundColor: 'var(--card-bg)', borderRadius: '16px', border: '1px solid var(--card-border)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                        itemStyle={{ fontWeight: 'bold' }}
-                     />
-                     <Area type="monotone" dataKey="visitors" stroke="#A88BFA" strokeWidth={3} fillOpacity={1} fill="url(#colorVisitors)" />
-                     <Area type="monotone" dataKey="sales" stroke="#FB6900" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
-                 </AreaChart>
-             </ResponsiveContainer>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={stats.chartData}
+                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#FB6900" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#FB6900" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient
+                    id="colorVisitors"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="5%" stopColor="#A88BFA" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#A88BFA" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#888888", fontSize: 12, fontWeight: "bold" }}
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#888888", fontSize: 12 }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "var(--card-bg)",
+                    borderRadius: "16px",
+                    border: "1px solid var(--card-border)",
+                    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+                  }}
+                  itemStyle={{ fontWeight: "bold" }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="visitors"
+                  stroke="#A88BFA"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#colorVisitors)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="sales"
+                  stroke="#FB6900"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#colorSales)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
-        
+
         {/* Latest Events */}
         <div className="bg-card p-6 md:p-8 rounded-3xl border border-card-border flex flex-col">
           <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-text">{t('dashboard.latestEvents')}</h3>
-              <button className="text-sm text-primary font-bold">{t('dashboard.viewAll')}</button>
+            <h3 className="text-lg font-bold text-text">
+              {t("dashboard.latestEvents")}
+            </h3>
+            <button className="text-sm text-primary font-bold">
+              {t("dashboard.viewAll")}
+            </button>
           </div>
-          
+
           <div className="space-y-4 flex-1">
             {stats.latestEvents && stats.latestEvents.length > 0 ? (
-               stats.latestEvents.map((event: any) => (
-                 <div key={event._id} className="flex items-center gap-4 p-4 rounded-2xl border border-card-border bg-card-border/10 hover:bg-card-border/20 transition-colors">
-                   {event.image ? (
-                     <img src={event.image} alt={event.title} className="w-14 h-14 rounded-xl object-cover" />
-                   ) : (
-                     <div className="w-14 h-14 bg-card-border/50 text-subtext rounded-xl flex items-center justify-center">
-                         <Calendar size={24} />
-                     </div>
-                   )}
-                   <div className="flex-1 min-w-0">
-                     <h4 className="font-bold text-text truncate leading-tight">{event.title}</h4>
-                     <p className="text-xs text-subtext mt-1 truncate">
-                        {new Date(event.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })} • {event.venue_name}
-                     </p>
-                   </div>
-                   <div className="text-right shrink-0 w-24">
-                     <div className="font-bold text-text text-sm">{event.soldPercentage}% Sold</div>
-                     <div className="w-full h-1.5 bg-card-border rounded-full mt-1.5 overflow-hidden">
-                       <div className="bg-primary h-full rounded-full transition-all duration-1000" style={{ width: `${event.soldPercentage}%` }}></div>
-                     </div>
-                   </div>
-                 </div>
-               ))
-            ) : (
-                <div className="text-center py-10 text-subtext">
-                    <Calendar className="mx-auto h-12 w-12 opacity-30 mb-3" />
-                <p className="font-bold">{t('dashboard.noEvents')}</p>
+              stats.latestEvents.map((event: any) => (
+                <div
+                  key={event._id}
+                  className="flex items-center gap-4 p-4 rounded-2xl border border-card-border bg-card-border/10 hover:bg-card-border/20 transition-colors"
+                >
+                  {event.image ? (
+                    <img
+                      src={event.image}
+                      alt={event.title}
+                      className="w-14 h-14 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 bg-card-border/50 text-subtext rounded-xl flex items-center justify-center">
+                      <Calendar size={24} />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-text truncate leading-tight">
+                      {event.title}
+                    </h4>
+                    <p className="text-xs text-subtext mt-1 truncate">
+                      {new Date(event.date).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}{" "}
+                      • {event.venue_name}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0 w-24">
+                    <div className="font-bold text-text text-sm">
+                      {event.soldPercentage}% Sold
+                    </div>
+                    <div className="w-full h-1.5 bg-card-border rounded-full mt-1.5 overflow-hidden">
+                      <div
+                        className="bg-primary h-full rounded-full transition-all duration-1000"
+                        style={{ width: `${event.soldPercentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-10 text-subtext">
+                <Calendar className="mx-auto h-12 w-12 opacity-30 mb-3" />
+                <p className="font-bold">{t("dashboard.noEvents")}</p>
+              </div>
             )}
           </div>
         </div>
