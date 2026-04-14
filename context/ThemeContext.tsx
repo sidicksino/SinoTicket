@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useColorScheme } from "react-native";
-import * as SecureStore from "expo-secure-store";
 import { Colors, ThemeColors } from "@/constants/colors";
+import * as SecureStore from "expo-secure-store";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useColorScheme } from "react-native";
 
 type ThemePreference = "light" | "dark" | "system";
 type ResolvedTheme = "light" | "dark";
@@ -21,8 +21,8 @@ const ThemeContext = createContext<ThemeContextType>({
   theme: "light",
   themePreference: "system",
   colors: Colors.light,
-  setThemePreference: () => {},
-  toggleTheme: () => {},
+  setThemePreference: () => { },
+  toggleTheme: () => { },
   isDark: false,
 });
 
@@ -64,13 +64,13 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   if (!loaded) return null;
 
   return (
-    <ThemeContext.Provider value={{ 
-      theme: resolvedTheme, 
+    <ThemeContext.Provider value={{
+      theme: resolvedTheme,
       themePreference: themePref,
-      colors, 
-      setThemePreference, 
-      toggleTheme, 
-      isDark 
+      colors,
+      setThemePreference,
+      toggleTheme,
+      isDark
     }}>
       {children}
     </ThemeContext.Provider>
