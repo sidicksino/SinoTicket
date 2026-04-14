@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ticketController = require('../controllers/ticketController');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, checkAdmin } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -9,6 +9,20 @@ const { authenticateToken } = require('../middleware/auth');
  *   name: Ticket
  *   description: Ticket issuance and retrieval
  */
+
+/**
+ * @swagger
+ * /api/tickets/all:
+ *   get:
+ *     summary: Retrieve all platform tickets (Admin only)
+ *     tags: [Ticket]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of tickets
+ */
+router.get('/all', authenticateToken, checkAdmin, ticketController.getAllTickets);
 
 /**
  * @swagger

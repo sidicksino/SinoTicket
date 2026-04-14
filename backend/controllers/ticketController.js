@@ -223,4 +223,47 @@ const verifyTicket = async (req, res) => {
     }
 };
 
-module.exports = { checkoutReservation, getMyTickets, verifyTicket };
+// @desc    Get all tickets across the platform (Admin)
+// @route   GET /api/tickets/all
+// @access  Private/Admin
+const getAllTickets = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+
+        const query = {};
+        if (req.query.status && req.query.status !== 'All') {
+            query.status = req.query.status;
+        }
+
+        const total = await Ticket.countDocuments(query);
+        const tickets = await Ticket.find(query)
+            .populate('event_id', 'title date imageUrl venue_id')
+            .populate('attendee_id', 'name email profile_photo')
+            .populate({
+                path: 'seat_id',
+                select: 'number section_id',
+                populate: {
+                    path: 'section_id',
+                    select: 'name'
+                }
+            })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        res.status(200).json({
+            success: true,
+            total,
+            page,
+            limit,
+            tickets
+        });
+    } catch (error) {
+        console.error("Error in getAllTickets:", error);
+        res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+    }
+};
+
+module.exports = { checkoutReservation, getMyTickets, verifyTicket, getAllTickets };

@@ -69,6 +69,7 @@ export default function AdminLayout() {
             <SidebarItem to="/seats" icon={Armchair} label="Seats" />
           </div>
 
+          <SidebarItem to="/tickets" icon={Ticket} label="Tickets" />
           <SidebarItem to="/users" icon={Users} label="Users" />
           
           <div className="mt-8 mb-2 px-4">

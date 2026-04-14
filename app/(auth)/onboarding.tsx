@@ -21,6 +21,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import CustomButton from "@/components/CustomButton";
 import { onboarding } from "@/constants";
+import { useTheme } from "@/context/ThemeContext";
 
 type OnboardingSlide = {
   id: number;
@@ -40,6 +41,7 @@ const OnboardingDot = ({
   width: number;
   scrollX: SharedValue<number>;
 }) => {
+  const { colors } = useTheme();
   const dotStyle = useAnimatedStyle(() => {
     const dotWidth = interpolate(
       scrollX.value,
@@ -62,8 +64,8 @@ const OnboardingDot = ({
 
   return (
     <Animated.View
-      style={dotStyle}
-      className="mx-1 h-2 rounded-full bg-[#0286FF]"
+      style={[dotStyle, { backgroundColor: colors.primary }]}
+      className="mx-1 h-2 rounded-full"
     />
   );
 };
@@ -79,6 +81,7 @@ const OnboardingItem = ({
   scrollX: SharedValue<number>;
   screenWidth: number;
 }) => {
+  const { colors } = useTheme();
   const headerSize = Math.max(30, Math.min(38, screenWidth * 0.08));
   const bodySize = Math.max(15, Math.min(18, screenWidth * 0.043));
 
@@ -222,15 +225,15 @@ const OnboardingItem = ({
         className="w-full items-center justify-center px-1"
       >
         <Text
-          style={{ fontSize: headerSize }}
-          className="text-center font-syne font-extrabold leading-tight text-[#0F172A]"
+          style={{ fontSize: headerSize, color: colors.text }}
+          className="text-center font-syne font-extrabold leading-tight"
         >
           {item.title}
         </Text>
 
         <Text
-          style={{ fontSize: bodySize }}
-          className="mb-7 mt-4 px-4 text-center font-medium leading-7 text-[#64748B]"
+          style={{ fontSize: bodySize, color: colors.subtext }}
+          className="mb-7 mt-4 px-4 text-center font-medium leading-7"
         >
           {item.description}
         </Text>
@@ -238,19 +241,25 @@ const OnboardingItem = ({
         {/* Tech and Feature Labels */}
         <View className="absolute inset-x-0 bottom-[-20px] flex-row justify-between px-8">
           <Animated.View
-            style={techStyle}
-            className="bg-[#0286FF]/10 px-3 py-1 rounded-full border border-[#0286FF]/20"
+            style={[
+              techStyle, 
+              { backgroundColor: colors.primaryLight, borderColor: colors.primary }
+            ]}
+            className="px-3 py-1 rounded-full border border-opacity-20"
           >
-            <Text className="text-[#0286FF] text-xs font-bold uppercase tracking-wider">
+            <Text style={{ color: colors.primary }} className="text-xs font-bold uppercase tracking-wider">
               {item.tech}
             </Text>
           </Animated.View>
 
           <Animated.View
-            style={featureStyle}
-            className="bg-[#F8FAFC] px-3 py-1 rounded-full border border-[#E2E8F0]"
+            style={[
+              featureStyle,
+              { backgroundColor: colors.card, borderColor: colors.border }
+            ]}
+            className="px-3 py-1 rounded-full border"
           >
-            <Text className="text-[#64748B] text-xs font-bold uppercase tracking-wider">
+            <Text style={{ color: colors.subtext }} className="text-xs font-bold uppercase tracking-wider">
               {item.feature}
             </Text>
           </Animated.View>
@@ -265,6 +274,7 @@ const OnboardingScreen = () => {
   const flatListRef = useRef<FlatList>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollX = useSharedValue(0);
+  const { theme, colors } = useTheme();
 
   const onScrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -287,13 +297,13 @@ const OnboardingScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar style="dark" />
+    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
+      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
       <TouchableOpacity
         onPress={() => router.replace("/(auth)/welcome" as any)}
         className="w-full items-end px-6 py-4"
       >
-        <Text className="text-base font-semibold text-[#334155] opacity-70">
+        <Text style={{ color: colors.subtext }} className="text-base font-semibold opacity-70">
           Skip
         </Text>
       </TouchableOpacity>

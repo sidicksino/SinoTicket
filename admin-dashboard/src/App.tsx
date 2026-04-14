@@ -7,6 +7,7 @@ import EventsManager from './pages/EventsManager';
 import VenuesManager from './pages/VenuesManager';
 import SectionsManager from './pages/SectionsManager';
 import SeatsManager from './pages/SeatsManager';
+import TicketsManager from './pages/TicketsManager';
 import UsersManager from './pages/UsersManager';
 import LoginScreen from './pages/LoginScreen';
 
@@ -128,6 +129,7 @@ function App() {
               <Route path="venues" element={<VenuesManager />} />
               <Route path="sections" element={<SectionsManager />} />
               <Route path="seats" element={<SeatsManager />} />
+              <Route path="tickets" element={<TicketsManager />} />
               <Route path="users" element={<UsersManager />} />
               <Route path="*" element={
                 <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 bg-card rounded-3xl border border-card-border uppercase tracking-widest text-subtext/30 font-bold italic">
