@@ -9,11 +9,11 @@ import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   FlatList,
+  ImageBackground,
   RefreshControl,
   Text,
   TouchableOpacity,
   View,
-  ImageBackground,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -150,7 +150,7 @@ function TicketCard({
   const daysUntil = event?.date
     ? Math.ceil(
         (new Date(event.date).getTime() - new Date().getTime()) /
-          (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24),
       )
     : 0;
 
@@ -221,10 +221,15 @@ function TicketCard({
                 >
                   {eventTitle}
                 </Text>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                >
                   <Ionicons name="ticket-outline" size={14} color="#fff" />
-                  <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>
-                    {section?.name || t("ticket.standard")} • Seat #{seat?.number || "0"}
+                  <Text
+                    style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}
+                  >
+                    {section?.name || t("ticket.standard")} • Seat #
+                    {seat?.number || "0"}
                   </Text>
                 </View>
               </View>
@@ -453,7 +458,13 @@ function TicketCard({
 
         {/* Expanded QR section */}
         {isExpanded && (
-          <View style={{ paddingHorizontal: 20, paddingBottom: 20, backgroundColor: colors.card }}>
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingBottom: 20,
+              backgroundColor: colors.card,
+            }}
+          >
             <QRModal
               code={item.qr_code || "SINOTICKET"}
               colors={colors}
@@ -543,7 +554,9 @@ export default function TicketWallet() {
       />
 
       {/* Premium header stats */}
-      <View style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 20 }}>
+      <View
+        style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 20 }}
+      >
         <View
           style={{
             backgroundColor: colors.primary + "10",
