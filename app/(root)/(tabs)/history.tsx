@@ -28,7 +28,7 @@ const QRModal = React.memo(function QRModal({
   colors: any;
   onClose: () => void;
 }) {
-  const qrUrl = `${process.env.EXPO_PUBLIC_API_URL || "https://sinoticket.com"}/api/tickets/verify/${code}`;
+  const qrUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/tickets/verify/${code}`;
 
   return (
     <View
@@ -112,13 +112,10 @@ const HistoryItem = React.memo(
     const eventTitle = event?.title || t("ticket.eventTba");
     const eventDate = event?.date
       ? new Date(event.date).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        })
+        month: "short",
+        day: "numeric",
+      })
       : "N/A";
-    const eventMonth = event?.date
-      ? new Date(event.date).toLocaleDateString("en-US", { year: "2-digit" })
-      : "";
 
     const statusColor =
       item.status === "Used"

@@ -221,6 +221,10 @@ const en = {
       standard: "Standard",
       seat: "Seat",
       row: "Row",
+      saved: "Saved!",
+      savedGallery: "Your ticket has been saved to your photos.",
+      permissionError: "Permission Required",
+      permissionMessage: "Please allow photo access in Settings to save your ticket.",
     },
     history: {
       subtitle: "Track your",

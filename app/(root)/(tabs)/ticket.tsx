@@ -1,22 +1,27 @@
 import AppHeader from "@/components/AppHeader";
+import { DownloadableTicket, TicketData } from "@/components/DownloadableTicket";
 import EmptyState from "@/components/EmptyState";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthFetch } from "@/lib/fetch";
 import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback, useEffect, useState } from "react";
+import * as MediaLibrary from "expo-media-library";
+import * as Sharing from "expo-sharing";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   ImageBackground,
   RefreshControl,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { captureRef } from "react-native-view-shot";
 
 // Premium QR modal
 const QRModal = React.memo(function QRModal({
@@ -30,7 +35,7 @@ const QRModal = React.memo(function QRModal({
   eventTitle: string;
   onClose: () => void;
 }) {
-  const qrUrl = `${process.env.EXPO_PUBLIC_API_URL || "https://sinoticket.com"}/api/tickets/verify/${code}`;
+  const qrUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/tickets/verify/${code}`;
 
   return (
     <View
@@ -116,10 +121,14 @@ function TicketCard({
   item,
   isExpanded,
   onToggle,
+  onDownload,
+  isDownloading,
 }: {
   item: any;
   isExpanded: boolean;
   onToggle: () => void;
+  onDownload: () => void;
+  isDownloading: boolean;
 }) {
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -135,23 +144,23 @@ function TicketCard({
     "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=800";
   const eventDate = event?.date
     ? new Date(event.date).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })
     : "N/A";
   const eventTime = event?.date
     ? new Date(event.date).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+    })
     : "N/A";
 
   const daysUntil = event?.date
     ? Math.ceil(
-        (new Date(event.date).getTime() - new Date().getTime()) /
-          (1000 * 60 * 60 * 24),
-      )
+      (new Date(event.date).getTime() - new Date().getTime()) /
+      (1000 * 60 * 60 * 24),
+    )
     : 0;
 
   return (
@@ -429,12 +438,13 @@ function TicketCard({
             </View>
 
             <TouchableOpacity
-              onPress={onToggle}
+              onPress={onDownload}
+              disabled={isDownloading}
               style={{
                 flex: 1,
                 paddingHorizontal: 12,
                 paddingVertical: 8,
-                backgroundColor: colors.primary,
+                backgroundColor: colors.primary + (isDownloading ? "50" : ""),
                 borderRadius: 10,
                 alignItems: "center",
                 justifyContent: "center",
@@ -442,16 +452,22 @@ function TicketCard({
                 gap: 6,
               }}
             >
-              <Ionicons name="qr-code" size={14} color="#fff" />
-              <Text
-                style={{
-                  color: "#fff",
-                  fontSize: 12,
-                  fontWeight: "700",
-                }}
-              >
-                Show Code
-              </Text>
+              {isDownloading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <Ionicons name="download-outline" size={14} color="#fff" />
+                  <Text
+                    style={{
+                      color: "#fff",
+                      fontSize: 12,
+                      fontWeight: "700",
+                    }}
+                  >
+                    Download
+                  </Text>
+                </>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -488,6 +504,88 @@ export default function TicketWallet() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const ticketRef = useRef<any>(null);
+  const [printingTicket, setPrintingTicket] = useState<TicketData | null>(null);
+
+  const handleDownload = async (item: any) => {
+    try {
+      setDownloadingId(item._id);
+
+      const event = typeof item.event_id === "object" ? item.event_id : {};
+      const seat = typeof item.seat_id === "object" ? item.seat_id : {};
+      const section = seat && typeof seat.section_id === "object" ? seat.section_id : {};
+
+      // Map to DownloadableTicket data structure
+      const ticketData: TicketData = {
+        category: event.category || "General",
+        eventName: event.title || "Sino Ticket Event",
+        date: event.date
+          ? new Date(event.date).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+          : "TBA",
+        price: (() => {
+          const catId = item.category_id;
+          const categories = event.ticket_categories || [];
+          const matched = categories.find((cat: any) => 
+            cat._id === catId || cat.category_id === catId || cat.id === catId
+          );
+          return matched ? `${matched.price} XAF` : (event.price ? `$${event.price}` : "PAID");
+        })(),
+        venue: event.location || (event.venue_id && typeof event.venue_id === 'object' ? event.venue_id.name : "TBA"),
+        section: section.name || "N/A",
+        seat: seat.number || "0",
+        ticketId: item.qr_code || "SINOTICKET",
+        eventImage: event.imageUrl || "https://images.unsplash.com/photo-1540039155733-5bb30b4f53e6?w=800",
+      };
+
+      setPrintingTicket(ticketData);
+
+      // Small delay to ensure state update and rendering of the hidden component
+      setTimeout(async () => {
+        try {
+          const uri = await captureRef(ticketRef, {
+            format: "png",
+            quality: 1,
+          });
+
+          const { status } = await MediaLibrary.requestPermissionsAsync();
+
+          if (status === "granted") {
+            await MediaLibrary.saveToLibraryAsync(uri);
+            Alert.alert(t("ticket.saved"), t("ticket.savedGallery"));
+          } else {
+            const canShare = await Sharing.isAvailableAsync();
+            if (canShare) {
+              await Sharing.shareAsync(uri, {
+                mimeType: "image/png",
+                dialogTitle: "Save Ticket",
+              });
+            } else {
+              Alert.alert(t("ticket.permissionError"), t("ticket.permissionMessage"));
+            }
+          }
+        } catch (err) {
+          console.error("Capture error:", err);
+          Alert.alert("Error", "Failed to capture ticket image.");
+        } finally {
+          setDownloadingId(null);
+          setPrintingTicket(null);
+        }
+      }, 500);
+    } catch (err) {
+      console.error("Download error:", err);
+      setDownloadingId(null);
+      setPrintingTicket(null);
+      Alert.alert("Error", "Could not process ticket download.");
+    }
+  };
 
   const loadTickets = useCallback(async () => {
     if (!isSignedIn) return;
@@ -616,6 +714,8 @@ export default function TicketWallet() {
             onToggle={() =>
               setExpandedId(expandedId === item._id ? null : item._id)
             }
+            onDownload={() => handleDownload(item)}
+            isDownloading={downloadingId === item._id}
           />
         )}
         ListEmptyComponent={renderEmpty}
@@ -633,6 +733,14 @@ export default function TicketWallet() {
           />
         }
       />
+
+      {/* Hidden renderer for ticket capture */}
+      {printingTicket && (
+        <DownloadableTicket
+          ticket={printingTicket}
+          ticketRef={ticketRef}
+        />
+      )}
     </SafeAreaView>
   );
 }

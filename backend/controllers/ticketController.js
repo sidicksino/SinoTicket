@@ -170,7 +170,7 @@ const getMyTickets = async (req, res) => {
         if (!mongoUser) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
         const tickets = await Ticket.find({ attendee_id: mongoUser._id })
-            .populate('event_id', 'title date location venue_id imageUrl')
+            .populate('event_id', 'title date location venue_id imageUrl ticket_categories')
             .populate({
                 path: 'seat_id',
                 select: 'number section_id',
