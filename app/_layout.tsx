@@ -1,18 +1,18 @@
+import { initializeI18n } from "@/i18n";
 import { ClerkLoaded, ClerkProvider } from "@clerk/expo";
 import { Syne_700Bold } from "@expo-google-fonts/syne";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { LogBox } from "react-native";
 import "react-native-reanimated";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import "../global.css";
 import { tokenCache } from "../lib/auth";
-import * as WebBrowser from "expo-web-browser";
-import { ErrorBoundary } from "../components/ErrorBoundary";
-import { initializeI18n } from "@/i18n";
 
 export { ErrorBoundary };
 
@@ -39,7 +39,10 @@ function AppShell() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(root)" />
-        <Stack.Screen name="oauth-native-callback" options={{ presentation: 'transparentModal' }} />
+        <Stack.Screen
+          name="oauth-native-callback"
+          options={{ presentation: "transparentModal" }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />
