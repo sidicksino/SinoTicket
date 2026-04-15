@@ -2,9 +2,9 @@ import AppHeader from "@/components/AppHeader";
 import EmptyState from "@/components/EmptyState";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuthFetch } from "@/lib/fetch";
+import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-import { useAuth } from "@clerk/expo";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -15,8 +15,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Minimal QR modal
 const QRModal = React.memo(function QRModal({
@@ -51,7 +51,12 @@ const QRModal = React.memo(function QRModal({
           borderColor: colors.primary + "40",
         }}
       >
-        <QRCode value={qrUrl} size={140} color={colors.primary} backgroundColor="#fff" />
+        <QRCode
+          value={qrUrl}
+          size={140}
+          color={colors.primary}
+          backgroundColor="#fff"
+        />
       </View>
       <Text
         style={{
@@ -75,7 +80,11 @@ const QRModal = React.memo(function QRModal({
           borderRadius: 8,
         }}
       >
-        <Text style={{ color: colors.primary, fontWeight: "600", fontSize: 12 }}>Close</Text>
+        <Text
+          style={{ color: colors.primary, fontWeight: "600", fontSize: 12 }}
+        >
+          Close
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -97,11 +106,15 @@ const HistoryItem = React.memo(
 
     const event = typeof item.event_id === "object" ? item.event_id : null;
     const seat = typeof item.seat_id === "object" ? item.seat_id : null;
-    const section = seat && typeof seat.section_id === "object" ? seat.section_id : null;
+    const section =
+      seat && typeof seat.section_id === "object" ? seat.section_id : null;
 
     const eventTitle = event?.title || t("ticket.eventTba");
     const eventDate = event?.date
-      ? new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+      ? new Date(event.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        })
       : "N/A";
     const eventMonth = event?.date
       ? new Date(event.date).toLocaleDateString("en-US", { year: "2-digit" })
@@ -145,17 +158,32 @@ const HistoryItem = React.memo(
               justifyContent: "center",
             }}
           >
-            <Text style={{ color: statusColor, fontSize: 18, fontWeight: "700" }}>
+            <Text
+              style={{ color: statusColor, fontSize: 18, fontWeight: "700" }}
+            >
               {eventDate.split(" ")[0]}
             </Text>
-            <Text style={{ color: statusColor + "80", fontSize: 9, fontWeight: "600" }}>
+            <Text
+              style={{
+                color: statusColor + "80",
+                fontSize: 9,
+                fontWeight: "600",
+              }}
+            >
               {eventDate.split(" ")[1]}
             </Text>
           </View>
 
           {/* Content */}
           <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 4,
+              }}
+            >
               <Text
                 style={{
                   color: colors.text,
@@ -196,18 +224,36 @@ const HistoryItem = React.memo(
               }}
             >
               {section && (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <Ionicons name="layers-outline" size={12} color={colors.subtext} />
-                  <Text style={{ color: colors.subtext, fontSize: 11 }}>{section.name}</Text>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                >
+                  <Ionicons
+                    name="layers-outline"
+                    size={12}
+                    color={colors.subtext}
+                  />
+                  <Text style={{ color: colors.subtext, fontSize: 11 }}>
+                    {section.name}
+                  </Text>
                 </View>
               )}
               {seat && (
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <Ionicons name="aperture-outline" size={12} color={colors.subtext} />
-                  <Text style={{ color: colors.subtext, fontSize: 11 }}>#{seat.number}</Text>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                >
+                  <Ionicons
+                    name="aperture-outline"
+                    size={12}
+                    color={colors.subtext}
+                  />
+                  <Text style={{ color: colors.subtext, fontSize: 11 }}>
+                    #{seat.number}
+                  </Text>
                 </View>
               )}
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+              >
                 <Ionicons
                   name={isExpanded ? "chevron-up" : "qr-code-outline"}
                   size={12}
@@ -235,7 +281,7 @@ const HistoryItem = React.memo(
         )}
       </View>
     );
-  }
+  },
 );
 
 HistoryItem.displayName = "HistoryItem";
@@ -259,7 +305,8 @@ const History = () => {
       const result = await authFetch("/api/tickets/me");
       if (result?.success) {
         const pastTickets = (result.tickets || []).sort(
-          (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          (a: any, b: any) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         );
         setTickets(pastTickets);
       } else {
@@ -277,7 +324,7 @@ const History = () => {
   useFocusEffect(
     useCallback(() => {
       loadHistory();
-    }, [loadHistory])
+    }, [loadHistory]),
   );
 
   const onRefresh = () => {
@@ -334,8 +381,16 @@ const History = () => {
       )}
 
       <View style={{ paddingHorizontal: 24, paddingVertical: 12 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <Text style={{ color: colors.subtext, fontSize: 13, fontWeight: "500" }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text
+            style={{ color: colors.subtext, fontSize: 13, fontWeight: "500" }}
+          >
             {tickets.length} {tickets.length === 1 ? "ticket" : "tickets"}
           </Text>
           <View
@@ -349,8 +404,14 @@ const History = () => {
               borderRadius: 8,
             }}
           >
-            <Ionicons name="checkmark-circle" size={14} color={colors.primary} />
-            <Text style={{ color: colors.primary, fontSize: 12, fontWeight: "600" }}>
+            <Ionicons
+              name="checkmark-circle"
+              size={14}
+              color={colors.primary}
+            />
+            <Text
+              style={{ color: colors.primary, fontSize: 12, fontWeight: "600" }}
+            >
               All history
             </Text>
           </View>
@@ -364,7 +425,9 @@ const History = () => {
           <HistoryItem
             item={item}
             isExpanded={expandedId === item._id}
-            onToggle={() => setExpandedId(expandedId === item._id ? null : item._id)}
+            onToggle={() =>
+              setExpandedId(expandedId === item._id ? null : item._id)
+            }
           />
         )}
         ListEmptyComponent={renderEmpty}
