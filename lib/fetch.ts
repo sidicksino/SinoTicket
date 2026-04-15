@@ -142,6 +142,12 @@ export const useFetch = <T>(url: string, authenticated = false) => {
     }
 
     const controller = new AbortController();
+    
+    // Reset state on URL change to avoid showing stale data
+    setData(null);
+    setLoading(true);
+    setError(null);
+    
     load(controller.signal);
 
     return () => {

@@ -21,26 +21,23 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Event } from "@/types/type";
 import { useTranslation } from "react-i18next";
 
+const CATEGORIES = [
+  { id: "All", label: "home.categories.all" },
+  { id: "Music", label: "home.categories.music" },
+  { id: "Sports", label: "home.categories.sports" },
+  { id: "Cultural", label: "home.categories.cultural" },
+  { id: "Business", label: "home.categories.business" },
+  { id: "Fashion", label: "home.categories.fashion" },
+];
+
 export default function Home() {
   const { colors } = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
 
-  const CATEGORIES = useMemo(
-    () => [
-      t("home.categories.all"),
-      t("home.categories.music"),
-      t("home.categories.sports"),
-      t("home.categories.cultural"),
-      t("home.categories.business"),
-      t("home.categories.fashion"),
-    ],
-    [t]
-  );
-
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(t("home.categories.all"));
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -62,29 +59,8 @@ export default function Home() {
     setHasMore(true);
   }, [debouncedSearch, selectedCategory]);
 
-  useEffect(() => {
-    setSelectedCategory((prev) =>
-      CATEGORIES.includes(prev) ? prev : t("home.categories.all")
-    );
-  }, [CATEGORIES, t]);
-
-  const categoryToApiValue = useMemo(
-    () =>
-      new Map<string, string>([
-        [t("home.categories.all"), "All"],
-        [t("home.categories.music"), "Music"],
-        [t("home.categories.sports"), "Sports"],
-        [t("home.categories.cultural"), "Cultural"],
-        [t("home.categories.business"), "Business"],
-        [t("home.categories.fashion"), "Fashion"],
-      ]),
-    [t]
-  );
-
-  const selectedCategoryApi = categoryToApiValue.get(selectedCategory) ?? "All";
-
   const apiUrl = `/api/events?limit=20&page=${page}${debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
-    }${selectedCategoryApi !== "All" ? `&category=${selectedCategoryApi}` : ""}`;
+    }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
 
   const { data, loading, error, refetch } = useFetch<{ success: boolean; events: Event[] }>(apiUrl, false);
 
@@ -125,7 +101,7 @@ export default function Home() {
     }
   }, [loading]);
 
-  const isDefaultView = !debouncedSearch && selectedCategoryApi === "All";
+  const isDefaultView = !debouncedSearch && selectedCategory === "All";
   const featuredEvents = events.slice(0, 3);
   const listEvents = useMemo(
     () => (isDefaultView ? events.slice(3) : events),
@@ -238,11 +214,11 @@ export default function Home() {
             contentContainerStyle={{ paddingHorizontal: 24, marginTop: 16, gap: 10 }}
           >
             {CATEGORIES.map((cat) => {
-              const isActive = selectedCategory === cat;
+              const isActive = selectedCategory === cat.id;
               return (
                 <TouchableOpacity
-                  key={cat}
-                  onPress={() => setSelectedCategory(cat)}
+                  key={cat.id}
+                  onPress={() => setSelectedCategory(cat.id)}
                   style={{
                     paddingHorizontal: 18,
                     paddingVertical: 8,
@@ -259,7 +235,7 @@ export default function Home() {
                       fontWeight: isActive ? "700" : "500",
                     }}
                   >
-                    {cat}
+                    {t(cat.label)}
                   </Text>
                 </TouchableOpacity>
               );
@@ -392,7 +368,6 @@ export default function Home() {
       </View>
     ),
     [
-      CATEGORIES,
       colors,
       error,
       events,
