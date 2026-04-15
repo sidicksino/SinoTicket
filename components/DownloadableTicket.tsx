@@ -21,84 +21,94 @@ interface DownloadableTicketProps {
   ticketRef: any;
 }
 
-const CARD_WIDTH = 450;
-const CARD_HEIGHT = 180;
+const CARD_WIDTH = 650; // Wider for that professional "Figma" layout
+const CARD_HEIGHT = 260;
+const ACCENT = "#00D1FF"; // Electric Cyan
+const BLACK = "#0A0A0A";
+const SLATE = "#64748B";
 
 export function DownloadableTicket({ ticket, ticketRef }: DownloadableTicketProps) {
-  // Ensure the QR code points to the verification URL exactly like the modal
   const qrUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/tickets/verify/${ticket.ticketId}`;
 
   return (
     <View style={styles.container}>
       <ViewShot ref={ticketRef} options={{ format: "png", quality: 1 }}>
         <View style={styles.card}>
-          {/* Left Panel */}
-          <View style={styles.leftPanel}>
-            <View>
-              <Text style={styles.category}>{ticket.category?.toUpperCase() || "EVENT"}</Text>
-              <Text style={[styles.eventName, { fontFamily: "Syne_700Bold" }]} numberOfLines={2}>
-                {ticket.eventName?.toUpperCase()}
+
+          {/* LEFT: Branding & Image */}
+          <View style={styles.leftColumn}>
+            <View style={styles.imageContainer}>
+              <Image
+                source={{ uri: ticket.eventImage }}
+                style={styles.eventImage}
+                contentFit="cover"
+              />
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{ticket.category?.toUpperCase()}</Text>
+              </View>
+              <Text style={styles.eventName} numberOfLines={2}>
+                {ticket.eventName}
               </Text>
             </View>
+          </View>
 
-            <View style={styles.middleSection}>
-              <View style={styles.dateBox}>
-                <Text style={styles.dateText}>{ticket.date?.toUpperCase()}</Text>
+          {/* MIDDLE: Organized Details Grid */}
+          <View style={styles.midColumn}>
+            <View style={styles.infoGrid}>
+
+              {/* Row 1: Date & Time */}
+              <View style={styles.gridFull}>
+                <Text style={styles.label}>DATE & TIME</Text>
+                <Text style={styles.valueBold}>{ticket.date.toUpperCase()}</Text>
               </View>
 
-              <View style={styles.infoRow}>
-                <View style={styles.infoBox}>
-                  <Text style={styles.infoText}>PRICE: {ticket.price}</Text>
-                </View>
-                <View style={[styles.infoBox, { flex: 1 }]}>
-                  <Text style={styles.infoText} numberOfLines={1}>
-                    {ticket.venue?.toUpperCase() || "VARIOUS LOCATIONS"}
-                  </Text>
+              {/* Row 2: Section & Seat (The center focus) */}
+              <View style={styles.gridHalf}>
+                <Text style={styles.label}>SECTION</Text>
+                <Text style={styles.valueHighlight}>{ticket.section}</Text>
+              </View>
+              <View style={styles.gridHalf}>
+                <Text style={styles.label}>SEAT</Text>
+                <Text style={styles.valueHighlight}>{ticket.seat}</Text>
+              </View>
+
+              {/* Row 3: Location */}
+              <View style={styles.gridFull}>
+                <Text style={styles.label}>LOCATION</Text>
+                <Text style={styles.value}>{ticket.venue}</Text>
+              </View>
+
+              {/* Row 4: Price */}
+              <View style={styles.gridFull}>
+                <View style={styles.priceTag}>
+                  <Text style={styles.labelInline}>ADMISSION:</Text>
+                  <Text style={styles.priceText}>{ticket.price}</Text>
                 </View>
               </View>
             </View>
           </View>
 
-          {/* Center Image */}
-          <Image
-            source={{ uri: ticket.eventImage }}
-            style={styles.eventImage}
-            contentFit="cover"
-          />
-
-          {/* Dashed Separator */}
-          <View style={styles.dashedSeparator}>
+          {/* DIVIDER */}
+          <View style={styles.dividerWrapper}>
             <View style={styles.notchTop} />
             <View style={styles.dashedLine} />
             <View style={styles.notchBottom} />
           </View>
 
-          {/* Right Panel (Stub) */}
-          <View style={styles.rightPanel}>
-            <View style={styles.qrWrapper}>
+          {/* RIGHT: The Stub / QR */}
+          <View style={styles.rightColumn}>
+            <View style={styles.qrBg}>
               <QRCode
                 value={qrUrl}
-                size={75}
-                color="#000"
-                backgroundColor="#FFF"
+                size={100}
+                color={BLACK}
+                backgroundColor="transparent"
               />
             </View>
-
-            <Text style={styles.ticketId} numberOfLines={1}>
-              {ticket.ticketId.slice(0, 12)}...
-            </Text>
-
-            <View style={styles.seatRow}>
-              <View>
-                <Text style={styles.seatLabel}>SECTION</Text>
-                <Text style={styles.seatValue}>{ticket.section}</Text>
-              </View>
-              <View style={{ alignItems: "flex-end" }}>
-                <Text style={styles.seatLabel}>SEAT</Text>
-                <Text style={styles.seatValue}>#{ticket.seat}</Text>
-              </View>
-            </View>
+            <Text style={styles.scanText}>SCAN FOR ENTRY</Text>
+            <Text style={styles.ticketId} numberOfLines={1}>{ticket.ticketId.toUpperCase()}</Text>
           </View>
+
         </View>
       </ViewShot>
     </View>
@@ -107,142 +117,174 @@ export function DownloadableTicket({ ticket, ticketRef }: DownloadableTicketProp
 
 const styles = StyleSheet.create({
   container: {
-    // Hidden off-screen but rendered for ViewShot to capture
-    position: 'absolute',
-    left: -2000,
-    top: 0,
-    width: CARD_WIDTH,
+    position: "absolute",
+    left: -5000,
   },
   card: {
-    flexDirection: "row",
+    width: CARD_WIDTH,
     height: CARD_HEIGHT,
     backgroundColor: "#FFFFFF",
-    width: CARD_WIDTH,
-    overflow: "hidden",
-    borderRadius: 4,
-  },
-  leftPanel: {
-    width: 170,
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    justifyContent: "space-between",
-    backgroundColor: "#FFFFFF",
-  },
-  category: {
-    fontSize: 8,
-    fontWeight: "700",
-    letterSpacing: 1.5,
-    color: "#666",
-    marginBottom: 2,
-  },
-  eventName: {
-    fontSize: 18,
-    fontWeight: "900",
-    color: "#000",
-    lineHeight: 20,
-  },
-  middleSection: {
-    gap: 8,
-  },
-  dateBox: {
-    borderWidth: 1.5,
-    borderColor: "#000",
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 3,
-    alignSelf: "flex-start",
-  },
-  dateText: {
-    fontSize: 8,
-    fontWeight: "800",
-    color: "#000",
-  },
-  infoRow: {
+    borderRadius: 24,
     flexDirection: "row",
-    gap: 4,
-  },
-  infoBox: {
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#000",
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    justifyContent: "center",
+    borderColor: "#E2E8F0",
   },
-  infoText: {
-    fontSize: 7,
-    fontWeight: "700",
-    color: "#000",
-    textAlign: "center",
+  // Left Column
+  leftColumn: {
+    width: 250,
+    padding: 8,
+    backgroundColor: "#F8FAFC",
+    borderRightWidth: 1,
+    borderRightColor: "#F1F5F9",
+  },
+  imageContainer: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 16,
+    overflow: "hidden",
+    marginBottom: 16,
   },
   eventImage: {
     flex: 1,
-    height: CARD_HEIGHT,
   },
-  dashedSeparator: {
-    width: 20,
-    height: CARD_HEIGHT,
+  badge: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  badgeText: {
+    color: ACCENT,
+    fontSize: 9,
+    fontWeight: "800",
+  },
+  eventName: {
+    backgroundColor: "linear-gradient(to bottom, rgba(21, 20, 20, 0.5), rgba(21, 20, 20, 0.2))",
+    position: "absolute",
+    padding: 10,
+    bottom: 0,
+    fontSize: 20,
+    fontWeight: "900",
+    color: "#F8FAFC",
+    lineHeight: 24,
+    letterSpacing: -0.5,
+  },
+  // Middle Column
+  midColumn: {
+    flex: 1,
+    padding: 24,
+    justifyContent: "center",
+  },
+  infoGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: 16,
+  },
+  gridFull: {
+    width: "100%",
+  },
+  gridHalf: {
+    width: "50%",
+  },
+  label: {
+    fontSize: 10,
+    color: SLATE,
+    fontWeight: "700",
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  value: {
+    fontSize: 12,
+    color: "#334155",
+    fontWeight: "600",
+  },
+  valueBold: {
+    fontSize: 12,
+    color: BLACK,
+    fontWeight: "800",
+  },
+  valueHighlight: {
+    fontSize: 14,
+    color: BLACK,
+    fontWeight: "900",
+  },
+  priceTag: {
+    flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    justifyContent: 'space-between',
-    paddingVertical: 0,
+    marginTop: 6,
+  },
+  labelInline: {
+    fontSize: 10,
+    color: SLATE,
+    fontWeight: "700",
+    marginRight: 6,
+  },
+  priceText: {
+    fontSize: 16,
+    color: ACCENT,
+    fontWeight: "900",
+  },
+  // Divider
+  dividerWrapper: {
+    width: 40,
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   dashedLine: {
     flex: 1,
     width: 1,
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
     borderStyle: "dashed",
-    borderWidth: 0.5,
-    borderColor: "#DDD",
-    marginVertical: 4,
+    marginVertical: 15,
   },
   notchTop: {
-    width: 20,
-    height: 10,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-    backgroundColor: "#F5F5F5",
+    width: 40,
+    height: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    backgroundColor: "#F1F5F9", // Match app background
     marginTop: -1,
   },
   notchBottom: {
-    width: 20,
-    height: 10,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    backgroundColor: "#F5F5F5",
+    width: 40,
+    height: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    backgroundColor: "#F1F5F9", // Match app background
     marginBottom: -1,
   },
-  rightPanel: {
-    width: 130,
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    backgroundColor: "#FFFFFF",
+  // Right Column (Stub)
+  rightColumn: {
+    width: 150,
+    padding: 12,
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
   },
-  qrWrapper: {
-    padding: 2,
-    backgroundColor: '#FFF',
+  qrBg: {
+    padding: 12,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    marginRight: 10,
+  },
+  scanText: {
+    fontSize: 8,
+    fontWeight: "700",
+    color: SLATE,
+    marginTop: 12,
+    letterSpacing: 1,
   },
   ticketId: {
-    fontSize: 7,
-    color: "#999",
+    fontSize: 10,
     fontFamily: "monospace",
-    marginTop: 2,
-  },
-  seatRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-  },
-  seatLabel: {
-    fontSize: 7,
-    fontWeight: "700",
-    color: "#000",
-    letterSpacing: 0.5,
-  },
-  seatValue: {
-    fontSize: 12,
-    fontWeight: "900",
-    color: "#FF6B35",
+    color: "#94A3B8",
+    marginTop: 4,
   },
 });

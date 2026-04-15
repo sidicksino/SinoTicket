@@ -231,14 +231,13 @@ function TicketCard({
                   {eventTitle}
                 </Text>
                 <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+                  style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}
                 >
-                  <Ionicons name="ticket-outline" size={14} color="#fff" />
+                  <Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.7)" />
                   <Text
-                    style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}
+                    style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: "500" }}
                   >
-                    {section?.name || t("ticket.standard")} • Seat #
-                    {seat?.number || "0"}
+                    {event?.location || (event?.venue_id && typeof event.venue_id === 'object' ? (event.venue_id as any).name : "Sino Ticket Venue")}
                   </Text>
                 </View>
               </View>
@@ -522,13 +521,12 @@ export default function TicketWallet() {
         category: event.category || "General",
         eventName: event.title || "Sino Ticket Event",
         date: event.date
-          ? new Date(event.date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })
+          ? (() => {
+            const d = new Date(event.date);
+            const datePart = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+            const timePart = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+            return `${datePart} ${timePart}`;
+          })()
           : "TBA",
         price: (() => {
           const catId = item.category_id;
@@ -538,7 +536,7 @@ export default function TicketWallet() {
           );
           return matched ? `${matched.price} XAF` : (event.price ? `$${event.price}` : "PAID");
         })(),
-        venue: event.location || (event.venue_id && typeof event.venue_id === 'object' ? event.venue_id.name : "TBA"),
+        venue: event.location || (event.venue_id && typeof event.venue_id === 'object' ? (event.venue_id as any).name : "Sino Ticket Venue"),
         section: section.name || "N/A",
         seat: seat.number || "0",
         ticketId: item.qr_code || "SINOTICKET",
