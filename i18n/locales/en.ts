@@ -33,6 +33,7 @@ const en = {
       retryConnection: "Retry Connection",
       venueTba: "Venue TBA",
       tba: "TBA",
+      offlineMode: "Viewing Offline Content",
       categories: {
         all: "All",
         music: "Music",
@@ -214,6 +215,7 @@ const en = {
       noTicketsTitle: "No tickets found",
       noTicketsMessage:
         "Your booked tickets will appear here for scanning at the venue.",
+      offlineMode: "Viewing Offline Tickets",
       eventTba: "Event TBA",
       tba: "TBA",
       active: "ACTIVE",

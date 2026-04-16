@@ -2,7 +2,7 @@ import AppHeader from "@/components/AppHeader";
 import { DownloadableTicket, TicketData } from "@/components/DownloadableTicket";
 import EmptyState from "@/components/EmptyState";
 import { useTheme } from "@/context/ThemeContext";
-import { useAuthFetch } from "@/lib/fetch";
+import { useAuthFetch, useFetch } from "@/lib/fetch";
 import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import * as MediaLibrary from "expo-media-library";
@@ -499,11 +499,20 @@ export default function TicketWallet() {
   const { authFetch } = useAuthFetch();
   const { isSignedIn, isLoaded } = useAuth();
 
-  const [tickets, setTickets] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { 
+    data, 
+    loading: fetchLoading, 
+    error: fetchError, 
+    isOffline, 
+    refetch 
+  } = useFetch<any>("/api/tickets/me", { 
+    authenticated: true, 
+    cacheKey: "active_tickets" 
+  });
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const ticketRef = useRef<any>(null);
   const [printingTicket, setPrintingTicket] = useState<TicketData | null>(null);
@@ -585,40 +594,33 @@ export default function TicketWallet() {
     }
   };
 
-  const loadTickets = useCallback(async () => {
-    if (!isSignedIn) return;
-    try {
-      const result = await authFetch("/api/tickets/me");
-      if (result?.success) {
-        // Filter to show only Active tickets and exclude past/used tickets
-        const activeTickets = result.tickets.filter((ticket: any) => {
-          // Must be Active status
-          if (ticket.status !== "Active") return false;
+  // Derive active tickets from fetch data
+  const tickets = React.useMemo(() => {
+    if (!data?.success || !Array.isArray(data.tickets)) return [];
 
-          // Must be a future event (if event date exists)
-          const event =
-            typeof ticket.event_id === "object" ? ticket.event_id : null;
-          if (event?.date) {
-            const eventDate = new Date(event.date);
-            const now = new Date();
-            if (eventDate < now) return false; // Exclude past events
-          }
+    return data.tickets.filter((ticket: any) => {
+      // Must be Active status
+      if (ticket.status !== "Active") return false;
 
-          return true;
-        });
-        setTickets(activeTickets);
+      // Must be a future event (if event date exists)
+      const event = typeof ticket.event_id === "object" ? ticket.event_id : null;
+      if (event?.date) {
+        const eventDate = new Date(event.date);
+        const now = new Date();
+        // Allow same day event
+        now.setHours(0, 0, 0, 0);
+        eventDate.setHours(23, 59, 59, 999);
+        if (eventDate < now) return false;
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [authFetch, isSignedIn]);
+      return true;
+    });
+  }, [data]);
 
-  useEffect(() => {
-    loadTickets();
-  }, [loadTickets]);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   const renderEmpty = () => (
     <EmptyState
@@ -628,7 +630,7 @@ export default function TicketWallet() {
     />
   );
 
-  if (!isLoaded || loading) {
+  if (!isLoaded || (fetchLoading && !data)) {
     return (
       <SafeAreaView
         style={{
@@ -648,6 +650,26 @@ export default function TicketWallet() {
         subtitle={t("ticket.yourTickets")}
         displayName={t("ticket.wallet")}
       />
+
+      {/* Offline Banner */}
+      {isOffline && (
+        <View
+          style={{
+            backgroundColor: "#F59E0B",
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
+        >
+          <Ionicons name="cloud-offline-outline" size={16} color="#fff" />
+          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>
+            Viewing Offline Tickets
+          </Text>
+        </View>
+      )}
 
       {/* Premium header stats */}
       <View
@@ -723,10 +745,7 @@ export default function TicketWallet() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              loadTickets();
-            }}
+            onRefresh={onRefresh}
             tintColor={colors.primary}
           />
         }

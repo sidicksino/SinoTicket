@@ -33,6 +33,7 @@ const fr = {
       retryConnection: "Reessayer",
       venueTba: "Lieu a confirmer",
       tba: "A confirmer",
+      offlineMode: "Contenu hors ligne",
       categories: {
         all: "Tous",
         music: "Musique",
@@ -219,6 +220,7 @@ const fr = {
         "Vos billets reserves apparaitront ici pour le scan sur place.",
       eventTba: "Evenement a confirmer",
       tba: "A confirmer",
+      offlineMode: "Billets hors ligne",
       active: "ACTIF",
       section: "Section",
       standard: "Standard",

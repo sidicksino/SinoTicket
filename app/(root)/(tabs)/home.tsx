@@ -62,7 +62,10 @@ export default function Home() {
   const apiUrl = `/api/events?limit=20&page=${page}${debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
     }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
 
-  const { data, loading, error, refetch } = useFetch<{ success: boolean; events: Event[] }>(apiUrl, false);
+  const { data, loading, error, isOffline, refetch } = useFetch<{ success: boolean; events: Event[] }>(apiUrl, {
+    authenticated: false,
+    cacheKey: page === 1 ? "home_events" : undefined
+  });
 
   useEffect(() => {
     if (data?.success && Array.isArray(data.events)) {
@@ -387,6 +390,26 @@ export default function Home() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       {/* ── HEADER ── */}
       <AppHeader />
+
+      {/* Offline Banner */}
+      {isOffline && (
+        <View
+          style={{
+            backgroundColor: "#F59E0B",
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
+        >
+          <Ionicons name="cloud-offline-outline" size={16} color="#fff" />
+          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>
+            Viewing Offline Content
+          </Text>
+        </View>
+      )}
       <FlatList
         data={!loading && !error ? listEvents : []}
         keyExtractor={(item) => item._id}

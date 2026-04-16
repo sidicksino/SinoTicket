@@ -1,7 +1,11 @@
 import { useAuth } from "@clerk/expo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const baseUrl = process.env.EXPO_PUBLIC_API_URL;
+
+// Cache utility helpers
+const CACHE_PREFIX = "sinoticket_cache_";
 
 export const fetchAPI = async (url: string, options?: RequestInit) => {
   const fullUrl = `${baseUrl}${url}`;
@@ -75,17 +79,33 @@ export const useAuthFetch = () => {
   return { authFetch };
 };
 
-// Generic hook to fetch data from any API endpoint
-export const useFetch = <T>(url: string, authenticated = false) => {
+interface FetchOptions {
+  authenticated?: boolean;
+  cacheKey?: string;
+  autoFetch?: boolean;
+}
+
+// Generic hook to fetch data from any API endpoint with optional caching
+export const useFetch = <T>(url: string, options: FetchOptions | boolean = false) => {
   const { getToken, isLoaded } = useAuth();
 
+  // Normalize options
+  const isAuth = typeof options === "boolean" ? options : !!options.authenticated;
+  const cacheKey = typeof options === "object" ? options.cacheKey : undefined;
+  const autoFetch = typeof options === "object" ? (options.autoFetch ?? true) : true;
+
   const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(autoFetch);
   const [error, setError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+  const [isRevalidating, setIsRevalidating] = useState(false);
+
+  // Persistence Key
+  const storageKey = cacheKey ? `${CACHE_PREFIX}${cacheKey}` : null;
 
   const load = useCallback(async (signal?: AbortSignal) => {
     // If auth is required but Clerk hasn't loaded yet, don't fetch yet
-    if (authenticated && !isLoaded) {
+    if (isAuth && !isLoaded) {
       return;
     }
 
@@ -95,68 +115,99 @@ export const useFetch = <T>(url: string, authenticated = false) => {
     }
 
     try {
-      setLoading(true);
+      if (!data) setLoading(true); // Only show full loading if we have no data at all
+      setIsRevalidating(true);
       setError(null);
 
+      // 1. Try to load from cache first for instant UI (if we don't have data yet)
+      if (storageKey && !data) {
+        const cached = await AsyncStorage.getItem(storageKey);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            setData(parsed);
+          } catch (e) {
+            console.warn("[useFetch] Cache parse error:", e);
+          }
+        }
+      }
+
+      // 2. Network Fetch
       let headers: Record<string, string> = {};
 
-      if (authenticated) {
+      if (isAuth) {
         const token = await getToken();
-
         if (!token) {
           throw new Error("No auth token found");
         }
-
         headers.Authorization = `Bearer ${token}`;
       }
 
       const result = await fetchAPI(url, { headers, signal });
 
-      // 🔥 SAFE DATA
       if (!result) {
         throw new Error("Empty response from server");
       }
 
+      // 3. Success -> Update state and persist
       setData(result);
+      setIsOffline(false);
+      setError(null);
+
+      if (storageKey) {
+        AsyncStorage.setItem(storageKey, JSON.stringify(result)).catch(e => 
+          console.error("[useFetch] Cache save error:", e)
+        );
+      }
     } catch (err: any) {
       if (err.name === "AbortError" || err.message?.includes("aborted")) {
-        console.log(`[fetchAPI] Request aborted: ${url}`);
         return;
       }
+      
       console.log("USEFETCH ERROR:", err.message);
-      setError(err.message || "Something went wrong");
+      
+      // 4. On Error -> Use cached data if available, otherwise show error
+      if (!data) {
+        setError(err.message || "Something went wrong");
+      } else {
+        // We have cached data but network failed -> Show offline banner
+        setIsOffline(true);
+      }
     } finally {
       if (!signal?.aborted) {
         setLoading(false);
+        setIsRevalidating(false);
       }
     }
-  }, [url, authenticated, getToken, isLoaded]);
+  }, [url, isAuth, getToken, isLoaded, storageKey, data]);
 
-  // Keep a ref to the latest load function so refetch is always stable
   const loadRef = useRef(load);
   loadRef.current = load;
 
   useEffect(() => {
-    if (authenticated && !isLoaded) {
-      return; // wait until clerk is ready
+    if (autoFetch) {
+      if (isAuth && !isLoaded) {
+        return;
+      }
+
+      const controller = new AbortController();
+      
+      // Reset only if we don't have a cacheKey to avoid flickering
+      if (!cacheKey) {
+        setData(null);
+        setLoading(true);
+        setError(null);
+      }
+      
+      load(controller.signal);
+
+      return () => {
+        controller.abort();
+      };
     }
+  }, [url, isAuth, isLoaded, cacheKey, autoFetch]); 
 
-    const controller = new AbortController();
-    
-    // Reset state on URL change to avoid showing stale data
-    setData(null);
-    setLoading(true);
-    setError(null);
-    
-    load(controller.signal);
-
-    return () => {
-      controller.abort();
-    };
-  }, [url, authenticated, isLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Stable refetch function that never changes identity
   const refetch = useCallback(() => loadRef.current(), []);
 
-  return { data, loading, error, refetch };
+  return { data, loading, error, isOffline, isRevalidating, refetch };
 };
