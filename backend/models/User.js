@@ -10,6 +10,7 @@ const UserSchema = new Schema(
     phone_number: { type: String, default: null },
     preferences: { type: Schema.Types.Mixed, default: {} },
     is_verified: { type: Boolean, default: false },
+    push_tokens: [{ type: String }],
     last_login: { type: Date },
   },
   { timestamps: true }

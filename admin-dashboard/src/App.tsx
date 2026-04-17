@@ -146,6 +146,7 @@ function ProtectedAdmin({ children }: ProtectedAdminProps) {
 }
 
 function App() {
+  const { t } = useTranslation();
   return (
     <BrowserRouter>
       <SignedOut>

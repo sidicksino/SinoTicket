@@ -9,7 +9,8 @@ import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { LogBox } from "react-native";
 import "react-native-reanimated";
-import { ErrorBoundary } from "../components/ErrorBoundary";
+import GlobalErrorBoundary, { ErrorBoundary } from "../components/ErrorBoundary";
+import { usePushNotifications } from "../hooks/usePushNotifications";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import "../global.css";
 import { tokenCache } from "../lib/auth";
@@ -33,6 +34,9 @@ LogBox.ignoreLogs(["Clerk:"]);
 
 function AppShell() {
   const { isDark } = useTheme();
+  
+  // Initialize Push Notifications
+  usePushNotifications();
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
@@ -88,7 +92,9 @@ export default function RootLayout() {
     <ThemeProvider>
       <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
         <ClerkLoaded>
-          <AppShell />
+          <GlobalErrorBoundary>
+            <AppShell />
+          </GlobalErrorBoundary>
         </ClerkLoaded>
       </ClerkProvider>
     </ThemeProvider>

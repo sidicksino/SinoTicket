@@ -8,6 +8,8 @@ const Ticket = require('../models/Ticket');
 const Payment = require('../models/Payment');
 const Notification = require('../models/Notification');
 
+const { sendPushNotification } = require('../utils/pushNotification');
+
 // Helper to get mongo user
 const getMongoUser = async (clerkId) => {
     if (!clerkId) return null;
@@ -143,6 +145,18 @@ const checkoutReservation = async (req, res) => {
             link: '/(root)/(tabs)/ticket'
         });
         await notification.save({ session });
+        
+        // 7. Background: Send actual Push Notification via Expo
+        if (mongoUser.push_tokens && mongoUser.push_tokens.length > 0) {
+            // We do this after save but don't strictly wait for it to block the user response, 
+            // though we await it here for simplicity before commit.
+            sendPushNotification(
+                mongoUser.push_tokens,
+                'Booking Confirmed!',
+                `Your ticket for "${event?.title || 'the event'}" is ready.`,
+                { ticketId: savedTicket._id, screen: 'ticket' }
+            ).catch(err => console.error('[Push] Fail:', err));
+        }
 
         await session.commitTransaction();
         session.endSession();

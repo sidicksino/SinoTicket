@@ -155,7 +155,7 @@ export const useFetch = <T>(url: string, options: FetchOptions | boolean = false
       setError(null);
 
       if (storageKey) {
-        AsyncStorage.setItem(storageKey, JSON.stringify(result)).catch(e => 
+        AsyncStorage.setItem(storageKey, JSON.stringify(result)).catch(e =>
           console.error("[useFetch] Cache save error:", e)
         );
       }
@@ -163,9 +163,9 @@ export const useFetch = <T>(url: string, options: FetchOptions | boolean = false
       if (err.name === "AbortError" || err.message?.includes("aborted")) {
         return;
       }
-      
+
       console.log("USEFETCH ERROR:", err.message);
-      
+
       // 4. On Error -> Use cached data if available, otherwise show error
       if (!data) {
         setError(err.message || "Something went wrong");
@@ -191,21 +191,21 @@ export const useFetch = <T>(url: string, options: FetchOptions | boolean = false
       }
 
       const controller = new AbortController();
-      
+
       // Reset only if we don't have a cacheKey to avoid flickering
       if (!cacheKey) {
         setData(null);
         setLoading(true);
         setError(null);
       }
-      
+
       load(controller.signal);
 
       return () => {
         controller.abort();
       };
     }
-  }, [url, isAuth, isLoaded, cacheKey, autoFetch]); 
+  }, [url, isAuth, isLoaded, cacheKey, autoFetch, load]);
 
   const refetch = useCallback(() => loadRef.current(), []);
 

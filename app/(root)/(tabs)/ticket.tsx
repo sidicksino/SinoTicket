@@ -2,12 +2,12 @@ import AppHeader from "@/components/AppHeader";
 import { DownloadableTicket, TicketData } from "@/components/DownloadableTicket";
 import EmptyState from "@/components/EmptyState";
 import { useTheme } from "@/context/ThemeContext";
-import { useAuthFetch, useFetch } from "@/lib/fetch";
+import { useFetch } from "@/lib/fetch";
 import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import * as MediaLibrary from "expo-media-library";
 import * as Sharing from "expo-sharing";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
@@ -496,18 +496,16 @@ function TicketCard({
 export default function TicketWallet() {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const { authFetch } = useAuthFetch();
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isLoaded } = useAuth();
 
-  const { 
-    data, 
-    loading: fetchLoading, 
-    error: fetchError, 
-    isOffline, 
-    refetch 
-  } = useFetch<any>("/api/tickets/me", { 
-    authenticated: true, 
-    cacheKey: "active_tickets" 
+  const {
+    data,
+    loading: fetchLoading,
+    isOffline,
+    refetch
+  } = useFetch<any>("/api/tickets/me", {
+    authenticated: true,
+    cacheKey: "active_tickets"
   });
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -540,7 +538,7 @@ export default function TicketWallet() {
         price: (() => {
           const catId = item.category_id;
           const categories = event.ticket_categories || [];
-          const matched = categories.find((cat: any) => 
+          const matched = categories.find((cat: any) =>
             cat._id === catId || cat.category_id === catId || cat.id === catId
           );
           return matched ? `${matched.price} XAF` : (event.price ? `$${event.price}` : "PAID");
