@@ -1,6 +1,8 @@
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+
 const options = {
   definition: {
     openapi: '3.0.0',
@@ -11,8 +13,8 @@ const options = {
     },
     servers: [
       {
-        url: `${process.env.EXPO_PUBLIC_API_URL}`,
-        description: 'Development server',
+        url: apiBaseUrl,
+        description: 'API server',
       },
     ],
     components: {

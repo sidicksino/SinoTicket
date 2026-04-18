@@ -9,10 +9,12 @@ import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { LogBox, Text, View } from "react-native";
 import "react-native-reanimated";
-import GlobalErrorBoundary, { ErrorBoundary } from "../components/ErrorBoundary";
-import { usePushNotifications } from "../hooks/usePushNotifications";
+import GlobalErrorBoundary, {
+  ErrorBoundary,
+} from "../components/ErrorBoundary";
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import "../global.css";
+import { usePushNotifications } from "../hooks/usePushNotifications";
 import { tokenCache } from "../lib/auth";
 
 export { ErrorBoundary };
@@ -28,7 +30,7 @@ LogBox.ignoreLogs(["Clerk:"]);
 
 function AppShell() {
   const { isDark } = useTheme();
-  
+
   // Initialize Push Notifications
   usePushNotifications();
   return (
@@ -120,15 +122,26 @@ export default function RootLayout() {
       >
         <Text
           selectable
-          style={{ color: "#ffffff", fontSize: 18, fontFamily: "Syne_700Bold", textAlign: "center" }}
+          style={{
+            color: "#ffffff",
+            fontSize: 18,
+            fontFamily: "Syne_700Bold",
+            textAlign: "center",
+          }}
         >
           Missing Clerk Publishable Key
         </Text>
         <Text
           selectable
-          style={{ color: "#cbd5e1", marginTop: 8, textAlign: "center", lineHeight: 22 }}
+          style={{
+            color: "#cbd5e1",
+            marginTop: 8,
+            textAlign: "center",
+            lineHeight: 22,
+          }}
         >
-          Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY for your EAS preview environment and rebuild.
+          Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY for your EAS preview environment
+          and rebuild.
         </Text>
       </View>
     );

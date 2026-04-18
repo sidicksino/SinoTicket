@@ -68,6 +68,11 @@ app.get('/', (req, res) => {
   res.send('SinoTicket Backend is running...');
 });
 
+// Health check route for Render
+app.get('/healthz', (req, res) => {
+  res.status(200).json({ success: true, status: 'ok' });
+});
+
 // Global Error Handler (Formats Clerk and standard errors as JSON)
 app.use((err, req, res, next) => {
   console.error(err.stack);
