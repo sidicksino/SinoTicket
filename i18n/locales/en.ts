@@ -22,7 +22,7 @@ const en = {
       welcomeBack: "Welcome back,",
     },
     home: {
-      searchPlaceholder: "Search events, artists...",
+      searchPlaceholder: "Search events...",
       upcomingEvents: "Upcoming Events",
       results: "Results",
       moreEvents: "More Events",

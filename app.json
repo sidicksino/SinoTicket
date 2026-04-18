@@ -45,7 +45,14 @@
       "expo-secure-store",
       "expo-web-browser",
       "expo-notifications",
-      "expo-media-library"
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow SinoTicket to access your photos.",
+          "savePhotosPermission": "Allow SinoTicket to save photos to your library.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -60,6 +67,10 @@
     "owner": "sidick102",
     "runtimeVersion": {
       "policy": "appVersion"
+    },
+    "locales": {
+      "en": "./languages/en.json",
+      "fr": "./languages/fr.json"
     },
     "updates": {
       "url": "https://u.expo.dev/0a749316-1b99-4850-9fe5-b20eadedf7fd"

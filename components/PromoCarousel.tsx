@@ -195,11 +195,11 @@ export default function PromoCarousel() {
 const styles = StyleSheet.create({
   container: {
     marginTop: 20,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   card: {
     width: "100%",
-    height: 220,
+    height: 190,
     borderRadius: 24, // Matches typical modern app rounded card aesthetics
     overflow: "hidden",
     // Soft shadow for depth
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     position: "absolute",
-    bottom: 24,
+    bottom: 20,
     left: 20,
     right: 20,
   },
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 18,
+    marginTop: 8,
   },
   dot: {
     marginHorizontal: 5,

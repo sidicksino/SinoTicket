@@ -18,8 +18,8 @@ Notifications.setNotificationHandler({
 export const usePushNotifications = () => {
   const { authFetch } = useAuthFetch();
   const { isLoaded, isSignedIn } = useAuth();
-  const notificationListener = useRef<any>();
-  const responseListener = useRef<any>();
+  const notificationListener = useRef<Notifications.Subscription | null>(null);
+  const responseListener = useRef<Notifications.Subscription | null>(null);
 
   const registerForPushNotificationsAsync = async () => {
     let token;
@@ -94,7 +94,8 @@ export const usePushNotifications = () => {
     notificationListener.current = Notifications.addNotificationReceivedListener(
       (notification) => {
         // Handle foreground notification (e.g., show a custom toast or alert)
-        console.log("Notification received in foreground:", notification);
+        // Log only the data payload to avoid deprecated property access warnings
+        console.log("Notification received in foreground:", notification.request.content.data);
       }
     );
 
@@ -114,5 +115,5 @@ export const usePushNotifications = () => {
         responseListener.current.remove();
       }
     };
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded, isSignedIn, authFetch]);
 };

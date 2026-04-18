@@ -4,10 +4,12 @@ import PromoCarousel from "@/components/PromoCarousel";
 import Skeleton from "@/components/Skeleton";
 import { useTheme } from "@/context/ThemeContext";
 import { useFetch } from "@/lib/fetch";
+import { Event } from "@/types/type";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   FlatList,
@@ -18,8 +20,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Event } from "@/types/type";
-import { useTranslation } from "react-i18next";
 
 const CATEGORIES = [
   { id: "All", label: "home.categories.all" },
@@ -182,19 +182,29 @@ export default function Home() {
             alignItems: "center",
             backgroundColor: colors.inputBg,
             paddingHorizontal: 16,
-            paddingVertical: 12,
-            borderRadius: 20,
+            height: 48, // Fixed height for consistency
+            borderRadius: 15,
             borderWidth: 1,
             borderColor: colors.border,
           }}
         >
-            <Ionicons name="search" size={20} color={colors.subtext} />
-            <TextInput
-              placeholder={t("home.searchPlaceholder")}
-              placeholderTextColor={colors.subtext}
-              value={searchQuery}
+          <Ionicons name="search" size={20} color={colors.subtext} />
+          <TextInput
+            placeholder={t("home.searchPlaceholder")}
+            placeholderTextColor={colors.subtext}
+            value={searchQuery}
             onChangeText={setSearchQuery}
-            style={{ flex: 1, marginLeft: 10, fontSize: 15, color: colors.text }}
+            multiline={false}
+            numberOfLines={1}
+            style={{
+              flex: 1,
+              marginLeft: 10,
+              fontSize: 15,
+              color: colors.text,
+              paddingVertical: 0, // Fix for Android extra height
+              height: "100%",
+              textAlignVertical: "center",
+            }}
           />
           {searchQuery !== "" ? (
             <TouchableOpacity onPress={() => setSearchQuery("")} style={{ marginRight: 10 }}>
@@ -203,7 +213,15 @@ export default function Home() {
           ) : null}
           <TouchableOpacity
             onPress={() => setShowFilters(!showFilters)}
-            style={{ backgroundColor: colors.primary, padding: 6, borderRadius: 10 }}
+            style={{
+              backgroundColor: colors.primary,
+              padding: 6,
+              borderRadius: 10,
+              height: 32,
+              width: 32,
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
           >
             <Ionicons name="options-outline" size={18} color="white" />
           </TouchableOpacity>
@@ -292,15 +310,15 @@ export default function Home() {
                   activeOpacity={0.9}
                   style={{
                     marginRight: 16,
-                    width: 260,
-                    height: 320,
+                    width: 240,
+                    height: 270,
                     borderRadius: 28,
                     overflow: "hidden",
                     backgroundColor: colors.black,
                   }}
                 >
                   <Image
-                    source={{ uri: item.imageUrl || "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800" }}
+                    source={{ uri: item.imageUrl }}
                     style={{ width: "100%", height: "100%", position: "absolute" }}
                     contentFit="cover"
                     transition={200}
@@ -365,7 +383,7 @@ export default function Home() {
                   paddingHorizontal: 24,
                 }}
               >
-                 {t("home.moreEvents")}
+                {t("home.moreEvents")}
               </Text>
             )}
           </>
