@@ -13,6 +13,7 @@
 1. In Render, click New +, then Web Service.
 2. Connect this repository.
 3. Configure:
+
 - Root Directory: backend
 - Runtime: Node
 - Build Command: npm install
@@ -38,6 +39,7 @@
 ## Verify Deployment
 
 After deploy, open:
+
 - https://YOUR-RENDER-URL/healthz
 
 Expected response:

@@ -1,29 +1,29 @@
-const swaggerJsdoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 
-const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000";
 
 const options = {
   definition: {
-    openapi: '3.0.0',
+    openapi: "3.0.0",
     info: {
-      title: 'SinoTicket API',
-      version: '1.0.0',
-      description: 'API documentation for SinoTicket backend',
+      title: "SinoTicket API",
+      version: "1.0.0",
+      description: "API documentation for SinoTicket backend",
     },
     servers: [
       {
         url: apiBaseUrl,
-        description: 'API server',
+        description: "API server",
       },
     ],
     components: {
       securitySchemes: {
         bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          description: 'Pass the Clerk JWT token here to authenticate.',
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+          description: "Pass the Clerk JWT token here to authenticate.",
         },
       },
     },
@@ -33,13 +33,13 @@ const options = {
       },
     ],
   },
-  apis: ['./routes/*.js', './controllers/*.js'],
+  apis: ["./routes/*.js", "./controllers/*.js"],
 };
 
 const swaggerSpec = swaggerJsdoc(options);
 
 const setupSwagger = (app) => {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 };
 
 module.exports = setupSwagger;
