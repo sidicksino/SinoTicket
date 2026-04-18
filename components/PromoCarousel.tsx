@@ -66,7 +66,7 @@ export default function PromoCarousel() {
     }, 4500);
 
     return () => clearInterval(interval);
-  }, [currentIndex]);
+  }, [currentIndex, promoData.length]);
 
   // Update dots when swiped manually by user
   const handleMomentumScrollEnd = (event: any) => {

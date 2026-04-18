@@ -276,7 +276,7 @@ export default function Home() {
         )}
 
         {/* ── FEATURED HORIZONTAL CARDS ── */}
-        {!loading && !error && events.length > 0 && isDefaultView && (
+        {!error && events.length > 0 && isDefaultView && (
           <>
             <ScrollView
               horizontal
@@ -354,18 +354,20 @@ export default function Home() {
             </ScrollView>
 
             {/* "More Events" sub-header */}
-            <Text
-              style={{
-                fontFamily: "Syne_700Bold",
-                fontSize: 20,
-                color: colors.text,
-                marginTop: 32,
-                marginBottom: 16,
-                paddingHorizontal: 24,
-              }}
-            >
-               {t("home.moreEvents")}
-            </Text>
+            {events.length > 3 && (
+              <Text
+                style={{
+                  fontFamily: "Syne_700Bold",
+                  fontSize: 20,
+                  color: colors.text,
+                  marginTop: 32,
+                  marginBottom: 16,
+                  paddingHorizontal: 24,
+                }}
+              >
+                 {t("home.moreEvents")}
+              </Text>
+            )}
           </>
         )}
       </View>
@@ -411,12 +413,12 @@ export default function Home() {
         </View>
       )}
       <FlatList
-        data={!loading && !error ? listEvents : []}
+        data={!error ? listEvents : []}
         keyExtractor={(item) => item._id}
         renderItem={renderEventRow}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={
-          loading ? (
+          loading && events.length === 0 ? (
             <View style={{ marginTop: 20 }}>
               {[1, 2, 3, 4].map((i) => (
                 <View key={i} style={{ flexDirection: "row", marginBottom: 14, marginHorizontal: 24, backgroundColor: colors.card, padding: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.cardBorder }}>

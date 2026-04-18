@@ -164,8 +164,6 @@ export const useFetch = <T>(url: string, options: FetchOptions | boolean = false
         return;
       }
 
-      console.log("USEFETCH ERROR:", err.message);
-
       // 4. On Error -> Use cached data if available, otherwise show error
       if (!data) {
         setError(err.message || "Something went wrong");
@@ -205,7 +203,8 @@ export const useFetch = <T>(url: string, options: FetchOptions | boolean = false
         controller.abort();
       };
     }
-  }, [url, isAuth, isLoaded, cacheKey, autoFetch, load]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, isAuth, isLoaded, cacheKey, autoFetch]);
 
   const refetch = useCallback(() => loadRef.current(), []);
 

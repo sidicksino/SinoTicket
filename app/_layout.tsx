@@ -7,7 +7,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
-import { LogBox } from "react-native";
+import { LogBox, Text, View } from "react-native";
 import "react-native-reanimated";
 import GlobalErrorBoundary, { ErrorBoundary } from "../components/ErrorBoundary";
 import { usePushNotifications } from "../hooks/usePushNotifications";
@@ -20,15 +20,9 @@ export { ErrorBoundary };
 WebBrowser.maybeCompleteAuthSession();
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync();
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
-
-if (!publishableKey) {
-  throw new Error(
-    "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env",
-  );
-}
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 
 LogBox.ignoreLogs(["Clerk:"]);
 
@@ -64,9 +58,14 @@ export default function RootLayout() {
     let isMounted = true;
 
     const setupLocalization = async () => {
-      await initializeI18n();
-      if (isMounted) {
-        setI18nReady(true);
+      try {
+        await initializeI18n();
+      } catch (error) {
+        console.error("i18n initialization failed:", error);
+      } finally {
+        if (isMounted) {
+          setI18nReady(true);
+        }
       }
     };
 
@@ -78,15 +77,62 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (fontsLoaded) {
-      const timer = setTimeout(async () => {
+    let hideTimer: ReturnType<typeof setTimeout> | null = null;
+    let forceHideTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const hideSplash = async () => {
+      try {
         await SplashScreen.hideAsync();
-      }, 2000);
-      return () => clearTimeout(timer);
+      } catch (error) {
+        console.warn("Splash hide failed:", error);
+      }
+    };
+
+    if (fontsLoaded && i18nReady) {
+      hideTimer = setTimeout(() => {
+        void hideSplash();
+      }, 500);
     }
-  }, [fontsLoaded]);
+
+    // Fail-safe: never keep users trapped on the splash screen forever.
+    forceHideTimer = setTimeout(() => {
+      void hideSplash();
+    }, 6000);
+
+    return () => {
+      if (hideTimer) clearTimeout(hideTimer);
+      if (forceHideTimer) clearTimeout(forceHideTimer);
+    };
+  }, [fontsLoaded, i18nReady]);
 
   if (!fontsLoaded || !i18nReady) return null;
+
+  if (!publishableKey) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          paddingHorizontal: 24,
+          backgroundColor: "#0f172a",
+        }}
+      >
+        <Text
+          selectable
+          style={{ color: "#ffffff", fontSize: 18, fontFamily: "Syne_700Bold", textAlign: "center" }}
+        >
+          Missing Clerk Publishable Key
+        </Text>
+        <Text
+          selectable
+          style={{ color: "#cbd5e1", marginTop: 8, textAlign: "center", lineHeight: 22 }}
+        >
+          Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY for your EAS preview environment and rebuild.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <ThemeProvider>

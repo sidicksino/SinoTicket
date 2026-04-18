@@ -328,18 +328,6 @@ export default function Profile() {
           <Text style={{ textAlign: "center", color: colors.subtext, fontSize: 12, marginTop: 24, opacity: 0.5 }}>
             SinoTicket v1.0.0
           </Text>
-          
-          {/* Debug: Test Error Boundary */}
-          <TouchableOpacity 
-            onPress={() => {
-              throw new Error("Manual Test Error: This is a test of the ErrorBoundary system!");
-            }}
-            style={{ marginTop: 12, padding: 8, alignSelf: 'center' }}
-          >
-            <Text style={{ color: colors.error, fontSize: 10, opacity: 0.3, textDecorationLine: 'underline' }}>
-              Test Error Boundary
-            </Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>

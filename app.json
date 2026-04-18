@@ -23,7 +23,8 @@
         "monochromeImage": "./assets/icons/adaptive-icon.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.sidick102.SinoTicket"
     },
     "web": {
       "bundler": "metro",
@@ -32,6 +33,7 @@
     },
     "plugins": [
       "expo-router",
+      "@clerk/expo",
       [
         "expo-splash-screen",
         {
@@ -41,16 +43,26 @@
         }
       ],
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-notifications",
+      "expo-media-library"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
     "extra": {
+      "router": {},
       "eas": {
-        "projectId": "YOUR_PROJECT_ID_HERE"
+        "projectId": "0a749316-1b99-4850-9fe5-b20eadedf7fd"
       }
+    },
+    "owner": "sidick102",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/0a749316-1b99-4850-9fe5-b20eadedf7fd"
     }
   }
 }
