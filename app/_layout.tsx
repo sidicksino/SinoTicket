@@ -3,11 +3,12 @@ import { ClerkLoaded, ClerkProvider } from "@clerk/expo";
 import { Syne_700Bold } from "@expo-google-fonts/syne";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
+import * as NavigationBar from "expo-navigation-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
-import { LogBox, Text, View } from "react-native";
+import { LogBox, Platform, Text, View } from "react-native";
 import "react-native-reanimated";
 import GlobalErrorBoundary, {
   ErrorBoundary,
@@ -30,6 +31,13 @@ LogBox.ignoreLogs(["Clerk:"]);
 
 function AppShell() {
   const { isDark } = useTheme();
+
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      void NavigationBar.setBackgroundColorAsync(isDark ? "#0F172A" : "#FFFFFF");
+      void NavigationBar.setButtonStyleAsync(isDark ? "light" : "dark");
+    }
+  }, [isDark]);
 
   // Initialize Push Notifications
   usePushNotifications();
@@ -107,7 +115,9 @@ export default function RootLayout() {
     };
   }, [fontsLoaded, i18nReady]);
 
-  if (!fontsLoaded || !i18nReady) return null;
+  if (!fontsLoaded || !i18nReady) {
+    return <View style={{ flex: 1, backgroundColor: "#1E88E5" }} />;
+  }
 
   if (!publishableKey) {
     return (

@@ -24,7 +24,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.sidick102.SinoTicket"
+      "package": "com.sidick102.SinoTicket",
+      "backgroundColor": "#1E88E5"
     },
     "web": {
       "bundler": "metro",

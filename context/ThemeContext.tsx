@@ -1,7 +1,7 @@
 import { Colors, ThemeColors } from "@/constants/colors";
 import * as SecureStore from "expo-secure-store";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useColorScheme } from "react-native";
+import { useColorScheme, View } from "react-native";
 
 type ThemePreference = "light" | "dark" | "system";
 type ResolvedTheme = "light" | "dark";
@@ -61,7 +61,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const colors = Colors[resolvedTheme];
   const isDark = resolvedTheme === "dark";
 
-  if (!loaded) return null;
+  if (!loaded) return <View style={{ flex: 1, backgroundColor: "#1E88E5" }} />;
 
   return (
     <ThemeContext.Provider value={{
