@@ -40,7 +40,7 @@ const Welcome = () => {
 
                     <Animated.View entering={FadeInDown.duration(800).delay(400).springify().damping(14)} className="w-full mt-10 gap-y-4">
                         <CustomButton
-                            title="Sign Up"
+                            title={t("welcome.signUp")}
                             onPress={() => router.push("/(auth)/sign-up" as any)}
                         />
                         <CustomButton
