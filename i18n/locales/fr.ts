@@ -229,13 +229,21 @@ const fr = {
       saved: "Enregistré !",
       savedGallery: "Votre billet a été enregistré dans vos photos.",
       permissionError: "Permission requise",
-      permissionMessage: "Veuillez autoriser l'accès aux photos dans les réglages pour enregistrer votre billet.",
+      permissionMessage:
+        "Veuillez autoriser l'accès aux photos dans les réglages pour enregistrer votre billet.",
+      download: {
+        dateTime: "DATE ET HEURE",
+        location: "LIEU",
+        admission: "ENTRÉE",
+        scanForEntry: "SCANNER POUR ENTRER",
+      },
     },
     history: {
       subtitle: "Suivez votre",
       displayName: "Historique",
       title: "Historique des evenements",
       message: "Vos billets passes et enregistres apparaitront ici.",
+      allHistory: "Tout l'historique",
     },
     checkout: {
       reviewOrder: "Verifier la commande",

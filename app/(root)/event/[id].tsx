@@ -17,6 +17,7 @@ import {
   Dimensions,
   Modal,
   ScrollView,
+  Share,
   Text,
   TouchableOpacity,
   View,
@@ -104,6 +105,30 @@ export default function EventDetail() {
     setIsModalVisible(true);
   };
 
+  const handleShare = async () => {
+    try {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+      const eventLink = `${process.env.EXPO_PUBLIC_API_URL}/events/${id}`;
+      const dateText = event.date
+        ? new Date(event.date).toLocaleString([], {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : t("eventDetail.fallbackDescription");
+
+      await Share.share({
+        message: `${event.title}\n${event.venue_id?.name || t("home.venueTba")}\n${dateText}\n${eventLink}`,
+        title: event.title,
+      });
+    } catch (shareError) {
+      console.warn("Failed to share event:", shareError);
+    }
+  };
+
   const handleSelectSeats = () => {
     if (!selectedCategory) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -160,7 +185,7 @@ export default function EventDetail() {
           tint={isDark ? "dark" : "light"}
           style={{ borderRadius: 24, overflow: "hidden" }}
         >
-          <TouchableOpacity style={{ padding: 12 }}>
+          <TouchableOpacity onPress={handleShare} style={{ padding: 12 }}>
             <Ionicons
               name="share-social-outline"
               size={24}

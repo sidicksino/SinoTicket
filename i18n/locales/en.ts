@@ -226,13 +226,21 @@ const en = {
       saved: "Saved!",
       savedGallery: "Your ticket has been saved to your photos.",
       permissionError: "Permission Required",
-      permissionMessage: "Please allow photo access in Settings to save your ticket.",
+      permissionMessage:
+        "Please allow photo access in Settings to save your ticket.",
+      download: {
+        dateTime: "DATE & TIME",
+        location: "LOCATION",
+        admission: "ADMISSION",
+        scanForEntry: "SCAN FOR ENTRY",
+      },
     },
     history: {
       subtitle: "Track your",
       displayName: "History",
       title: "Event History",
       message: "Your past and saved tickets will appear here.",
+      allHistory: "All history",
     },
     checkout: {
       reviewOrder: "Review Order",

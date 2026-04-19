@@ -112,9 +112,9 @@ const HistoryItem = React.memo(
     const eventTitle = event?.title || t("ticket.eventTba");
     const eventDate = event?.date
       ? new Date(event.date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      })
+          month: "short",
+          day: "numeric",
+        })
       : "N/A";
 
     const statusColor =
@@ -409,7 +409,7 @@ const History = () => {
             <Text
               style={{ color: colors.primary, fontSize: 12, fontWeight: "600" }}
             >
-              All history
+              {t("history.allHistory")}
             </Text>
           </View>
         </View>

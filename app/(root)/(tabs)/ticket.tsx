@@ -704,7 +704,7 @@ export default function TicketWallet() {
         >
           <Ionicons name="cloud-offline-outline" size={16} color="#fff" />
           <Text style={{ color: "#fff", fontSize: 12, fontWeight: "700" }}>
-            Viewing Offline Tickets
+            {t("ticket.offlineMode")}
           </Text>
         </View>
       )}

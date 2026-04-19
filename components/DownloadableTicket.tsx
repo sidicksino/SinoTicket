@@ -1,5 +1,6 @@
 import { Image } from "expo-image";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import ViewShot from "react-native-view-shot";
@@ -27,14 +28,17 @@ const ACCENT = "#00D1FF"; // Electric Cyan
 const BLACK = "#0A0A0A";
 const SLATE = "#64748B";
 
-export function DownloadableTicket({ ticket, ticketRef }: DownloadableTicketProps) {
+export function DownloadableTicket({
+  ticket,
+  ticketRef,
+}: DownloadableTicketProps) {
+  const { t } = useTranslation();
   const qrUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/tickets/verify/${ticket.ticketId}`;
 
   return (
     <View style={styles.container}>
       <ViewShot ref={ticketRef} options={{ format: "png", quality: 1 }}>
         <View style={styles.card}>
-
           {/* LEFT: Branding & Image */}
           <View style={styles.leftColumn}>
             <View style={styles.imageContainer}>
@@ -44,7 +48,9 @@ export function DownloadableTicket({ ticket, ticketRef }: DownloadableTicketProp
                 contentFit="cover"
               />
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{ticket.category?.toUpperCase()}</Text>
+                <Text style={styles.badgeText}>
+                  {ticket.category?.toUpperCase()}
+                </Text>
               </View>
               <Text style={styles.eventName} numberOfLines={2}>
                 {ticket.eventName}
@@ -55,33 +61,40 @@ export function DownloadableTicket({ ticket, ticketRef }: DownloadableTicketProp
           {/* MIDDLE: Organized Details Grid */}
           <View style={styles.midColumn}>
             <View style={styles.infoGrid}>
-
               {/* Row 1: Date & Time */}
               <View style={styles.gridFull}>
-                <Text style={styles.label}>DATE & TIME</Text>
-                <Text style={styles.valueBold}>{ticket.date.toUpperCase()}</Text>
+                <Text style={styles.label}>
+                  {t("ticket.download.dateTime")}
+                </Text>
+                <Text style={styles.valueBold}>
+                  {ticket.date.toUpperCase()}
+                </Text>
               </View>
 
               {/* Row 2: Section & Seat (The center focus) */}
               <View style={styles.gridHalf}>
-                <Text style={styles.label}>SECTION</Text>
+                <Text style={styles.label}>{t("ticket.section")}</Text>
                 <Text style={styles.valueHighlight}>{ticket.section}</Text>
               </View>
               <View style={styles.gridHalf}>
-                <Text style={styles.label}>SEAT</Text>
+                <Text style={styles.label}>{t("ticket.seat")}</Text>
                 <Text style={styles.valueHighlight}>{ticket.seat}</Text>
               </View>
 
               {/* Row 3: Location */}
               <View style={styles.gridFull}>
-                <Text style={styles.label}>LOCATION</Text>
+                <Text style={styles.label}>
+                  {t("ticket.download.location")}
+                </Text>
                 <Text style={styles.value}>{ticket.venue}</Text>
               </View>
 
               {/* Row 4: Price */}
               <View style={styles.gridFull}>
                 <View style={styles.priceTag}>
-                  <Text style={styles.labelInline}>ADMISSION:</Text>
+                  <Text style={styles.labelInline}>
+                    {t("ticket.download.admission")}:
+                  </Text>
                   <Text style={styles.priceText}>{ticket.price}</Text>
                 </View>
               </View>
@@ -105,10 +118,13 @@ export function DownloadableTicket({ ticket, ticketRef }: DownloadableTicketProp
                 backgroundColor="transparent"
               />
             </View>
-            <Text style={styles.scanText}>SCAN FOR ENTRY</Text>
-            <Text style={styles.ticketId} numberOfLines={1}>{ticket.ticketId.toUpperCase()}</Text>
+            <Text style={styles.scanText}>
+              {t("ticket.download.scanForEntry")}
+            </Text>
+            <Text style={styles.ticketId} numberOfLines={1}>
+              {ticket.ticketId.toUpperCase()}
+            </Text>
           </View>
-
         </View>
       </ViewShot>
     </View>
@@ -163,7 +179,8 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   eventName: {
-    backgroundColor: "linear-gradient(to bottom, rgba(21, 20, 20, 0.5), rgba(21, 20, 20, 0.2))",
+    backgroundColor:
+      "linear-gradient(to bottom, rgba(21, 20, 20, 0.5), rgba(21, 20, 20, 0.2))",
     position: "absolute",
     padding: 10,
     bottom: 0,
