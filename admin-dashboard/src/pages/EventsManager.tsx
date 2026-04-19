@@ -32,6 +32,12 @@ interface TicketCategory {
   price: number;
   quantity: number;
   sold?: number;
+  section_id?: string;
+}
+
+interface Section {
+  _id: string;
+  name: string;
 }
 
 interface Venue {
@@ -72,7 +78,7 @@ const EMPTY_FORM: EventFormData = {
   imageUrl: "",
   venue_id: "",
   category: "Music",
-  ticket_categories: [{ name: "General Admission", price: 0, quantity: 100 }],
+  ticket_categories: [{ name: "General Admission", price: 0, quantity: 100, section_id: "" }],
   artist_lineup: [],
 };
 
@@ -83,6 +89,7 @@ export default function EventsManager() {
 
   const [events, setEvents] = useState<Event[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
+  const [venueSections, setVenueSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -139,6 +146,25 @@ export default function EventsManager() {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const fetchSections = async () => {
+      if (!formData.venue_id) {
+        setVenueSections([]);
+        return;
+      }
+      try {
+        const res = await fetch(apiUrl(`/api/sections?venue_id=${formData.venue_id}`));
+        const data = await res.json();
+        if (data.success) {
+          setVenueSections(data.sections);
+        }
+      } catch (err) {
+        console.error("Failed to fetch sections", err);
+      }
+    };
+    fetchSections();
+  }, [formData.venue_id]);
+
   // ─── Filtered events ────────────────────────────
   const filteredEvents = events.filter((e) => {
     const matchesSearch =
@@ -175,7 +201,8 @@ export default function EventsManager() {
         name: tc.name,
         price: tc.price,
         quantity: tc.quantity,
-      })) || [{ name: "General Admission", price: 0, quantity: 100 }],
+        section_id: (tc as any).section_id?._id || (tc as any).section_id || "",
+      })) || [{ name: "General Admission", price: 0, quantity: 100, section_id: "" }],
       artist_lineup:
         event.artist_lineup?.map((a) => ({
           name: a.name,
@@ -238,7 +265,7 @@ export default function EventsManager() {
       ...formData,
       ticket_categories: [
         ...formData.ticket_categories,
-        { name: "", price: 0, quantity: 0 },
+        { name: "", price: 0, quantity: 0, section_id: "" },
       ],
     });
   };
@@ -249,7 +276,7 @@ export default function EventsManager() {
     value: string,
   ) => {
     const updated = [...formData.ticket_categories];
-    if (field === "name") {
+    if (field === "name" || field === "section_id") {
       updated[index][field] = value;
     } else {
       (updated[index][field] as number) = Number(value);
@@ -788,6 +815,17 @@ export default function EventsManager() {
                   <div className="space-y-3">
                     {formData.ticket_categories.map((cat, index) => (
                       <div key={index} className="flex gap-2 items-center">
+                        <select
+                          required
+                          value={cat.section_id || ""}
+                          onChange={(e) => updateTicket(index, "section_id", e.target.value)}
+                          className="w-32 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                        >
+                          <option value="" disabled>Section</option>
+                          {venueSections.map(s => (
+                            <option key={s._id} value={s._id}>{s.name}</option>
+                          ))}
+                        </select>
                         <input
                           type="text"
                           placeholder="Name"

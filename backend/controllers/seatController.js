@@ -92,6 +92,8 @@ const getSeats = async (req, res) => {
     if (req.query.section_id) {
        if (mongoose.Types.ObjectId.isValid(req.query.section_id)) {
            query.section_id = req.query.section_id;
+       } else {
+           return res.status(200).json({ success: true, total: 0, page, limit, seats: [] });
        }
     }
     if (req.query.status) query.status = req.query.status;
