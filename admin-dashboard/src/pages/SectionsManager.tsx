@@ -1,6 +1,6 @@
-import { useAuth } from '@clerk/clerk-react';
-import { Layers, Edit, Loader2, MapPin, Plus, Trash2, X } from 'lucide-react';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useAuth } from "@clerk/clerk-react";
+import { Edit, Layers, Loader2, MapPin, Plus, Trash2, X } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
 
 interface Venue {
   _id: string;
@@ -22,7 +22,12 @@ interface SectionFormData {
   parent_section_id: string;
 }
 
-const EMPTY_FORM: SectionFormData = { name: '', description: '', venue_id: '', parent_section_id: '' };
+const EMPTY_FORM: SectionFormData = {
+  name: "",
+  description: "",
+  venue_id: "",
+  parent_section_id: "",
+};
 
 export default function SectionsManager() {
   const { getToken } = useAuth();
@@ -32,14 +37,14 @@ export default function SectionsManager() {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [filterVenueId, setFilterVenueId] = useState<string>('All');
+  const [filterVenueId, setFilterVenueId] = useState<string>("All");
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [editingSection, setEditingSection] = useState<Section | null>(null);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<SectionFormData>(EMPTY_FORM);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState<Section | null>(null);
@@ -49,8 +54,8 @@ export default function SectionsManager() {
     try {
       setLoading(true);
       const [sectionsRes, venuesRes] = await Promise.all([
-        fetch('http://localhost:5001/api/sections'),
-        fetch('http://localhost:5001/api/venue/getVenue')
+        fetch("http://localhost:5001/api/sections"),
+        fetch("http://localhost:5001/api/venue/getVenue"),
       ]);
       const stData = await sectionsRes.json();
       const vnData = await venuesRes.json();
@@ -64,12 +69,17 @@ export default function SectionsManager() {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const openAdd = () => {
     setEditingSection(null);
-    setFormData({ ...EMPTY_FORM, venue_id: filterVenueId !== 'All' ? filterVenueId : (venues[0]?._id || '') });
-    setError('');
+    setFormData({
+      ...EMPTY_FORM,
+      venue_id: filterVenueId !== "All" ? filterVenueId : venues[0]?._id || "",
+    });
+    setError("");
     setShowModal(true);
   };
 
@@ -77,23 +87,23 @@ export default function SectionsManager() {
     setEditingSection(section);
     setFormData({
       name: section.name,
-      description: section.description || '',
-      venue_id: section.venue_id?._id || '',
-      parent_section_id: section.parent_section_id || '',
+      description: section.description || "",
+      venue_id: section.venue_id?._id || "",
+      parent_section_id: section.parent_section_id || "",
     });
-    setError('');
+    setError("");
     setShowModal(true);
   };
 
   const handleSave = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
-    setError('');
+    setError("");
 
     try {
       const token = await getToken();
       const isEdit = !!editingSection;
-      
+
       const payload: any = {
         name: formData.name,
         description: formData.description,
@@ -102,18 +112,18 @@ export default function SectionsManager() {
       if (!isEdit) {
         payload.venue_id = formData.venue_id;
         if (formData.parent_section_id) {
-            payload.parent_section_id = formData.parent_section_id;
+          payload.parent_section_id = formData.parent_section_id;
         }
       }
 
       const url = isEdit
         ? `http://localhost:5001/api/sections/${editingSection!._id}`
-        : 'http://localhost:5001/api/sections/add';
+        : "http://localhost:5001/api/sections/add";
 
       const res = await fetch(url, {
-        method: isEdit ? 'PUT' : 'POST',
+        method: isEdit ? "PUT" : "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
@@ -124,11 +134,11 @@ export default function SectionsManager() {
         setShowModal(false);
         fetchData();
       } else {
-        setError(data.message || 'Error saving section');
+        setError(data.message || "Error saving section");
       }
     } catch (err) {
       console.error(err);
-      setError('Network error saving section');
+      setError("Network error saving section");
     } finally {
       setSaving(false);
     }
@@ -139,39 +149,47 @@ export default function SectionsManager() {
     if (!deleteTarget) return;
 
     setDeleting(true);
-    setError('');
+    setError("");
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:5001/api/sections/${deleteTarget._id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch(
+        `http://localhost:5001/api/sections/${deleteTarget._id}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       const data = await res.json();
       if (data.success) {
         setDeleteTarget(null);
         fetchData();
       } else {
-        setError(data.message || 'Error deleting section');
+        setError(data.message || "Error deleting section");
       }
     } catch (err) {
       console.error(err);
-      setError('Network error deleting section');
+      setError("Network error deleting section");
     } finally {
       setDeleting(false);
     }
   };
 
-  const filteredSections = filterVenueId === 'All' 
-    ? sections 
-    : sections.filter(s => s.venue_id?._id === filterVenueId);
+  const filteredSections =
+    filterVenueId === "All"
+      ? sections
+      : sections.filter((s) => s.venue_id?._id === filterVenueId);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-text">Sections Manager</h2>
-          <p className="text-subtext mt-1">Organize venues into discrete sections like VIP, General, Balcony.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-text">
+            Sections Manager
+          </h2>
+          <p className="text-subtext mt-1">
+            Organize venues into discrete sections like VIP, General, Balcony.
+          </p>
         </div>
         <button
           onClick={openAdd}
@@ -191,8 +209,10 @@ export default function SectionsManager() {
           className="bg-card border border-card-border rounded-xl px-4 py-2 text-text focus:outline-none focus:border-primary"
         >
           <option value="All">All Venues</option>
-          {venues.map(v => (
-            <option key={v._id} value={v._id}>{v.name}</option>
+          {venues.map((v) => (
+            <option key={v._id} value={v._id}>
+              {v.name}
+            </option>
           ))}
         </select>
       </div>
@@ -201,14 +221,16 @@ export default function SectionsManager() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4 text-primary">
           <Loader2 className="animate-spin" size={32} />
-          <p className="text-subtext font-medium animate-pulse">Loading sections...</p>
+          <p className="text-subtext font-medium animate-pulse">
+            Loading sections...
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredSections.map((section) => (
             <div
               key={section._id}
-              className="group bg-card rounded-[24px] border border-card-border overflow-hidden hover:border-primary/50 transition-all shadow-sm hover:shadow-xl hover:shadow-primary/5 flex flex-col"
+              className="group bg-card rounded-3xl border border-card-border overflow-hidden hover:border-primary/50 transition-all shadow-sm hover:shadow-xl hover:shadow-primary/5 flex flex-col"
             >
               <div className="p-6 flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-4">
@@ -231,16 +253,18 @@ export default function SectionsManager() {
                   </div>
                 </div>
 
-                <h3 className="text-xl font-bold text-text mb-1 line-clamp-1">{section.name}</h3>
-                
+                <h3 className="text-xl font-bold text-text mb-1 line-clamp-1">
+                  {section.name}
+                </h3>
+
                 <div className="flex items-center gap-2 mt-auto pt-4 border-t border-card-border/50">
                   <span className="text-xs font-semibold px-2.5 py-1 bg-background rounded-lg text-subtext">
-                    {section.venue_id?.name || 'Unknown Venue'}
+                    {section.venue_id?.name || "Unknown Venue"}
                   </span>
                   {section.parent_section_id && (
-                     <span className="text-xs font-semibold px-2.5 py-1 border border-primary/20 bg-primary/5 rounded-lg text-primary">
-                        Has Parent Section
-                     </span>
+                    <span className="text-xs font-semibold px-2.5 py-1 border border-primary/20 bg-primary/5 rounded-lg text-primary">
+                      Has Parent Section
+                    </span>
                   )}
                 </div>
               </div>
@@ -250,7 +274,9 @@ export default function SectionsManager() {
           {filteredSections.length === 0 && (
             <div className="col-span-full py-20 text-center border-2 border-dashed border-card-border rounded-3xl bg-card">
               <Layers className="mx-auto h-12 w-12 text-subtext/50 mb-4" />
-              <h3 className="text-lg font-bold text-text mb-1">No sections found</h3>
+              <h3 className="text-lg font-bold text-text mb-1">
+                No sections found
+              </h3>
               <p className="text-subtext">Create a section to get started.</p>
             </div>
           )}
@@ -260,10 +286,10 @@ export default function SectionsManager() {
       {/* Save Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-md rounded-[32px] border border-card-border shadow-2xl overflow-hidden flex flex-col">
+          <div className="bg-card w-full max-w-md rounded-4xl border border-card-border shadow-2xl overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-card-border">
               <h3 className="text-xl font-bold text-text">
-                {editingSection ? 'Edit Section' : 'Add Section'}
+                {editingSection ? "Edit Section" : "Add Section"}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
@@ -273,7 +299,7 @@ export default function SectionsManager() {
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSave} className="p-6 flex-1 overflow-y-auto">
               <div className="space-y-4">
                 {error && (
@@ -281,24 +307,32 @@ export default function SectionsManager() {
                     {error}
                   </div>
                 )}
-                
+
                 <div>
-                  <label className="block text-sm font-bold text-text mb-2">Section Name</label>
+                  <label className="block text-sm font-bold text-text mb-2">
+                    Section Name
+                  </label>
                   <input
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-primary transition-colors"
                     placeholder="e.g. VIP Front Row"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-text mb-2">Description</label>
+                  <label className="block text-sm font-bold text-text mb-2">
+                    Description
+                  </label>
                   <textarea
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     rows={2}
                     className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-primary transition-colors resize-none"
                     placeholder="Short details about this section"
@@ -307,17 +341,25 @@ export default function SectionsManager() {
 
                 {!editingSection && (
                   <div>
-                    <label className="block text-sm font-bold text-text mb-2">Venue</label>
+                    <label className="block text-sm font-bold text-text mb-2">
+                      Venue
+                    </label>
                     <select
-                        required
-                        value={formData.venue_id}
-                        onChange={(e) => setFormData({ ...formData, venue_id: e.target.value })}
-                        className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-primary transition-colors"
+                      required
+                      value={formData.venue_id}
+                      onChange={(e) =>
+                        setFormData({ ...formData, venue_id: e.target.value })
+                      }
+                      className="w-full bg-background border border-card-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-primary transition-colors"
                     >
-                        <option value="" disabled>Select Venue</option>
-                        {venues.map((v) => (
-                        <option key={v._id} value={v._id}>{v.name}</option>
-                        ))}
+                      <option value="" disabled>
+                        Select Venue
+                      </option>
+                      {venues.map((v) => (
+                        <option key={v._id} value={v._id}>
+                          {v.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 )}
@@ -337,7 +379,11 @@ export default function SectionsManager() {
                   disabled={saving}
                   className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl flex items-center justify-center h-12 transition-colors disabled:opacity-50"
                 >
-                  {saving ? <Loader2 size={20} className="animate-spin" /> : 'Save'}
+                  {saving ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    "Save"
+                  )}
                 </button>
               </div>
             </form>
@@ -348,16 +394,23 @@ export default function SectionsManager() {
       {/* Delete Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-sm rounded-[32px] border border-error/20 p-8 shadow-2xl text-center shadow-error/10">
+          <div className="bg-card w-full max-w-sm rounded-4xl border border-error/20 p-8 shadow-2xl text-center shadow-error/10">
             <div className="w-16 h-16 bg-error/10 text-error rounded-2xl flex items-center justify-center mx-auto mb-6 border border-error/20">
               <Trash2 size={32} />
             </div>
-            
-            <h3 className="text-xl font-bold text-text mb-2">Delete Section?</h3>
+
+            <h3 className="text-xl font-bold text-text mb-2">
+              Delete Section?
+            </h3>
             <p className="text-subtext mb-8">
-              Are you sure you want to delete <span className="font-bold text-text">{deleteTarget.name}</span>? 
-              <br/><br/>
-              <span className="text-error font-medium">WARNING: This will permanently wipe all seats associated with this section!</span>
+              Are you sure you want to delete{" "}
+              <span className="font-bold text-text">{deleteTarget.name}</span>?
+              <br />
+              <br />
+              <span className="text-error font-medium">
+                WARNING: This will permanently wipe all seats associated with
+                this section!
+              </span>
             </p>
 
             {error && (
@@ -380,7 +433,11 @@ export default function SectionsManager() {
                 disabled={deleting}
                 className="flex-1 bg-error hover:bg-error/90 text-white font-bold rounded-xl flex items-center justify-center h-12 transition-colors disabled:opacity-50"
               >
-                {deleting ? <Loader2 size={20} className="animate-spin" /> : 'Delete'}
+                {deleting ? (
+                  <Loader2 size={20} className="animate-spin" />
+                ) : (
+                  "Delete"
+                )}
               </button>
             </form>
           </div>

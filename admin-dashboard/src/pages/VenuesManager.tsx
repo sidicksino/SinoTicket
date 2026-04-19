@@ -1,6 +1,14 @@
-import { useAuth } from '@clerk/clerk-react';
-import { Building2, Edit, Loader2, MapPin, Plus, Trash2, X } from 'lucide-react';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useAuth } from "@clerk/clerk-react";
+import {
+    Building2,
+    Edit,
+    Loader2,
+    MapPin,
+    Plus,
+    Trash2,
+    X,
+} from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
 
 interface Venue {
   _id: string;
@@ -15,7 +23,7 @@ interface VenueFormData {
   capacity: string;
 }
 
-const EMPTY_FORM: VenueFormData = { name: '', location: '', capacity: '' };
+const EMPTY_FORM: VenueFormData = { name: "", location: "", capacity: "" };
 
 export default function VenuesManager() {
   const { getToken } = useAuth();
@@ -28,7 +36,7 @@ export default function VenuesManager() {
   const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<VenueFormData>(EMPTY_FORM);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Delete confirmation
   const [deleteTarget, setDeleteTarget] = useState<Venue | null>(null);
@@ -38,7 +46,7 @@ export default function VenuesManager() {
   const fetchVenues = async () => {
     try {
       setLoading(true);
-      const res = await fetch('http://localhost:5001/api/venue/getVenue');
+      const res = await fetch("http://localhost:5001/api/venue/getVenue");
       const data = await res.json();
       if (data.success) {
         setVenues(data.venues);
@@ -50,13 +58,15 @@ export default function VenuesManager() {
     }
   };
 
-  useEffect(() => { fetchVenues(); }, []);
+  useEffect(() => {
+    fetchVenues();
+  }, []);
 
   // ─── Open modals ─────────────────────────────────
   const openAdd = () => {
     setEditingVenue(null);
     setFormData(EMPTY_FORM);
-    setError('');
+    setError("");
     setShowModal(true);
   };
 
@@ -65,9 +75,9 @@ export default function VenuesManager() {
     setFormData({
       name: venue.name,
       location: venue.location,
-      capacity: String(venue.capacity || ''),
+      capacity: String(venue.capacity || ""),
     });
-    setError('');
+    setError("");
     setShowModal(true);
   };
 
@@ -75,7 +85,7 @@ export default function VenuesManager() {
   const handleSave = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
-    setError('');
+    setError("");
 
     try {
       const token = await getToken();
@@ -83,12 +93,12 @@ export default function VenuesManager() {
 
       const url = isEdit
         ? `http://localhost:5001/api/venue/updateVenue/${editingVenue!._id}`
-        : 'http://localhost:5001/api/venue/add';
+        : "http://localhost:5001/api/venue/add";
 
       const res = await fetch(url, {
-        method: isEdit ? 'PUT' : 'POST',
+        method: isEdit ? "PUT" : "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
@@ -105,10 +115,10 @@ export default function VenuesManager() {
         setFormData(EMPTY_FORM);
         fetchVenues();
       } else {
-        setError(data.message || 'Validation error');
+        setError(data.message || "Validation error");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setSaving(false);
     }
@@ -123,9 +133,9 @@ export default function VenuesManager() {
       const res = await fetch(
         `http://localhost:5001/api/venue/deleteVenue/${deleteTarget._id}`,
         {
-          method: 'DELETE',
+          method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
       const data = await res.json();
       if (data.success) {
@@ -146,7 +156,9 @@ export default function VenuesManager() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-text">Venues</h2>
-          <p className="text-subtext mt-1">Locations where your events take place.</p>
+          <p className="text-subtext mt-1">
+            Locations where your events take place.
+          </p>
         </div>
         <button
           onClick={openAdd}
@@ -166,7 +178,9 @@ export default function VenuesManager() {
         <div className="p-12 text-center bg-card border border-card-border rounded-3xl">
           <Building2 size={48} className="mx-auto text-subtext/40 mb-4" />
           <h3 className="text-xl font-bold text-text mb-2">No venues yet</h3>
-          <p className="text-subtext mb-6">Create your first venue to start hosting events.</p>
+          <p className="text-subtext mb-6">
+            Create your first venue to start hosting events.
+          </p>
           <button
             onClick={openAdd}
             className="px-6 py-2.5 bg-primary/10 text-primary font-bold rounded-xl hover:bg-primary/20 transition-colors"
@@ -187,18 +201,20 @@ export default function VenuesManager() {
                   className="text-primary opacity-10 group-hover:opacity-20 transition-opacity"
                   size={64}
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-card/80 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-b from-transparent to-card/80 pointer-events-none" />
               </div>
 
               <div className="p-6 -mt-6 relative">
-                <h3 className="font-bold text-lg text-text mb-1">{venue.name}</h3>
+                <h3 className="font-bold text-lg text-text mb-1">
+                  {venue.name}
+                </h3>
                 <p className="text-sm text-subtext mb-4 flex items-center gap-1.5">
-                  <MapPin size={14} className="flex-shrink-0" /> {venue.location}
+                  <MapPin size={14} className="shrink-0" /> {venue.location}
                 </p>
 
                 <div className="flex items-center justify-between pt-4 border-t border-card-border">
                   <div className="text-xs font-bold text-subtext uppercase tracking-widest">
-                    Capacity:{' '}
+                    Capacity:{" "}
                     <span className="text-primary ml-1">
                       {venue.capacity?.toLocaleString() || 0}
                     </span>
@@ -232,7 +248,7 @@ export default function VenuesManager() {
           <div className="bg-card rounded-3xl w-full max-w-md shadow-2xl border border-card-border overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-card-border flex items-center justify-between">
               <h3 className="text-xl font-bold text-text">
-                {editingVenue ? 'Edit Venue' : 'Add New Venue'}
+                {editingVenue ? "Edit Venue" : "Add New Venue"}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
@@ -314,9 +330,9 @@ export default function VenuesManager() {
                   {saving ? (
                     <Loader2 className="animate-spin" size={20} />
                   ) : editingVenue ? (
-                    'Update Venue'
+                    "Update Venue"
                   ) : (
-                    'Save Venue'
+                    "Save Venue"
                   )}
                 </button>
               </div>
@@ -334,7 +350,7 @@ export default function VenuesManager() {
             </div>
             <h3 className="text-xl font-bold text-text mb-2">Delete Venue?</h3>
             <p className="text-subtext text-sm mb-6">
-              Are you sure you want to delete{' '}
+              Are you sure you want to delete{" "}
               <span className="font-bold text-text">{deleteTarget.name}</span>?
               This action cannot be undone.
             </p>
@@ -353,7 +369,7 @@ export default function VenuesManager() {
                 {deleting ? (
                   <Loader2 className="animate-spin" size={20} />
                 ) : (
-                  'Delete'
+                  "Delete"
                 )}
               </button>
             </div>

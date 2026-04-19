@@ -12,7 +12,13 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 
 // ─── Types ────────────────────────────────────────
 interface Artist {
@@ -412,7 +418,7 @@ export default function EventsManager() {
               className="w-full pl-12 pr-4 py-2.5 bg-input-bg border border-card-border rounded-xl text-text placeholder:text-subtext/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-medium"
             />
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             <Filter size={18} className="text-subtext" />
             <select
               value={filterCategory}
@@ -473,9 +479,9 @@ export default function EventsManager() {
                           <img
                             src={event.imageUrl}
                             alt=""
-                            className="w-10 h-10 object-cover bg-card-border rounded-xl flex-shrink-0"
+                            className="w-10 h-10 object-cover bg-card-border rounded-xl shrink-0"
                           />
-                          <span className="font-bold text-text truncate max-w-[200px]">
+                          <span className="font-bold text-text truncate max-w-50">
                             {event.title}
                           </span>
                         </div>
@@ -553,7 +559,7 @@ export default function EventsManager() {
       {showModal && (
         <div className="fixed inset-0 bg-overlay-dark z-50 flex items-center justify-center p-4">
           <div className="bg-card rounded-3xl w-full max-w-2xl max-h-[90vh] shadow-2xl border border-card-border flex flex-col animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-5 border-b border-card-border flex items-center justify-between flex-shrink-0">
+            <div className="px-6 py-5 border-b border-card-border flex items-center justify-between shrink-0">
               <h3 className="text-xl font-bold text-text">
                 {editingEvent ? "Edit Event" : "Create New Event"}
               </h3>
@@ -831,7 +837,7 @@ export default function EventsManager() {
               </form>
             </div>
 
-            <div className="p-6 border-t border-card-border bg-card-border/10 flex justify-end gap-3 rounded-b-3xl flex-shrink-0">
+            <div className="p-6 border-t border-card-border bg-card-border/10 flex justify-end gap-3 rounded-b-3xl shrink-0">
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
@@ -843,7 +849,7 @@ export default function EventsManager() {
                 form="event-form"
                 type="submit"
                 disabled={saving || uploading}
-                className="py-2.5 px-6 bg-primary text-white font-bold rounded-xl hover:brightness-110 disabled:opacity-70 flex items-center gap-2 transition-all min-w-[140px] justify-center"
+                className="py-2.5 px-6 bg-primary text-white font-bold rounded-xl hover:brightness-110 disabled:opacity-70 flex items-center gap-2 transition-all min-w-35 justify-center"
               >
                 {saving || uploading ? (
                   <Loader2 className="animate-spin" size={20} />
@@ -869,7 +875,7 @@ export default function EventsManager() {
                 alt={viewEvent.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-card to-transparent" />
               <button
                 onClick={() => setViewEvent(null)}
                 className="absolute top-4 right-4 p-2 bg-black/40 text-white rounded-full hover:bg-black/60 transition-colors"
@@ -884,7 +890,7 @@ export default function EventsManager() {
                   {viewEvent.title}
                 </h3>
                 <span
-                  className={`text-xs font-bold px-2.5 py-1 rounded-lg flex-shrink-0 ${getStatusBadge(viewEvent).cls}`}
+                  className={`text-xs font-bold px-2.5 py-1 rounded-lg shrink-0 ${getStatusBadge(viewEvent).cls}`}
                 >
                   {getStatusBadge(viewEvent).label}
                 </span>
@@ -971,7 +977,7 @@ export default function EventsManager() {
                                   style={{ width: `${tcPct}%` }}
                                 />
                               </div>
-                              <span className="text-xs font-bold text-primary min-w-[60px] text-right">
+                              <span className="text-xs font-bold text-primary min-w-15 text-right">
                                 {tc.price.toLocaleString()} XAF
                               </span>
                             </div>

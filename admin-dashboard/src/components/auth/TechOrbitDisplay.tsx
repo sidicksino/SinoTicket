@@ -11,25 +11,25 @@ import {
   Settings,
   ShieldCheck,
   Ticket,
-  Users
-} from 'lucide-react';
-import { memo } from 'react';
-import { OrbitingCircles } from '../ui/OrbitingCircles';
-import { Ripple } from '../ui/Ripple';
+  Users,
+} from "lucide-react";
+import { memo } from "react";
+import { OrbitingCircles } from "../ui/OrbitingCircles";
+import { Ripple } from "../ui/Ripple";
 
 interface TechOrbitDisplayProps {
   text?: string;
 }
 
 export const TechOrbitDisplay = memo(function TechOrbitDisplay({
-  text = 'SinoTicket Admin',
+  text = "SinoTicket Admin",
 }: TechOrbitDisplayProps) {
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#030712]">
       <Ripple />
 
       <div className="relative z-10 text-center select-none pointer-events-none">
-        <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-600 drop-shadow-2xl tracking-tighter">
+        <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-linear-to-b from-white to-slate-600 drop-shadow-2xl tracking-tighter">
           {text}
         </h1>
         <div className="mt-2 h-1 w-32 bg-blue-600 mx-auto rounded-full blur-[1px]"></div>
@@ -124,7 +124,6 @@ export const TechOrbitDisplay = memo(function TechOrbitDisplay({
           <Ticket size={16} />
         </div>
       </OrbitingCircles>
-
     </div>
   );
 });
