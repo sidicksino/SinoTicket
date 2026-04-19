@@ -10,8 +10,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useCallback } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useTranslation } from "react-i18next";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Profile() {
@@ -22,20 +22,27 @@ export default function Profile() {
   const { authFetch } = useAuthFetch();
 
   // Fetch backend User data
-  const { data, loading, refetch } = useFetch<{ success: boolean; user: UserType }>("/api/users/me", true);
+  const { data, loading, refetch } = useFetch<{
+    success: boolean;
+    user: UserType;
+  }>("/api/users/me", true);
   const backendUser = data?.user;
 
   // Refetch when screen comes into focus (e.g. after editing personal info)
   useFocusEffect(
     useCallback(() => {
       refetch();
-    }, [refetch])
+    }, [refetch]),
   );
 
   const handleSignOut = () => {
     Alert.alert(t("profile.signOutTitle"), t("profile.signOutMessage"), [
       { text: t("common.cancel"), style: "cancel" },
-      { text: t("profile.signOutAction"), style: "destructive", onPress: () => signOut() },
+      {
+        text: t("profile.signOutAction"),
+        style: "destructive",
+        onPress: () => signOut(),
+      },
     ]);
   };
 
@@ -74,10 +81,26 @@ export default function Profile() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={["top"]}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-        <View style={{ paddingHorizontal: 24, paddingTop: 10, paddingBottom: 20 }}>
-          <Text style={{ fontFamily: "Syne_700Bold", fontSize: 28, color: colors.text }}>{t("profile.title")}</Text>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      edges={["top"]}
+    >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        <View
+          style={{ paddingHorizontal: 24, paddingTop: 10, paddingBottom: 20 }}
+        >
+          <Text
+            style={{
+              fontFamily: "Syne_700Bold",
+              fontSize: 28,
+              color: colors.text,
+            }}
+          >
+            {t("profile.title")}
+          </Text>
         </View>
 
         <View style={{ paddingHorizontal: 24, marginBottom: 32 }}>
@@ -111,36 +134,77 @@ export default function Profile() {
               }}
             >
               <Image
-                source={{ uri: backendUser?.profile_photo || clerkUser?.imageUrl || "https://avatar.iran.liara.run/public/32" }}
+                source={{
+                  uri:
+                    backendUser?.profile_photo ||
+                    clerkUser?.imageUrl ||
+                    "https://avatar.iran.liara.run/public/32",
+                }}
                 style={{ width: "100%", height: "100%" }}
                 contentFit="cover"
                 cachePolicy="memory-disk"
               />
             </View>
             <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-                <Text style={{ color: colors.text, fontFamily: "Syne_700Bold", fontSize: 20, marginRight: 6 }}>
-                  {backendUser?.name || clerkUser?.fullName || t("profile.guestUser")}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 4,
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.text,
+                    fontFamily: "Syne_700Bold",
+                    fontSize: 20,
+                    marginRight: 6,
+                  }}
+                >
+                  {backendUser?.name ||
+                    clerkUser?.fullName ||
+                    t("profile.guestUser")}
                 </Text>
                 {!loading && backendUser?.is_verified && (
-                  <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={18}
+                    color={colors.success}
+                  />
                 )}
               </View>
-              <Text style={{ color: colors.subtext, fontSize: 13, fontWeight: "500" }}>
-                {clerkUser?.emailAddresses?.[0]?.emailAddress || backendUser?.email || t("profile.setUpAccount")}
+              <Text
+                style={{
+                  color: colors.subtext,
+                  fontSize: 13,
+                  fontWeight: "500",
+                }}
+              >
+                {clerkUser?.emailAddresses?.[0]?.emailAddress ||
+                  backendUser?.email ||
+                  t("profile.setUpAccount")}
               </Text>
             </View>
             <TouchableOpacity
               onPress={() => router.push("/(root)/personal-info")}
-              style={{ padding: 8, backgroundColor: colors.background, borderRadius: 12 }}
+              style={{
+                padding: 8,
+                backgroundColor: colors.background,
+                borderRadius: 12,
+              }}
             >
-              <Ionicons name="pencil-outline" size={18} color={colors.primary} />
+              <Ionicons
+                name="pencil-outline"
+                size={18}
+                color={colors.primary}
+              />
             </TouchableOpacity>
           </TouchableOpacity>
         </View>
 
         <View style={{ paddingHorizontal: 20 }}>
-          {(clerkUser?.publicMetadata?.role === "Admin" || clerkUser?.publicMetadata?.role === "admin") && (
+          {(clerkUser?.publicMetadata?.role === "Admin" ||
+            clerkUser?.publicMetadata?.role === "admin") && (
             <>
               <Text
                 style={{
@@ -203,12 +267,24 @@ export default function Profile() {
             <SettingsRow
               icon="person-outline"
               title={t("profile.personalInformation")}
-              subtitle={backendUser?.phone_number || t("profile.addPhoneNumber")}
+              subtitle={
+                backendUser?.phone_number || t("profile.addPhoneNumber")
+              }
               isFirst
               onPress={() => router.push("/(root)/personal-info")}
             />
-            <SettingsRow icon="card-outline" title={t("profile.paymentMethods")} subtitle={t("profile.visaEnding")} onPress={() => { }} />
-            <SettingsRow icon="notifications-outline" title={t("profile.notifications")} isLast onPress={() => { }} />
+            <SettingsRow
+              icon="card-outline"
+              title={t("profile.paymentMethods")}
+              subtitle={t("profile.visaEnding")}
+              onPress={() => {}}
+            />
+            <SettingsRow
+              icon="notifications-outline"
+              title={t("profile.notifications")}
+              isLast
+              onPress={() => router.push("/(root)/notifications")}
+            />
           </View>
 
           <Text
@@ -235,11 +311,24 @@ export default function Profile() {
             }}
           >
             <SettingsRow
-              icon={themePreference === "system" ? "phone-portrait-outline" : isDark ? "moon-outline" : "sunny-outline"}
+              icon={
+                themePreference === "system"
+                  ? "phone-portrait-outline"
+                  : isDark
+                    ? "moon-outline"
+                    : "sunny-outline"
+              }
               title={t("profile.appearance")}
               isFirst
               rightElement={
-                <View style={{ flexDirection: "row", backgroundColor: colors.inputBg, borderRadius: 8, padding: 2 }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    backgroundColor: colors.inputBg,
+                    borderRadius: 8,
+                    padding: 2,
+                  }}
+                >
                   {(["light", "system", "dark"] as const).map((mode) => (
                     <TouchableOpacity
                       key={mode}
@@ -248,8 +337,14 @@ export default function Profile() {
                         paddingHorizontal: 10,
                         paddingVertical: 6,
                         borderRadius: 6,
-                        backgroundColor: themePreference === mode ? colors.card : "transparent",
-                        shadowColor: themePreference === mode ? colors.shadow : "transparent",
+                        backgroundColor:
+                          themePreference === mode
+                            ? colors.card
+                            : "transparent",
+                        shadowColor:
+                          themePreference === mode
+                            ? colors.shadow
+                            : "transparent",
                         shadowOpacity: themePreference === mode ? 0.05 : 0,
                         shadowRadius: 2,
                         elevation: themePreference === mode ? 2 : 0,
@@ -259,7 +354,10 @@ export default function Profile() {
                         style={{
                           fontSize: 12,
                           fontWeight: themePreference === mode ? "700" : "500",
-                          color: themePreference === mode ? colors.text : colors.subtext,
+                          color:
+                            themePreference === mode
+                              ? colors.text
+                              : colors.subtext,
                           textTransform: "capitalize",
                         }}
                       >
@@ -273,7 +371,11 @@ export default function Profile() {
             <SettingsRow
               icon="globe-outline"
               title={t("profile.language")}
-              subtitle={getCurrentLanguage() === "fr" ? t("language.french") : t("language.english")}
+              subtitle={
+                getCurrentLanguage() === "fr"
+                  ? t("language.french")
+                  : t("language.english")
+              }
               isLast
               onPress={handleLanguageChange}
             />
@@ -302,9 +404,23 @@ export default function Profile() {
               marginBottom: 36,
             }}
           >
-            <SettingsRow icon="help-buoy-outline" title={t("profile.helpCenter")} isFirst onPress={() => { }} />
-            <SettingsRow icon="shield-checkmark-outline" title={t("profile.privacyPolicy")} onPress={() => { }} />
-            <SettingsRow icon="document-text-outline" title={t("profile.termsOfService")} isLast onPress={() => { }} />
+            <SettingsRow
+              icon="help-buoy-outline"
+              title={t("profile.helpCenter")}
+              isFirst
+              onPress={() => {}}
+            />
+            <SettingsRow
+              icon="shield-checkmark-outline"
+              title={t("profile.privacyPolicy")}
+              onPress={() => {}}
+            />
+            <SettingsRow
+              icon="document-text-outline"
+              title={t("profile.termsOfService")}
+              isLast
+              onPress={() => {}}
+            />
           </View>
 
           <View
@@ -325,7 +441,15 @@ export default function Profile() {
               onPress={handleSignOut}
             />
           </View>
-          <Text style={{ textAlign: "center", color: colors.subtext, fontSize: 12, marginTop: 24, opacity: 0.5 }}>
+          <Text
+            style={{
+              textAlign: "center",
+              color: colors.subtext,
+              fontSize: 12,
+              marginTop: 24,
+              opacity: 0.5,
+            }}
+          >
             SinoTicket v1.0.0
           </Text>
         </View>
