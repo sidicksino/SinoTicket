@@ -1,6 +1,7 @@
 import { useAuth } from "@clerk/clerk-react";
 import { Edit, Layers, Loader2, MapPin, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import { apiUrl } from "../lib/api";
 
 interface Venue {
   _id: string;
@@ -54,8 +55,8 @@ export default function SectionsManager() {
     try {
       setLoading(true);
       const [sectionsRes, venuesRes] = await Promise.all([
-        fetch("http://localhost:5001/api/sections"),
-        fetch("http://localhost:5001/api/venue/getVenue"),
+        fetch(apiUrl("/api/sections")),
+        fetch(apiUrl("/api/venue/getVenue")),
       ]);
       const stData = await sectionsRes.json();
       const vnData = await venuesRes.json();
@@ -117,8 +118,8 @@ export default function SectionsManager() {
       }
 
       const url = isEdit
-        ? `http://localhost:5001/api/sections/${editingSection!._id}`
-        : "http://localhost:5001/api/sections/add";
+        ? apiUrl(`/api/sections/${editingSection!._id}`)
+        : apiUrl("/api/sections/add");
 
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
@@ -152,13 +153,10 @@ export default function SectionsManager() {
     setError("");
     try {
       const token = await getToken();
-      const res = await fetch(
-        `http://localhost:5001/api/sections/${deleteTarget._id}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await fetch(apiUrl(`/api/sections/${deleteTarget._id}`), {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.success) {
         setDeleteTarget(null);

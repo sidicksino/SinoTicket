@@ -1,18 +1,18 @@
 import { useClerk, useUser } from "@clerk/clerk-react";
 import {
-    Armchair,
-    Bell,
-    Calendar,
-    Layers,
-    LayoutDashboard,
-    LogOut,
-    MapPin,
-    Moon,
-    Settings,
-    Sun,
-    Ticket,
-    Users,
-    type LucideIcon,
+  Armchair,
+  Bell,
+  Calendar,
+  Layers,
+  LayoutDashboard,
+  LogOut,
+  MapPin,
+  Moon,
+  Settings,
+  Sun,
+  Ticket,
+  Users,
+  type LucideIcon,
 } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";

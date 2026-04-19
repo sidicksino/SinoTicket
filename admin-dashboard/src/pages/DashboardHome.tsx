@@ -1,23 +1,24 @@
 import { useAuth } from "@clerk/clerk-react";
 import {
-    Calendar,
-    DollarSign,
-    Loader2,
-    Ticket,
-    TrendingUp,
-    Users,
-    type LucideIcon,
+  Calendar,
+  DollarSign,
+  Loader2,
+  Ticket,
+  TrendingUp,
+  Users,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
-    Area,
-    AreaChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 import { useTranslation } from "../i18n";
+import { apiUrl } from "../lib/api";
 
 interface StatCardProps {
   label: string;
@@ -74,7 +75,7 @@ export default function DashboardHome() {
     const fetchStats = async () => {
       try {
         const token = await getToken();
-        const res = await fetch("http://localhost:5001/api/dashboard/stats", {
+        const res = await fetch(apiUrl("/api/dashboard/stats"), {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();

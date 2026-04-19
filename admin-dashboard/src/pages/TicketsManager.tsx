@@ -5,9 +5,10 @@ import {
     Filter,
     Loader2,
     Ticket as TicketIcon,
-    User as UserIcon
+    User as UserIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { apiUrl } from "../lib/api";
 
 interface EventData {
   title: string;
@@ -54,7 +55,7 @@ export default function TicketsManager() {
       setLoading(true);
       const token = await getToken();
 
-      let url = `http://localhost:5001/api/tickets/all?page=${page}&limit=${limit}`;
+      let url = apiUrl(`/api/tickets/all?page=${page}&limit=${limit}`);
       if (statusFilter !== "All") url += `&status=${statusFilter}`;
 
       const res = await fetch(url, {

@@ -19,6 +19,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
+import { apiUrl } from "../lib/api";
 
 // ─── Types ────────────────────────────────────────
 interface Artist {
@@ -111,8 +112,8 @@ export default function EventsManager() {
     try {
       setLoading(true);
       const [eventsRes, venuesRes] = await Promise.all([
-        fetch("http://localhost:5001/api/events"),
-        fetch("http://localhost:5001/api/venue/getVenue"),
+        fetch(apiUrl("/api/events")),
+        fetch(apiUrl("/api/venue/getVenue")),
       ]);
       const eventsData = await eventsRes.json();
       const venuesData = await venuesRes.json();
@@ -209,7 +210,7 @@ export default function EventsManager() {
       const uploadFormData = new FormData();
       uploadFormData.append("image", selectedFile);
 
-      const res = await fetch("http://localhost:5001/api/upload", {
+      const res = await fetch(apiUrl("/api/upload"), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -310,8 +311,8 @@ export default function EventsManager() {
       };
 
       const url = isEdit
-        ? `http://localhost:5001/api/events/${editingEvent!._id}`
-        : "http://localhost:5001/api/events/add";
+        ? apiUrl(`/api/events/${editingEvent!._id}`)
+        : apiUrl("/api/events/add");
 
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
@@ -344,10 +345,10 @@ export default function EventsManager() {
     setDeleting(true);
     try {
       const token = await getToken();
-      const res = await fetch(
-        `http://localhost:5001/api/events/${deleteTarget._id}`,
-        { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
-      );
+      const res = await fetch(apiUrl(`/api/events/${deleteTarget._id}`), {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.success) {
         setDeleteTarget(null);

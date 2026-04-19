@@ -10,6 +10,7 @@ import {
     Trash2,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import { apiUrl } from "../lib/api";
 
 interface Venue {
   _id: string;
@@ -63,8 +64,8 @@ export default function SeatsManager() {
     try {
       setLoading(true);
       const [sectionsRes, venuesRes] = await Promise.all([
-        fetch("http://localhost:5001/api/sections"),
-        fetch("http://localhost:5001/api/venue/getVenue"),
+        fetch(apiUrl("/api/sections")),
+        fetch(apiUrl("/api/venue/getVenue")),
       ]);
       const stData = await sectionsRes.json();
       const vnData = await venuesRes.json();
@@ -93,7 +94,9 @@ export default function SeatsManager() {
     try {
       setLoadingSeats(true);
       const res = await fetch(
-        `http://localhost:5001/api/seats?section_id=${filterSectionId}&page=${page}&limit=${limit}`,
+        apiUrl(
+          `/api/seats?section_id=${filterSectionId}&page=${page}&limit=${limit}`,
+        ),
       );
       const data = await res.json();
       if (data.success) {
@@ -123,7 +126,7 @@ export default function SeatsManager() {
 
     try {
       const token = await getToken();
-      const res = await fetch(`http://localhost:5001/api/seats/generate`, {
+      const res = await fetch(apiUrl("/api/seats/generate"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -158,13 +161,10 @@ export default function SeatsManager() {
     setWiping(true);
     try {
       const token = await getToken();
-      const res = await fetch(
-        `http://localhost:5001/api/seats/section/${filterSectionId}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await fetch(apiUrl(`/api/seats/section/${filterSectionId}`), {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (data.success) {
         setWipeConfirmOpen(false);
@@ -188,7 +188,7 @@ export default function SeatsManager() {
           : "available";
     try {
       const token = await getToken();
-      await fetch(`http://localhost:5001/api/seats/${seat._id}`, {
+      await fetch(apiUrl(`/api/seats/${seat._id}`), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

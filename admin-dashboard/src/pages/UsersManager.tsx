@@ -9,6 +9,7 @@ import {
     Users,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import { apiUrl } from "../lib/api";
 
 interface LocalUser {
   _id: string;
@@ -47,14 +48,11 @@ export default function UsersManager() {
         ...(activeSearch && { search: activeSearch }),
       });
 
-      const res = await fetch(
-        `http://localhost:5001/api/users/all?${queryParams}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const res = await fetch(apiUrl(`/api/users/all?${queryParams}`), {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
       const data = await res.json();
 
       if (data.success) {

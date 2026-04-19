@@ -9,6 +9,7 @@ import {
     X,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import { apiUrl } from "../lib/api";
 
 interface Venue {
   _id: string;
@@ -46,7 +47,7 @@ export default function VenuesManager() {
   const fetchVenues = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5001/api/venue/getVenue");
+      const res = await fetch(apiUrl("/api/venue/getVenue"));
       const data = await res.json();
       if (data.success) {
         setVenues(data.venues);
@@ -92,8 +93,8 @@ export default function VenuesManager() {
       const isEdit = !!editingVenue;
 
       const url = isEdit
-        ? `http://localhost:5001/api/venue/updateVenue/${editingVenue!._id}`
-        : "http://localhost:5001/api/venue/add";
+        ? apiUrl(`/api/venue/updateVenue/${editingVenue!._id}`)
+        : apiUrl("/api/venue/add");
 
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
@@ -131,7 +132,7 @@ export default function VenuesManager() {
     try {
       const token = await getToken();
       const res = await fetch(
-        `http://localhost:5001/api/venue/deleteVenue/${deleteTarget._id}`,
+        apiUrl(`/api/venue/deleteVenue/${deleteTarget._id}`),
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
