@@ -1,5 +1,8 @@
 import AppHeader from "@/components/AppHeader";
-import { DownloadableTicket, TicketData } from "@/components/DownloadableTicket";
+import {
+  DownloadableTicket,
+  TicketData,
+} from "@/components/DownloadableTicket";
 import EmptyState from "@/components/EmptyState";
 import { useTheme } from "@/context/ThemeContext";
 import { useFetch } from "@/lib/fetch";
@@ -17,7 +20,7 @@ import {
   RefreshControl,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import QRCode from "react-native-qrcode-svg";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -139,28 +142,26 @@ function TicketCard({
     seat && typeof seat.section_id === "object" ? seat.section_id : null;
 
   const eventTitle = event?.title || t("ticket.eventTba");
-  const eventImage =
-    event?.imageUrl ||
-    "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=800";
+  const eventImage = event?.imageUrl;
   const eventDate = event?.date
     ? new Date(event.date).toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    })
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
     : "N/A";
   const eventTime = event?.date
     ? new Date(event.date).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    })
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : "N/A";
 
   const daysUntil = event?.date
     ? Math.ceil(
-      (new Date(event.date).getTime() - new Date().getTime()) /
-      (1000 * 60 * 60 * 24),
-    )
+        (new Date(event.date).getTime() - new Date().getTime()) /
+          (1000 * 60 * 60 * 24),
+      )
     : 0;
 
   return (
@@ -231,13 +232,29 @@ function TicketCard({
                   {eventTitle}
                 </Text>
                 <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                    marginTop: 4,
+                  }}
                 >
-                  <Ionicons name="location-outline" size={14} color="rgba(255,255,255,0.7)" />
+                  <Ionicons
+                    name="location-outline"
+                    size={14}
+                    color="rgba(255,255,255,0.7)"
+                  />
                   <Text
-                    style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: "500" }}
+                    style={{
+                      color: "rgba(255,255,255,0.7)",
+                      fontSize: 12,
+                      fontWeight: "500",
+                    }}
                   >
-                    {event?.location || (event?.venue_id && typeof event.venue_id === 'object' ? (event.venue_id as any).name : "Sino Ticket Venue")}
+                    {event?.location ||
+                      (event?.venue_id && typeof event.venue_id === "object"
+                        ? (event.venue_id as any).name
+                        : "Sino Ticket Venue")}
                   </Text>
                 </View>
               </View>
@@ -502,10 +519,10 @@ export default function TicketWallet() {
     data,
     loading: fetchLoading,
     isOffline,
-    refetch
+    refetch,
   } = useFetch<any>("/api/tickets/me", {
     authenticated: true,
-    cacheKey: "active_tickets"
+    cacheKey: "active_tickets",
   });
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -521,7 +538,8 @@ export default function TicketWallet() {
 
       const event = typeof item.event_id === "object" ? item.event_id : {};
       const seat = typeof item.seat_id === "object" ? item.seat_id : {};
-      const section = seat && typeof seat.section_id === "object" ? seat.section_id : {};
+      const section =
+        seat && typeof seat.section_id === "object" ? seat.section_id : {};
 
       // Map to DownloadableTicket data structure
       const ticketData: TicketData = {
@@ -529,25 +547,43 @@ export default function TicketWallet() {
         eventName: event.title || "Sino Ticket Event",
         date: event.date
           ? (() => {
-            const d = new Date(event.date);
-            const datePart = d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-            const timePart = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
-            return `${datePart} ${timePart}`;
-          })()
+              const d = new Date(event.date);
+              const datePart = d.toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+              });
+              const timePart = d.toLocaleTimeString("en-GB", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+              });
+              return `${datePart} ${timePart}`;
+            })()
           : "TBA",
         price: (() => {
           const catId = item.category_id;
           const categories = event.ticket_categories || [];
-          const matched = categories.find((cat: any) =>
-            cat._id === catId || cat.category_id === catId || cat.id === catId
+          const matched = categories.find(
+            (cat: any) =>
+              cat._id === catId ||
+              cat.category_id === catId ||
+              cat.id === catId,
           );
-          return matched ? `${matched.price} XAF` : (event.price ? `$${event.price}` : "PAID");
+          return matched
+            ? `${matched.price} XAF`
+            : event.price
+              ? `$${event.price}`
+              : "PAID";
         })(),
-        venue: event.location || (event.venue_id && typeof event.venue_id === 'object' ? (event.venue_id as any).name : "Sino Ticket Venue"),
+        venue:
+          event.location ||
+          (event.venue_id && typeof event.venue_id === "object"
+            ? (event.venue_id as any).name
+            : "Sino Ticket Venue"),
         section: section.name || "N/A",
         seat: seat.number || "0",
         ticketId: item.qr_code || "SINOTICKET",
-        eventImage: event.imageUrl || "https://images.unsplash.com/photo-1540039155733-5bb30b4f53e6?w=800",
+        eventImage: event.imageUrl,
       };
 
       setPrintingTicket(ticketData);
@@ -573,7 +609,10 @@ export default function TicketWallet() {
                 dialogTitle: "Save Ticket",
               });
             } else {
-              Alert.alert(t("ticket.permissionError"), t("ticket.permissionMessage"));
+              Alert.alert(
+                t("ticket.permissionError"),
+                t("ticket.permissionMessage"),
+              );
             }
           }
         } catch (err) {
@@ -601,7 +640,8 @@ export default function TicketWallet() {
       if (ticket.status !== "Active") return false;
 
       // Must be a future event (if event date exists)
-      const event = typeof ticket.event_id === "object" ? ticket.event_id : null;
+      const event =
+        typeof ticket.event_id === "object" ? ticket.event_id : null;
       if (event?.date) {
         const eventDate = new Date(event.date);
         const now = new Date();
@@ -751,10 +791,7 @@ export default function TicketWallet() {
 
       {/* Hidden renderer for ticket capture */}
       {printingTicket && (
-        <DownloadableTicket
-          ticket={printingTicket}
-          ticketRef={ticketRef}
-        />
+        <DownloadableTicket ticket={printingTicket} ticketRef={ticketRef} />
       )}
     </SafeAreaView>
   );

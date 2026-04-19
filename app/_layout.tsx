@@ -1,5 +1,5 @@
 import { initializeI18n } from "@/i18n";
-import { ClerkLoaded, ClerkProvider, useClerk } from "@clerk/expo";
+import { ClerkProvider, useClerk } from "@clerk/expo";
 import { Syne_700Bold } from "@expo-google-fonts/syne";
 import { useFonts } from "expo-font";
 import * as NavigationBar from "expo-navigation-bar";
@@ -176,11 +176,9 @@ export default function RootLayout() {
     <ThemeProvider>
       <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
         <SplashManager fontsLoaded={fontsLoaded} i18nReady={i18nReady} />
-        <ClerkLoaded>
-          <GlobalErrorBoundary>
-            <AppShell />
-          </GlobalErrorBoundary>
-        </ClerkLoaded>
+        <GlobalErrorBoundary>
+          <AppShell />
+        </GlobalErrorBoundary>
       </ClerkProvider>
     </ThemeProvider>
   );

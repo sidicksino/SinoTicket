@@ -1,14 +1,15 @@
+import LoadingScreen from "@/components/LoadingScreen";
+import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@clerk/expo";
 import { Redirect, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useTheme } from "@/context/ThemeContext";
 
 const Layout = () => {
   const { isSignedIn, isLoaded } = useAuth();
   const { isDark } = useTheme();
 
   if (!isLoaded) {
-    return null;
+    return <LoadingScreen />;
   }
 
   if (isSignedIn) {
@@ -24,28 +25,28 @@ const Layout = () => {
           name="sign-up"
           options={{
             headerShown: false,
-            animation: "slide_from_right"
+            animation: "slide_from_right",
           }}
         />
         <Stack.Screen
           name="sign-in"
           options={{
             headerShown: false,
-            animation: "slide_from_right"
+            animation: "slide_from_right",
           }}
         />
         <Stack.Screen
           name="sign-up-phone"
           options={{
             headerShown: false,
-            animation: "slide_from_right"
+            animation: "slide_from_right",
           }}
         />
         <Stack.Screen
           name="forgot-password"
           options={{
             headerShown: false,
-            animation: "slide_from_right"
+            animation: "slide_from_right",
           }}
         />
       </Stack>

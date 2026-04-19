@@ -178,9 +178,7 @@ export default function EventDetail() {
         <View style={{ height: SCREEN_HEIGHT * 0.55, width: "100%" }}>
           <Image
             source={{
-              uri:
-                event.imageUrl ||
-                "https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800",
+              uri: event.imageUrl,
             }}
             style={{ width: "100%", height: "100%", position: "absolute" }}
             contentFit="cover"

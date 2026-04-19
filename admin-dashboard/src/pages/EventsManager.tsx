@@ -1,19 +1,18 @@
-import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
+import { useAuth } from "@clerk/clerk-react";
 import {
+  Calendar as CalendarIcon,
+  Edit,
+  Eye,
+  Filter,
+  ImageIcon,
+  Loader2,
   Plus,
   Search,
-  Filter,
-  Loader2,
-  Calendar as CalendarIcon,
-  X,
-  Edit,
   Trash2,
-  Eye,
-  ImageIcon,
   Upload,
-} from 'lucide-react';
-import { useAuth } from '@clerk/clerk-react';
-import { useRef } from 'react';
+  X,
+} from "lucide-react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 
 // ─── Types ────────────────────────────────────────
 interface Artist {
@@ -60,17 +59,17 @@ interface EventFormData {
 }
 
 const EMPTY_FORM: EventFormData = {
-  title: '',
-  description: '',
-  date: '',
-  imageUrl: '',
-  venue_id: '',
-  category: 'Music',
-  ticket_categories: [{ name: 'General Admission', price: 0, quantity: 100 }],
+  title: "",
+  description: "",
+  date: "",
+  imageUrl: "",
+  venue_id: "",
+  category: "Music",
+  ticket_categories: [{ name: "General Admission", price: 0, quantity: 100 }],
   artist_lineup: [],
 };
 
-const CATEGORIES = ['Music', 'Sports', 'Cultural', 'Business', 'Fashion'];
+const CATEGORIES = ["Music", "Sports", "Cultural", "Business", "Fashion"];
 
 export default function EventsManager() {
   const { getToken } = useAuth();
@@ -78,15 +77,15 @@ export default function EventsManager() {
   const [events, setEvents] = useState<Event[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [filterCategory, setFilterCategory] = useState('');
+  const [search, setSearch] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<EventFormData>(EMPTY_FORM);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // Delete
   const [deleteTarget, setDeleteTarget] = useState<Event | null>(null);
@@ -98,7 +97,7 @@ export default function EventsManager() {
   // File upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [previewUrl, setPreviewUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
 
   // ─── Fetch data ─────────────────────────────────
@@ -106,8 +105,8 @@ export default function EventsManager() {
     try {
       setLoading(true);
       const [eventsRes, venuesRes] = await Promise.all([
-        fetch('http://localhost:5001/api/events'),
-        fetch('http://localhost:5001/api/venue/getVenue'),
+        fetch("http://localhost:5001/api/events"),
+        fetch("http://localhost:5001/api/venue/getVenue"),
       ]);
       const eventsData = await eventsRes.json();
       const venuesData = await venuesRes.json();
@@ -116,17 +115,22 @@ export default function EventsManager() {
       if (venuesData.success) {
         setVenues(venuesData.venues);
         if (venuesData.venues.length > 0) {
-          setFormData((prev) => ({ ...prev, venue_id: venuesData.venues[0]._id }));
+          setFormData((prev) => ({
+            ...prev,
+            venue_id: venuesData.venues[0]._id,
+          }));
         }
       }
     } catch (err) {
-      console.error('Failed to fetch data', err);
+      console.error("Failed to fetch data", err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   // ─── Filtered events ────────────────────────────
   const filteredEvents = events.filter((e) => {
@@ -143,11 +147,11 @@ export default function EventsManager() {
     setEditingEvent(null);
     setFormData({
       ...EMPTY_FORM,
-      venue_id: venues.length > 0 ? venues[0]._id : '',
+      venue_id: venues.length > 0 ? venues[0]._id : "",
     });
     setSelectedFile(null);
-    setPreviewUrl('');
-    setError('');
+    setPreviewUrl("");
+    setError("");
     setShowModal(true);
   };
 
@@ -156,23 +160,24 @@ export default function EventsManager() {
     setFormData({
       title: event.title,
       description: event.description,
-      date: event.date ? new Date(event.date).toISOString().slice(0, 16) : '',
-      imageUrl: event.imageUrl || '',
-      venue_id: event.venue_id?._id || '',
+      date: event.date ? new Date(event.date).toISOString().slice(0, 16) : "",
+      imageUrl: event.imageUrl || "",
+      venue_id: event.venue_id?._id || "",
       category: event.category,
       ticket_categories: event.ticket_categories?.map((tc) => ({
         name: tc.name,
         price: tc.price,
         quantity: tc.quantity,
-      })) || [{ name: 'General Admission', price: 0, quantity: 100 }],
-      artist_lineup: event.artist_lineup?.map((a) => ({
-        name: a.name,
-        time: a.time,
-      })) || [],
+      })) || [{ name: "General Admission", price: 0, quantity: 100 }],
+      artist_lineup:
+        event.artist_lineup?.map((a) => ({
+          name: a.name,
+          time: a.time,
+        })) || [],
     });
     setSelectedFile(null);
-    setPreviewUrl(event.imageUrl || '');
-    setError('');
+    setPreviewUrl(event.imageUrl || "");
+    setError("");
     setShowModal(true);
   };
 
@@ -196,10 +201,10 @@ export default function EventsManager() {
     try {
       const token = await getToken();
       const uploadFormData = new FormData();
-      uploadFormData.append('image', selectedFile);
+      uploadFormData.append("image", selectedFile);
 
-      const res = await fetch('http://localhost:5001/api/upload', {
-        method: 'POST',
+      const res = await fetch("http://localhost:5001/api/upload", {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -210,10 +215,10 @@ export default function EventsManager() {
       if (data.success) {
         return data.imageUrl;
       } else {
-        throw new Error(data.message || 'Image upload failed');
+        throw new Error(data.message || "Image upload failed");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Image upload failed');
+      setError(err instanceof Error ? err.message : "Image upload failed");
       return null;
     } finally {
       setUploading(false);
@@ -226,7 +231,7 @@ export default function EventsManager() {
       ...formData,
       ticket_categories: [
         ...formData.ticket_categories,
-        { name: '', price: 0, quantity: 0 },
+        { name: "", price: 0, quantity: 0 },
       ],
     });
   };
@@ -234,10 +239,10 @@ export default function EventsManager() {
   const updateTicket = (
     index: number,
     field: keyof TicketCategory,
-    value: string
+    value: string,
   ) => {
     const updated = [...formData.ticket_categories];
-    if (field === 'name') {
+    if (field === "name") {
       updated[index][field] = value;
     } else {
       (updated[index][field] as number) = Number(value);
@@ -255,18 +260,11 @@ export default function EventsManager() {
   const addArtist = () => {
     setFormData({
       ...formData,
-      artist_lineup: [
-        ...formData.artist_lineup,
-        { name: '', time: '' },
-      ],
+      artist_lineup: [...formData.artist_lineup, { name: "", time: "" }],
     });
   };
 
-  const updateArtist = (
-    index: number,
-    field: keyof Artist,
-    value: string
-  ) => {
+  const updateArtist = (index: number, field: keyof Artist, value: string) => {
     const updated = [...formData.artist_lineup];
     updated[index][field] = value;
     setFormData({ ...formData, artist_lineup: updated });
@@ -282,11 +280,11 @@ export default function EventsManager() {
   const handleSave = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
-    setError('');
+    setError("");
 
     try {
       const token = await getToken();
-      
+
       // 1. Upload image if selected
       const finalImageUrl = await uploadImage();
       if (!finalImageUrl && selectedFile) return; // Error already set in uploadImage
@@ -298,7 +296,7 @@ export default function EventsManager() {
         title: formData.title,
         description: formData.description,
         date: eventDate.toISOString(),
-        imageUrl: finalImageUrl || 'https://images.unsplash.com/photo-1540575861501-7ad058c67a3f?q=80&w=800',
+        imageUrl: finalImageUrl,
         venue_id: formData.venue_id,
         category: formData.category,
         ticket_categories: formData.ticket_categories,
@@ -307,12 +305,12 @@ export default function EventsManager() {
 
       const url = isEdit
         ? `http://localhost:5001/api/events/${editingEvent!._id}`
-        : 'http://localhost:5001/api/events/add';
+        : "http://localhost:5001/api/events/add";
 
       const res = await fetch(url, {
-        method: isEdit ? 'PUT' : 'POST',
+        method: isEdit ? "PUT" : "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
@@ -325,10 +323,10 @@ export default function EventsManager() {
         setFormData(EMPTY_FORM);
         fetchData();
       } else {
-        setError(data.message || 'Validation error. Check fields.');
+        setError(data.message || "Validation error. Check fields.");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setSaving(false);
     }
@@ -342,7 +340,7 @@ export default function EventsManager() {
       const token = await getToken();
       const res = await fetch(
         `http://localhost:5001/api/events/${deleteTarget._id}`,
-        { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }
+        { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
       );
       const data = await res.json();
       if (data.success) {
@@ -358,8 +356,10 @@ export default function EventsManager() {
 
   // ─── Helpers ────────────────────────────────────
   function getSalesInfo(event: Event) {
-    const total = event.ticket_categories?.reduce((s, c) => s + (c.quantity || 0), 0) || 0;
-    const sold = event.ticket_categories?.reduce((s, c) => s + (c.sold || 0), 0) || 0;
+    const total =
+      event.ticket_categories?.reduce((s, c) => s + (c.quantity || 0), 0) || 0;
+    const sold =
+      event.ticket_categories?.reduce((s, c) => s + (c.sold || 0), 0) || 0;
     const pct = total === 0 ? 0 : Math.round((sold / total) * 100);
     return { total, sold, pct };
   }
@@ -367,9 +367,11 @@ export default function EventsManager() {
   function getStatusBadge(event: Event) {
     const d = new Date(event.date);
     const now = new Date();
-    if (event.status === 'Ended' || d < now) return { label: 'Ended', cls: 'bg-error/10 text-error' };
-    if (event.status === 'Ongoing') return { label: 'Live', cls: 'bg-success/10 text-success' };
-    return { label: 'Upcoming', cls: 'bg-primary/10 text-primary' };
+    if (event.status === "Ended" || d < now)
+      return { label: "Ended", cls: "bg-error/10 text-error" };
+    if (event.status === "Ongoing")
+      return { label: "Live", cls: "bg-success/10 text-success" };
+    return { label: "Upcoming", cls: "bg-primary/10 text-primary" };
   }
 
   // ─── Render ─────────────────────────────────────
@@ -379,7 +381,9 @@ export default function EventsManager() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-text">Events</h2>
-          <p className="text-subtext mt-1">Create and manage your platform events.</p>
+          <p className="text-subtext mt-1">
+            Create and manage your platform events.
+          </p>
         </div>
         <button
           onClick={openAdd}
@@ -394,12 +398,17 @@ export default function EventsManager() {
       <div className="bg-card rounded-3xl border border-card-border overflow-hidden shadow-sm">
         <div className="p-5 border-b border-card-border flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:w-96">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-subtext" size={18} />
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-subtext"
+              size={18}
+            />
             <input
               type="text"
               placeholder="Search events..."
               value={search}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setSearch(e.target.value)
+              }
               className="w-full pl-12 pr-4 py-2.5 bg-input-bg border border-card-border rounded-xl text-text placeholder:text-subtext/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/50 transition-all font-medium"
             />
           </div>
@@ -412,7 +421,9 @@ export default function EventsManager() {
             >
               <option value="">All Categories</option>
               {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
           </div>
@@ -429,8 +440,8 @@ export default function EventsManager() {
             <h3 className="text-lg font-bold text-text">No events found</h3>
             <p className="text-subtext text-sm mt-1">
               {events.length > 0
-                ? 'Try adjusting your search or filters.'
-                : 'Create your first event to get started.'}
+                ? "Try adjusting your search or filters."
+                : "Create your first event to get started."}
             </p>
           </div>
         ) : (
@@ -475,17 +486,19 @@ export default function EventsManager() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-subtext">
-                        {event.venue_id?.name || 'TBA'}
+                        {event.venue_id?.name || "TBA"}
                       </td>
                       <td className="px-6 py-4 text-sm font-medium text-text">
-                        {new Date(event.date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
+                        {new Date(event.date).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
                         })}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${status.cls}`}>
+                        <span
+                          className={`text-xs font-bold px-2.5 py-1 rounded-lg ${status.cls}`}
+                        >
                           {status.label}
                         </span>
                       </td>
@@ -496,7 +509,7 @@ export default function EventsManager() {
                         <div className="w-24 h-1.5 bg-card-border rounded-full mt-1 overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all ${
-                              pct > 80 ? 'bg-success' : 'bg-primary'
+                              pct > 80 ? "bg-success" : "bg-primary"
                             }`}
                             style={{ width: `${pct}%` }}
                           />
@@ -542,7 +555,7 @@ export default function EventsManager() {
           <div className="bg-card rounded-3xl w-full max-w-2xl max-h-[90vh] shadow-2xl border border-card-border flex flex-col animate-in zoom-in-95 duration-200">
             <div className="px-6 py-5 border-b border-card-border flex items-center justify-between flex-shrink-0">
               <h3 className="text-xl font-bold text-text">
-                {editingEvent ? 'Edit Event' : 'Create New Event'}
+                {editingEvent ? "Edit Event" : "Create New Event"}
               </h3>
               <button
                 disabled={saving}
@@ -628,7 +641,9 @@ export default function EventsManager() {
                         className="w-full px-4 py-3 bg-input-bg border border-card-border rounded-xl text-text focus:ring-2 focus:ring-primary/30 focus:border-primary/50 outline-none"
                       >
                         {CATEGORIES.map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -643,26 +658,38 @@ export default function EventsManager() {
                         accept="image/*"
                         className="hidden"
                       />
-                      <div 
+                      <div
                         onClick={() => fileInputRef.current?.click()}
                         className="relative h-32 w-full bg-input-bg border-2 border-dashed border-card-border rounded-xl overflow-hidden cursor-pointer hover:border-primary/50 transition-all flex flex-col items-center justify-center group"
                       >
                         {previewUrl ? (
                           <>
-                            <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                            <img
+                              src={previewUrl}
+                              alt="Preview"
+                              className="w-full h-full object-cover"
+                            />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Upload className="text-white" size={24} />
                             </div>
                           </>
                         ) : (
                           <>
-                            <ImageIcon className="text-subtext mb-2" size={24} />
-                            <span className="text-xs text-subtext font-bold uppercase tracking-widest">Click to upload</span>
+                            <ImageIcon
+                              className="text-subtext mb-2"
+                              size={24}
+                            />
+                            <span className="text-xs text-subtext font-bold uppercase tracking-widest">
+                              Click to upload
+                            </span>
                           </>
                         )}
                         {uploading && (
                           <div className="absolute inset-0 bg-card/60 flex items-center justify-center">
-                            <Loader2 className="text-primary animate-spin" size={24} />
+                            <Loader2
+                              className="text-primary animate-spin"
+                              size={24}
+                            />
                           </div>
                         )}
                       </div>
@@ -700,7 +727,9 @@ export default function EventsManager() {
 
                   <div className="space-y-3">
                     {formData.artist_lineup.length === 0 ? (
-                      <p className="text-xs text-subtext italic">No artists added yet.</p>
+                      <p className="text-xs text-subtext italic">
+                        No artists added yet.
+                      </p>
                     ) : (
                       formData.artist_lineup.map((artist, index) => (
                         <div key={index} className="flex gap-2 items-center">
@@ -710,7 +739,7 @@ export default function EventsManager() {
                             required
                             value={artist.name}
                             onChange={(e) =>
-                              updateArtist(index, 'name', e.target.value)
+                              updateArtist(index, "name", e.target.value)
                             }
                             className="flex-1 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
                           />
@@ -719,7 +748,7 @@ export default function EventsManager() {
                             placeholder="Time (e.g. 8:00 PM)"
                             value={artist.time}
                             onChange={(e) =>
-                              updateArtist(index, 'time', e.target.value)
+                              updateArtist(index, "time", e.target.value)
                             }
                             className="w-40 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
                           />
@@ -758,7 +787,7 @@ export default function EventsManager() {
                           required
                           value={cat.name}
                           onChange={(e) =>
-                            updateTicket(index, 'name', e.target.value)
+                            updateTicket(index, "name", e.target.value)
                           }
                           className="flex-1 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
                         />
@@ -769,11 +798,13 @@ export default function EventsManager() {
                           required
                           value={cat.price}
                           onChange={(e) =>
-                            updateTicket(index, 'price', e.target.value)
+                            updateTicket(index, "price", e.target.value)
                           }
                           className="w-24 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
                         />
-                        <span className="text-subtext font-bold text-xs">XAF</span>
+                        <span className="text-subtext font-bold text-xs">
+                          XAF
+                        </span>
                         <input
                           type="number"
                           placeholder="Qty"
@@ -781,7 +812,7 @@ export default function EventsManager() {
                           required
                           value={cat.quantity}
                           onChange={(e) =>
-                            updateTicket(index, 'quantity', e.target.value)
+                            updateTicket(index, "quantity", e.target.value)
                           }
                           className="w-20 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
                         />
@@ -817,9 +848,9 @@ export default function EventsManager() {
                 {saving || uploading ? (
                   <Loader2 className="animate-spin" size={20} />
                 ) : editingEvent ? (
-                  'Update Event'
+                  "Update Event"
                 ) : (
-                  'Publish Event'
+                  "Publish Event"
                 )}
               </button>
             </div>
@@ -849,8 +880,12 @@ export default function EventsManager() {
 
             <div className="p-6 -mt-8 relative space-y-4 max-h-[70vh] overflow-y-auto">
               <div className="flex items-start justify-between gap-4">
-                <h3 className="text-xl font-bold text-text">{viewEvent.title}</h3>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-lg flex-shrink-0 ${getStatusBadge(viewEvent).cls}`}>
+                <h3 className="text-xl font-bold text-text">
+                  {viewEvent.title}
+                </h3>
+                <span
+                  className={`text-xs font-bold px-2.5 py-1 rounded-lg flex-shrink-0 ${getStatusBadge(viewEvent).cls}`}
+                >
                   {getStatusBadge(viewEvent).label}
                 </span>
               </div>
@@ -865,11 +900,11 @@ export default function EventsManager() {
                     Date
                   </div>
                   <div className="text-sm font-bold text-text">
-                    {new Date(viewEvent.date).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
+                    {new Date(viewEvent.date).toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
                     })}
                   </div>
                 </div>
@@ -878,60 +913,74 @@ export default function EventsManager() {
                     Venue
                   </div>
                   <div className="text-sm font-bold text-text">
-                    {viewEvent.venue_id?.name || 'TBA'}
+                    {viewEvent.venue_id?.name || "TBA"}
                   </div>
                 </div>
               </div>
 
               {/* Artist Lineup View */}
-              {viewEvent.artist_lineup && viewEvent.artist_lineup.length > 0 && (
-                <div className="pt-4 border-t border-card-border">
-                  <h4 className="text-sm font-bold text-text mb-3">Artist Lineup</h4>
-                  <div className="space-y-3">
-                    {viewEvent.artist_lineup.map((artist, i) => (
-                      <div key={i} className="flex justify-between items-center text-sm bg-card-border/10 p-2.5 rounded-xl border border-card-border/30">
-                        <div className="font-bold text-text">{artist.name}</div>
-                        <div className="text-xs text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-md">
-                          {artist.time}
+              {viewEvent.artist_lineup &&
+                viewEvent.artist_lineup.length > 0 && (
+                  <div className="pt-4 border-t border-card-border">
+                    <h4 className="text-sm font-bold text-text mb-3">
+                      Artist Lineup
+                    </h4>
+                    <div className="space-y-3">
+                      {viewEvent.artist_lineup.map((artist, i) => (
+                        <div
+                          key={i}
+                          className="flex justify-between items-center text-sm bg-card-border/10 p-2.5 rounded-xl border border-card-border/30"
+                        >
+                          <div className="font-bold text-text">
+                            {artist.name}
+                          </div>
+                          <div className="text-xs text-primary font-bold bg-primary/10 px-2 py-0.5 rounded-md">
+                            {artist.time}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Tickets breakdown */}
-              {viewEvent.ticket_categories && viewEvent.ticket_categories.length > 0 && (
-                <div className="pt-4 border-t border-card-border">
-                  <h4 className="text-sm font-bold text-text mb-3">Sales Breakdown</h4>
-                  <div className="space-y-3">
-                    {viewEvent.ticket_categories.map((tc, i) => {
-                      const tcPct = tc.quantity === 0 ? 0 : Math.round(((tc.sold || 0) / tc.quantity) * 100);
-                      return (
-                        <div key={i} className="space-y-1.5">
-                          <div className="flex justify-between text-xs font-bold">
-                            <span className="text-text">{tc.name}</span>
-                            <span className="text-subtext">
-                              {(tc.sold || 0)}/{tc.quantity} Sold
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1 h-2 bg-card-border rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all duration-500 ${tcPct > 80 ? 'bg-success' : 'bg-primary'}`}
-                                style={{ width: `${tcPct}%` }}
-                              />
+              {viewEvent.ticket_categories &&
+                viewEvent.ticket_categories.length > 0 && (
+                  <div className="pt-4 border-t border-card-border">
+                    <h4 className="text-sm font-bold text-text mb-3">
+                      Sales Breakdown
+                    </h4>
+                    <div className="space-y-3">
+                      {viewEvent.ticket_categories.map((tc, i) => {
+                        const tcPct =
+                          tc.quantity === 0
+                            ? 0
+                            : Math.round(((tc.sold || 0) / tc.quantity) * 100);
+                        return (
+                          <div key={i} className="space-y-1.5">
+                            <div className="flex justify-between text-xs font-bold">
+                              <span className="text-text">{tc.name}</span>
+                              <span className="text-subtext">
+                                {tc.sold || 0}/{tc.quantity} Sold
+                              </span>
                             </div>
-                            <span className="text-xs font-bold text-primary min-w-[60px] text-right">
-                              {tc.price.toLocaleString()} XAF
-                            </span>
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1 h-2 bg-card-border rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-500 ${tcPct > 80 ? "bg-success" : "bg-primary"}`}
+                                  style={{ width: `${tcPct}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-bold text-primary min-w-[60px] text-right">
+                                {tc.price.toLocaleString()} XAF
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               <div className="flex gap-3 pt-4 sticky bottom-0 bg-card pb-2">
                 <button
@@ -964,7 +1013,7 @@ export default function EventsManager() {
             </div>
             <h3 className="text-xl font-bold text-text mb-2">Delete Event?</h3>
             <p className="text-subtext text-sm mb-6">
-              Are you sure you want to delete{' '}
+              Are you sure you want to delete{" "}
               <span className="font-bold text-text">{deleteTarget.title}</span>?
               This action cannot be undone.
             </p>
@@ -983,7 +1032,7 @@ export default function EventsManager() {
                 {deleting ? (
                   <Loader2 className="animate-spin" size={20} />
                 ) : (
-                  'Delete'
+                  "Delete"
                 )}
               </button>
             </div>
