@@ -1,13 +1,13 @@
 import { initializeI18n } from "@/i18n";
-import { ClerkLoaded, ClerkProvider } from "@clerk/expo";
+import { ClerkLoaded, ClerkProvider, useClerk } from "@clerk/expo";
 import { Syne_700Bold } from "@expo-google-fonts/syne";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
 import * as NavigationBar from "expo-navigation-bar";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LogBox, Platform, Text, View } from "react-native";
 import "react-native-reanimated";
 import GlobalErrorBoundary, {
@@ -22,19 +22,56 @@ export { ErrorBoundary };
 
 WebBrowser.maybeCompleteAuthSession();
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-void SplashScreen.preventAutoHideAsync();
-
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 
 LogBox.ignoreLogs(["Clerk:"]);
+
+// SplashManager: Hides splash only when fonts, i18n, and Clerk are all ready
+// Runs outside ClerkLoaded to hide splash immediately when everything is ready
+function SplashManager({
+  fontsLoaded,
+  i18nReady,
+}: {
+  fontsLoaded: boolean;
+  i18nReady: boolean;
+}) {
+  const { loaded: isClerkLoaded } = useClerk();
+  const hasHidden = useRef(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!hasHidden.current) {
+        hasHidden.current = true;
+        SplashScreen.hideAsync().catch((error) => {
+          console.warn("Splash hide failed:", error);
+        });
+      }
+    }, 6000);
+
+    if (fontsLoaded && i18nReady && isClerkLoaded && !hasHidden.current) {
+      hasHidden.current = true;
+      clearTimeout(timeout);
+      SplashScreen.hideAsync().catch((error) => {
+        console.warn("Splash hide failed:", error);
+      });
+    }
+
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [fontsLoaded, i18nReady, isClerkLoaded]);
+
+  return null;
+}
 
 function AppShell() {
   const { isDark } = useTheme();
 
   useEffect(() => {
     if (Platform.OS === "android") {
-      void NavigationBar.setBackgroundColorAsync(isDark ? "#0F172A" : "#FFFFFF");
+      void NavigationBar.setBackgroundColorAsync(
+        isDark ? "#0F172A" : "#FFFFFF",
+      );
       void NavigationBar.setButtonStyleAsync(isDark ? "light" : "dark");
     }
   }, [isDark]);
@@ -65,6 +102,13 @@ export default function RootLayout() {
   const [i18nReady, setI18nReady] = useState(false);
 
   useEffect(() => {
+    // Prevent the splash screen from auto-hiding before asset loading is complete.
+    SplashScreen.preventAutoHideAsync().catch(() => {
+      // Ignore if already prevented
+    });
+  }, []);
+
+  useEffect(() => {
     let isMounted = true;
 
     const setupLocalization = async () => {
@@ -86,37 +130,8 @@ export default function RootLayout() {
     };
   }, []);
 
-  useEffect(() => {
-    let hideTimer: ReturnType<typeof setTimeout> | null = null;
-    let forceHideTimer: ReturnType<typeof setTimeout> | null = null;
-
-    const hideSplash = async () => {
-      try {
-        await SplashScreen.hideAsync();
-      } catch (error) {
-        console.warn("Splash hide failed:", error);
-      }
-    };
-
-    if (fontsLoaded && i18nReady) {
-      hideTimer = setTimeout(() => {
-        void hideSplash();
-      }, 500);
-    }
-
-    // Fail-safe: never keep users trapped on the splash screen forever.
-    forceHideTimer = setTimeout(() => {
-      void hideSplash();
-    }, 6000);
-
-    return () => {
-      if (hideTimer) clearTimeout(hideTimer);
-      if (forceHideTimer) clearTimeout(forceHideTimer);
-    };
-  }, [fontsLoaded, i18nReady]);
-
   if (!fontsLoaded || !i18nReady) {
-    return <View style={{ flex: 1, backgroundColor: "#1E88E5" }} />;
+    return null;
   }
 
   if (!publishableKey) {
@@ -160,6 +175,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
+        <SplashManager fontsLoaded={fontsLoaded} i18nReady={i18nReady} />
         <ClerkLoaded>
           <GlobalErrorBoundary>
             <AppShell />
