@@ -8,11 +8,36 @@ import { useClerk, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { Image } from "expo-image";
+import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const ADMIN_DASHBOARD_URL = process.env.EXPO_PUBLIC_ADMIN_DASHBOARD_URL ?? "";
+
+const resolveAdminUrl = (path: string) => {
+  if (ADMIN_DASHBOARD_URL) {
+    const normalizedBase = ADMIN_DASHBOARD_URL.endsWith("/")
+      ? ADMIN_DASHBOARD_URL
+      : `${ADMIN_DASHBOARD_URL}/`;
+    return new URL(path.replace(/^\//, ""), normalizedBase).toString();
+  }
+
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    return new URL(path, window.location.origin).toString();
+  }
+
+  return "";
+};
 
 export default function Profile() {
   const { colors, isDark, themePreference, setThemePreference } = useTheme();
@@ -78,6 +103,22 @@ export default function Profile() {
       },
       { text: t("common.cancel"), style: "cancel" },
     ]);
+  };
+
+  const openAdminPage = async (path: string) => {
+    const url = resolveAdminUrl(path);
+
+    if (!url) {
+      Alert.alert(t("common.error"), t("profile.externalLinkUnavailable"));
+      return;
+    }
+
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.warn("Failed to open external link:", error);
+      Alert.alert(t("common.error"), t("profile.externalLinkFailed"));
+    }
   };
 
   return (
@@ -277,7 +318,7 @@ export default function Profile() {
               icon="card-outline"
               title={t("profile.paymentMethods")}
               subtitle={t("profile.visaEnding")}
-              onPress={() => {}}
+              onPress={() => openAdminPage("/payment-methods")}
             />
             <SettingsRow
               icon="notifications-outline"
@@ -408,18 +449,18 @@ export default function Profile() {
               icon="help-buoy-outline"
               title={t("profile.helpCenter")}
               isFirst
-              onPress={() => {}}
+              onPress={() => openAdminPage("/help-center")}
             />
             <SettingsRow
               icon="shield-checkmark-outline"
               title={t("profile.privacyPolicy")}
-              onPress={() => {}}
+              onPress={() => openAdminPage("/privacy-policy")}
             />
             <SettingsRow
               icon="document-text-outline"
               title={t("profile.termsOfService")}
               isLast
-              onPress={() => {}}
+              onPress={() => openAdminPage("/terms-of-service")}
             />
           </View>
 

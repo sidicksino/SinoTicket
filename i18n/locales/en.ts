@@ -70,6 +70,8 @@ const en = {
       setUpAccount: "Set up your account",
       languageUpdated: "Language updated.",
       updateLanguageFailed: "Failed to update language preference.",
+      externalLinkUnavailable: "This page is not available right now.",
+      externalLinkFailed: "Unable to open the link. Please try again.",
     },
     auth: {
       welcome: "Welcome",

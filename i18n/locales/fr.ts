@@ -70,6 +70,9 @@ const fr = {
       setUpAccount: "Configurez votre compte",
       languageUpdated: "Langue mise a jour.",
       updateLanguageFailed: "Echec de la mise a jour de la langue.",
+      externalLinkUnavailable:
+        "Cette page n'est pas disponible pour le moment.",
+      externalLinkFailed: "Impossible d'ouvrir le lien. Veuillez reessayer.",
     },
     auth: {
       welcome: "Bienvenue",

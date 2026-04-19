@@ -5,9 +5,13 @@ import AdminLayout from "./components/AdminLayout";
 import { useTranslation } from "./i18n";
 import DashboardHome from "./pages/DashboardHome";
 import EventsManager from "./pages/EventsManager";
+import HelpCenter from "./pages/HelpCenter";
 import LoginScreen from "./pages/LoginScreen";
+import PaymentMethods from "./pages/PaymentMethods";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import SeatsManager from "./pages/SeatsManager";
 import SectionsManager from "./pages/SectionsManager";
+import TermsOfService from "./pages/TermsOfService";
 import TicketsManager from "./pages/TicketsManager";
 import UsersManager from "./pages/UsersManager";
 import VenuesManager from "./pages/VenuesManager";
@@ -157,6 +161,10 @@ function App() {
           <Routes>
             <Route path="/" element={<AdminLayout />}>
               <Route index element={<DashboardHome />} />
+              <Route path="help-center" element={<HelpCenter />} />
+              <Route path="privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="terms-of-service" element={<TermsOfService />} />
+              <Route path="payment-methods" element={<PaymentMethods />} />
               <Route path="events" element={<EventsManager />} />
               <Route path="venues" element={<VenuesManager />} />
               <Route path="sections" element={<SectionsManager />} />
