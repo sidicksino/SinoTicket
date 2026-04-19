@@ -270,7 +270,7 @@ export default function EventsManager() {
     });
   };
 
-  const updateTicket = (
+  const updateTicket = async (
     index: number,
     field: keyof TicketCategory,
     value: string,
@@ -282,6 +282,24 @@ export default function EventsManager() {
       (updated[index][field] as number) = Number(value);
     }
     setFormData({ ...formData, ticket_categories: updated });
+
+    if (field === "section_id" && value) {
+      try {
+        const res = await fetch(apiUrl(`/api/seats?section_id=${value}&limit=1`));
+        const data = await res.json();
+        if (data.success && data.total !== undefined) {
+          setFormData((prev) => {
+            const newTickets = [...prev.ticket_categories];
+            if (newTickets[index]) {
+              newTickets[index].quantity = data.total;
+            }
+            return { ...prev, ticket_categories: newTickets };
+          });
+        }
+      } catch (err) {
+        console.error("Failed to sync seat count", err);
+      }
+    }
   };
 
   const removeTicket = (index: number) => {
@@ -853,13 +871,14 @@ export default function EventsManager() {
                         <input
                           type="number"
                           placeholder="Qty"
-                          min="1"
+                          min="0"
                           required
+                          readOnly={!!cat.section_id}
                           value={cat.quantity}
                           onChange={(e) =>
                             updateTicket(index, "quantity", e.target.value)
                           }
-                          className="w-20 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                          className={`w-20 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20 ${cat.section_id ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                         <button
                           type="button"

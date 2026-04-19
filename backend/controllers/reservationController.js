@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Event = require('../models/Event');
 const Seat = require('../models/Seat');
 const Reservation = require('../models/Reservation');
+const Ticket = require('../models/Ticket');
 
 // Helper to get mongo user
 const getMongoUser = async (clerkId) => {
@@ -54,21 +55,36 @@ const reserveSeat = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Seat not found' });
     }
     
-    // Lazy Evaluation: If reserved but timer expired, it's legally available.
+    // Lazy Evaluation:
     const now = new Date();
     
-    // Check if the current user already has an active reservation for this seat
-    const existingReservation = await Reservation.findOne({
-        user_id: mongoUser._id,
+    // Check if there is already an active reservation for this seat + event
+    const activeReservation = await Reservation.findOne({
         event_id: event._id,
         seat_id: seat._id,
         status: 'Active',
         expires_at: { $gt: now }
     }).session(session);
 
-    const isAvailable = seat.status === 'available' || 
-                        (seat.status === 'reserved' && seat.reserved_until && seat.reserved_until < now) ||
-                        (existingReservation && seat.status === 'reserved');
+    // Check if the seat is already ticketed (booked) for this event
+    const existingTicket = await Ticket.findOne({
+        event_id: event._id,
+        seat_id: seat._id
+    }).session(session);
+
+    let isAvailable = true;
+    let existingReservation = null;
+
+    if (existingTicket) {
+        isAvailable = false;
+    } else if (activeReservation) {
+        if (!activeReservation.user_id.equals(mongoUser._id)) {
+            isAvailable = false; // Someone else has it reserved
+        } else {
+            // Current user already reserved it
+            existingReservation = activeReservation;
+        }
+    }
 
     if (!isAvailable) {
         await session.abortTransaction();
@@ -83,11 +99,8 @@ const reserveSeat = async (req, res) => {
         return res.status(400).json({ success: false, message: 'Seat does not belong to the Event\'s venue' });
     }
 
-    // 3. Lock the Seat (15 minute reservation timeout)
+    // 3. Define Expiration (15 minute reservation timeout)
     const expirationTime = new Date(now.getTime() + 15 * 60000); 
-    seat.status = 'reserved';
-    seat.reserved_until = expirationTime;
-    await seat.save({ session });
 
     // 4. Create or Update implicit Reservation Document
     let reservation;
@@ -156,12 +169,6 @@ const cancelReservations = async (req, res) => {
         await Reservation.updateMany(
             { _id: { $in: reservation_ids } },
             { status: 'Expired' } // Or 'Cancelled' if you add it to enum
-        ).session(session);
-
-        // Update seats back to available IF they are still reserved
-        await Seat.updateMany(
-            { _id: { $in: seatIds }, status: 'reserved' },
-            { status: 'available', $unset: { reserved_until: "" } }
         ).session(session);
 
         await session.commitTransaction();

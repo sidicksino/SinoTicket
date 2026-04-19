@@ -42,7 +42,7 @@ export default function SeatSelection() {
   const [reserving, setReserving] = useState(false);
 
   const { data, loading, refetch } = useFetch<any>(
-    `/api/seats?section_id=${params.section_id}&limit=200`,
+    `/api/seats?section_id=${params.section_id}&event_id=${params.event_id}&limit=200`,
     false,
   );
 

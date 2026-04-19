@@ -74,13 +74,12 @@ const checkoutReservation = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Reservation has expired. Please select the seat again.' });
         }
 
-        // 2. Validate the Seat is still legally locked by THIS reservation
+        // 2. Validate the Seat exists
         const seat = await Seat.findById(reservation.seat_id).session(session);
-        if (!seat || seat.status !== 'reserved' || seat.reserved_until < now) {
-            // Edge case: manual DB override or severe race condition
+        if (!seat) {
             await session.abortTransaction();
             session.endSession();
-            return res.status(400).json({ success: false, message: 'Seat is no longer reserved for you' });
+            return res.status(404).json({ success: false, message: 'Seat not found' });
         }
 
         // 2.5 Prevent Duplicate Tickets
@@ -122,11 +121,6 @@ const checkoutReservation = async (req, res) => {
         // Mark Reservation as Completed
         reservation.status = 'Completed';
         await reservation.save({ session });
-
-        // Mark Seat as permanently Booked and attach Ticket ID
-        seat.status = 'booked';
-        seat.current_ticket_id = savedTicket._id;
-        await seat.save({ session });
 
         // (Optional Increment Event Sold Count)
         const event = await Event.findById(reservation.event_id).session(session);

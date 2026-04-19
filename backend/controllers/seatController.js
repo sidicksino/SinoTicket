@@ -2,6 +2,8 @@ const User = require('../models/User');
 const Section = require('../models/Section');
 const Venue = require('../models/Venue');
 const Seat = require('../models/Seat');
+const Reservation = require('../models/Reservation');
+const Ticket = require('../models/Ticket');
 const mongoose = require('mongoose');
 
 const { clerkClient } = require('@clerk/express');
@@ -96,14 +98,48 @@ const getSeats = async (req, res) => {
            return res.status(200).json({ success: true, total: 0, page, limit, seats: [] });
        }
     }
-    if (req.query.status) query.status = req.query.status;
-
     const total = await Seat.countDocuments(query);
     const seats = await Seat.find(query)
       .sort({ number: 1 })
       .skip(skip)
       .limit(limit)
       .lean();
+
+    // DYNAMIC STATUS MAPPING
+    const event_id = req.query.event_id;
+    if (event_id && mongoose.Types.ObjectId.isValid(event_id)) {
+        const now = new Date();
+        const seatIds = seats.map(s => s._id);
+
+        const activeReservations = await Reservation.find({
+            event_id,
+            seat_id: { $in: seatIds },
+            status: 'Active',
+            expires_at: { $gt: now }
+        }).lean();
+
+        const tickets = await Ticket.find({
+            event_id,
+            seat_id: { $in: seatIds }
+        }).lean();
+
+        const reservedSeatIds = new Set(activeReservations.map(r => r.seat_id.toString()));
+        const bookedSeatIds = new Set(tickets.map(t => t.seat_id.toString()));
+
+        seats.forEach(seat => {
+            const sid = seat._id.toString();
+            if (bookedSeatIds.has(sid)) {
+                seat.status = 'booked';
+            } else if (reservedSeatIds.has(sid)) {
+                seat.status = 'reserved';
+            } else {
+                seat.status = 'available';
+            }
+        });
+    } else if (!event_id) {
+        // If no event_id is requested, we strongly force available because global DB status is deprecated
+        seats.forEach(seat => { seat.status = 'available'; });
+    }
 
     res.status(200).json({ success: true, total, page, limit, seats });
   } catch (error) {
