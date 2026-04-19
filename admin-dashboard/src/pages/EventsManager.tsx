@@ -784,7 +784,7 @@ export default function EventsManager() {
                       </p>
                     ) : (
                       formData.artist_lineup.map((artist, index) => (
-                        <div key={index} className="flex gap-2 items-center">
+                        <div key={index} className="flex flex-wrap sm:flex-nowrap gap-2 items-center p-3 sm:p-0 bg-card-border/10 sm:bg-transparent rounded-xl">
                           <input
                             type="text"
                             placeholder="Artist Name"
@@ -793,7 +793,7 @@ export default function EventsManager() {
                             onChange={(e) =>
                               updateArtist(index, "name", e.target.value)
                             }
-                            className="flex-1 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                            className="flex-1 w-full sm:w-auto min-w-[150px] px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
                           />
                           <input
                             type="text"
@@ -802,7 +802,7 @@ export default function EventsManager() {
                             onChange={(e) =>
                               updateArtist(index, "time", e.target.value)
                             }
-                            className="w-40 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                            className="w-full sm:w-40 flex-auto px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
                           />
                           <button
                             type="button"
@@ -832,12 +832,12 @@ export default function EventsManager() {
 
                   <div className="space-y-3">
                     {formData.ticket_categories.map((cat, index) => (
-                      <div key={index} className="flex gap-2 items-center">
+                      <div key={index} className="flex flex-wrap sm:flex-nowrap gap-2 items-center p-3 sm:p-0 bg-card-border/10 sm:bg-transparent rounded-xl">
                         <select
                           required
                           value={cat.section_id || ""}
                           onChange={(e) => updateTicket(index, "section_id", e.target.value)}
-                          className="w-32 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                          className="w-full sm:w-32 flex-auto px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
                         >
                           <option value="" disabled>Section</option>
                           {venueSections.map(s => (
@@ -852,22 +852,24 @@ export default function EventsManager() {
                           onChange={(e) =>
                             updateTicket(index, "name", e.target.value)
                           }
-                          className="flex-1 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                          className="flex-1 w-full sm:w-auto min-w-[120px] px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
                         />
-                        <input
-                          type="number"
-                          placeholder="Price"
-                          min="0"
-                          required
-                          value={cat.price}
-                          onChange={(e) =>
-                            updateTicket(index, "price", e.target.value)
-                          }
-                          className="w-24 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
-                        />
-                        <span className="text-subtext font-bold text-xs">
-                          XAF
-                        </span>
+                        <div className="flex items-center gap-2 w-full sm:w-auto flex-auto min-w-[120px]">
+                          <input
+                            type="number"
+                            placeholder="Price"
+                            min="0"
+                            required
+                            value={cat.price}
+                            onChange={(e) =>
+                              updateTicket(index, "price", e.target.value)
+                            }
+                            className="flex-1 w-full px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                          />
+                          <span className="text-subtext font-bold text-xs whitespace-nowrap">
+                            XAF
+                          </span>
+                        </div>
                         <input
                           type="number"
                           placeholder="Qty"
@@ -878,13 +880,13 @@ export default function EventsManager() {
                           onChange={(e) =>
                             updateTicket(index, "quantity", e.target.value)
                           }
-                          className={`w-20 px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20 ${cat.section_id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`w-full sm:w-20 flex-auto px-3 py-2.5 bg-input-bg border border-card-border rounded-lg text-text text-sm outline-none focus:ring-2 focus:ring-primary/20 ${cat.section_id ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                         <button
                           type="button"
                           onClick={() => removeTicket(index)}
                           disabled={formData.ticket_categories.length === 1}
-                          className="p-2 text-error hover:bg-error/10 rounded-lg disabled:opacity-30 transition-colors"
+                          className="p-2 w-full sm:w-auto flex justify-center text-error hover:bg-error/10 rounded-lg disabled:opacity-30 transition-colors"
                         >
                           <X size={16} />
                         </button>

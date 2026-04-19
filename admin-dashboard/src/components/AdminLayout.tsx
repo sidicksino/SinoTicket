@@ -12,9 +12,11 @@ import {
   Sun,
   Ticket,
   Users,
+  Menu,
   type LucideIcon,
 } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { useTranslation } from "../i18n";
 
@@ -48,19 +50,41 @@ export default function AdminLayout() {
   const { user } = useUser();
   const { theme, toggle } = useTheme();
   const { t } = useTranslation();
+  const location = useLocation();
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Close sidebar on route change on mobile
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen bg-background text-text">
+    <div className="flex min-h-screen bg-background text-text relative">
+      {/* Mobile Backdrop */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-overlay-dark z-40 md:hidden animate-in fade-in transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-card border-r border-card-border p-6 flex flex-col gap-8 sticky top-0 h-screen">
+      <aside
+        className={`w-64 bg-card border-r border-card-border p-6 flex flex-col gap-8 fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 md:relative md:translate-x-0 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         {/* Logo */}
-        <div className="flex items-center gap-2 px-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <Ticket className="text-white" size={20} />
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
+              <Ticket className="text-white" size={20} />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-text">
+              SinoTicket
+            </span>
           </div>
-          <span className="text-xl font-bold tracking-tight text-text">
-            SinoTicket
-          </span>
         </div>
 
         <nav className="flex flex-col gap-2 flex-1 overflow-y-auto">
@@ -123,12 +147,19 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col">
-        <header className="h-16 bg-card border-b border-card-border px-8 flex items-center justify-between sticky top-0 z-10">
-          <h1 className="text-lg font-bold text-text">
-            {t("admin.portalTitle")}
-          </h1>
+      <main className="flex-1 flex flex-col min-w-0">
+        <header className="h-16 bg-card border-b border-card-border px-4 md:px-8 flex items-center justify-between sticky top-0 z-10 box-border">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 -ml-2 text-subtext hover:bg-card-border/50 rounded-xl md:hidden"
+            >
+              <Menu size={24} />
+            </button>
+            <h1 className="text-lg font-bold text-text truncate hidden sm:block">
+              {t("admin.portalTitle")}
+            </h1>
+          </div>
 
           <div className="flex items-center gap-3">
             {/* Theme Toggle */}
@@ -162,7 +193,7 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <div className="p-8">
+        <div className="p-4 md:p-8 overflow-x-hidden">
           <Outlet />
         </div>
       </main>
