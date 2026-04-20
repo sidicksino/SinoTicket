@@ -70,7 +70,7 @@ export const useTranslation = () => {
 
       return Object.entries(params).reduce(
         (output, [paramKey, value]) =>
-          output.replaceAll(`{{${paramKey}}}`, String(value)),
+          output.split(`{{${paramKey}}}`).join(String(value)),
         template,
       );
     };
