@@ -11,6 +11,7 @@ import PaymentMethods from "./pages/PaymentMethods";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import SeatsManager from "./pages/SeatsManager";
 import SectionsManager from "./pages/SectionsManager";
+import SettingsManager from "./pages/SettingsManager";
 import TermsOfService from "./pages/TermsOfService";
 import TicketsManager from "./pages/TicketsManager";
 import UsersManager from "./pages/UsersManager";
@@ -171,6 +172,7 @@ function App() {
               <Route path="seats" element={<SeatsManager />} />
               <Route path="tickets" element={<TicketsManager />} />
               <Route path="users" element={<UsersManager />} />
+              <Route path="settings" element={<SettingsManager />} />
               <Route
                 path="*"
                 element={

@@ -28,7 +28,17 @@ const resolveLocale = (): Locale => {
     return "en";
   }
 
+  const saved = localStorage.getItem("sino-lang");
+  if (saved === "en" || saved === "fr") {
+    return saved as Locale;
+  }
+
   return navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en";
+};
+
+export const setLocale = (lang: Locale) => {
+  localStorage.setItem("sino-lang", lang);
+  window.location.reload();
 };
 
 const getValue = (locale: Locale, key: string): string => {
