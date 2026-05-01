@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/expo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const baseUrl = process.env.EXPO_PUBLIC_API_URL;
 
@@ -59,9 +59,10 @@ export const fetchAPI = async (url: string, options?: RequestInit) => {
       throw new Error("Server returned non-JSON response. Check backend logs.");
     }
   } catch (error: any) {
-    if (error.name !== "AbortError" && !error.message?.includes("aborted")) {
-      console.error(`[fetchAPI] Error fetching ${fullUrl}:`, error);
+    if (error.name === "AbortError" || error.message?.includes("aborted")) {
+      return; // Completely silent — expected during unmount/navigation
     }
+    console.error(`[fetchAPI] Error fetching ${fullUrl}:`, error);
     throw error;
   }
 };
@@ -124,8 +125,11 @@ export const useFetch = <T>(
   const [hasFetched, setHasFetched] = useState(false);
 
   // Persist by explicit cacheKey or fallback to URL-based key.
-  const storageKey = buildStorageKey(url, cacheKey);
+  const storageKey = useMemo(() => buildStorageKey(url, cacheKey), [url, cacheKey]);
   const previousStorageKeyRef = useRef<string | null>(null);
+  const isFetchingRef = useRef(false);
+  const dataRef = useRef<T | null>(null);
+  dataRef.current = data;
 
   const load = useCallback(
     async (signal?: AbortSignal) => {
@@ -139,12 +143,14 @@ export const useFetch = <T>(
         return;
       }
 
+      // Guard against overlapping requests
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
+
       try {
-        if (!data) setLoading(true); // Only show full loading if we have no data at all
+        if (!dataRef.current) setLoading(true); // Only show full loading if we have no data at all
         setIsRevalidating(true);
         setError(null);
-
-        let cachedData: T | null = null;
 
         // 1. Load cache first so UI can render offline/stale data immediately.
         if (storageKey) {
@@ -152,7 +158,6 @@ export const useFetch = <T>(
           if (cached) {
             try {
               const parsed = JSON.parse(cached);
-              cachedData = parsed;
               setData(parsed);
             } catch (e) {
               console.warn("[useFetch] Cache parse error:", e);
@@ -208,13 +213,14 @@ export const useFetch = <T>(
           }
         }
 
-        if (fallbackCacheUsed || data) {
+        if (fallbackCacheUsed || dataRef.current) {
           setIsOffline(true);
           setError(null);
         } else {
           setError(err.message || "Something went wrong");
         }
       } finally {
+        isFetchingRef.current = false;
         if (!signal?.aborted) {
           setHasFetched(true);
           setLoading(false);
@@ -222,7 +228,7 @@ export const useFetch = <T>(
         }
       }
     },
-    [url, isAuth, getToken, isLoaded, storageKey, data],
+    [url, isAuth, getToken, isLoaded, storageKey],
   );
 
   const loadRef = useRef(load);
@@ -247,14 +253,16 @@ export const useFetch = <T>(
       setError(null);
       setIsOffline(false);
 
-      load(controller.signal);
+      loadRef.current(controller.signal);
 
       return () => {
-        controller.abort();
+        if (!controller.signal.aborted) {
+          controller.abort();
+        }
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, isAuth, isLoaded, cacheKey, autoFetch]);
+  }, [url, isLoaded, autoFetch]);
 
   const refetch = useCallback(() => loadRef.current(), []);
 
