@@ -60,7 +60,7 @@ export const fetchAPI = async (url: string, options?: RequestInit) => {
     }
   } catch (error: any) {
     if (error.name === "AbortError" || error.message?.includes("aborted")) {
-      return; // Completely silent — expected during unmount/navigation
+      throw error; // Propagate cleanly — the hook already handles this
     }
     console.error(`[fetchAPI] Error fetching ${fullUrl}:`, error);
     throw error;
@@ -153,7 +153,8 @@ export const useFetch = <T>(
         setError(null);
 
         // 1. Load cache first so UI can render offline/stale data immediately.
-        if (storageKey) {
+        //    Skip disk read if we already have in-memory data.
+        if (!dataRef.current && storageKey) {
           const cached = await AsyncStorage.getItem(storageKey);
           if (cached) {
             try {
@@ -221,7 +222,7 @@ export const useFetch = <T>(
         }
       } finally {
         isFetchingRef.current = false;
-        if (!signal?.aborted) {
+        if (!signal || !signal.aborted) {
           setHasFetched(true);
           setLoading(false);
           setIsRevalidating(false);
@@ -262,7 +263,7 @@ export const useFetch = <T>(
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, isLoaded, autoFetch]);
+  }, [url, isLoaded, isAuth, autoFetch]);
 
   const refetch = useCallback(() => loadRef.current(), []);
 
