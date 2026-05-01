@@ -37,8 +37,8 @@ export const fetchAPI = async (url: string, options?: RequestInit) => {
 
       throw new Error(
         errorData.error ||
-          errorData.message ||
-          `HTTP error! status: ${response.status}`,
+        errorData.message ||
+        `HTTP error! status: ${response.status}`,
       );
     }
 
