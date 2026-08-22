@@ -27,7 +27,7 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const deviceScheme = useColorScheme() ?? "light";
+  const deviceScheme: ResolvedTheme = useColorScheme() === "dark" ? "dark" : "light";
   const [themePref, setThemePref] = useState<ThemePreference>("system");
   const [loaded, setLoaded] = useState(false);
 

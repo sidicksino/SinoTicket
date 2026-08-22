@@ -1,6 +1,6 @@
 import { useTheme } from '@/context/ThemeContext';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Icon, Label, NativeTabs, VectorIcon } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { useTranslation } from "react-i18next";
 
 export default function TabLayout() {
@@ -27,35 +27,35 @@ export default function TabLayout() {
       indicatorColor={colors.primaryLight}
     >
       <NativeTabs.Trigger name="home">
-        <Icon
+        <NativeTabs.Trigger.Icon
           sf="house"
-          androidSrc={<VectorIcon family={MaterialIcons} name="home" />}
+          src={<NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="home" />}
         />
-        <Label>{t("tabs.home")}</Label>
+        <NativeTabs.Trigger.Label>{t("tabs.home")}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="ticket">
-        <Icon
+        <NativeTabs.Trigger.Icon
           sf="ticket"
-          androidSrc={<VectorIcon family={MaterialIcons} name="local-activity" />}
+          src={<NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="local-activity" />}
         />
-        <Label>{t("tabs.tickets")}</Label>
+        <NativeTabs.Trigger.Label>{t("tabs.tickets")}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="history">
-        <Icon
+        <NativeTabs.Trigger.Icon
           sf="clock"
-          androidSrc={<VectorIcon family={MaterialIcons} name="history" />}
+          src={<NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="history" />}
         />
-        <Label>{t("tabs.history")}</Label>
+        <NativeTabs.Trigger.Label>{t("tabs.history")}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
 
       <NativeTabs.Trigger name="profile">
-        <Icon
+        <NativeTabs.Trigger.Icon
           sf="person"
-          androidSrc={<VectorIcon family={MaterialIcons} name="person" />}
+          src={<NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="person" />}
         />
-        <Label>{t("tabs.profile")}</Label>
+        <NativeTabs.Trigger.Label>{t("tabs.profile")}</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
