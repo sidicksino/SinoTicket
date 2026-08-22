@@ -171,22 +171,16 @@ const fr = {
         title: "Decouvrez des evenements dans tout le Tchad",
         description:
           "Trouvez des concerts, festivals et les meilleurs evenements pres de chez vous avec SinoTicket.",
-        tech: "Radar d'evenements intelligent",
-        feature: "Synchronisation en direct",
       },
       slide2: {
         title: "Reservez vos billets rapidement",
         description:
           "Reservez votre place en quelques secondes et ne manquez plus vos spectacles preferes.",
-        tech: "Paiement instantane",
-        feature: "Entree QR securisee",
       },
       slide3: {
         title: "Scannez, entrez, profitez",
         description:
           "Recevez votre billet numerique instantanement et accedez rapidement aux evenements via un QR code securise.",
-        tech: "File prioritaire",
-        feature: "Recompenses fidelite",
       },
     },
     forgotPassword: {

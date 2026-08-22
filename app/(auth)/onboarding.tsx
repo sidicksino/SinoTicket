@@ -28,8 +28,6 @@ type OnboardingSlide = {
   id: number;
   title: string;
   description: string;
-  tech: string;
-  feature: string;
   image: any;
 };
 
@@ -152,62 +150,6 @@ const OnboardingItem = ({
     };
   });
 
-  const techStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(
-      scrollX.value,
-      [
-        (index - 0.45) * screenWidth,
-        index * screenWidth,
-        (index + 0.45) * screenWidth,
-      ],
-      [0, 1, 0],
-      Extrapolation.CLAMP,
-    );
-    const translateX = interpolate(
-      scrollX.value,
-      [
-        (index - 1) * screenWidth,
-        index * screenWidth,
-        (index + 1) * screenWidth,
-      ],
-      [-screenWidth * 0.5, 0, -screenWidth * 0.5],
-      Extrapolation.CLAMP,
-    );
-
-    return {
-      opacity,
-      transform: [{ translateX }],
-    };
-  });
-
-  const featureStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(
-      scrollX.value,
-      [
-        (index - 0.45) * screenWidth,
-        index * screenWidth,
-        (index + 0.45) * screenWidth,
-      ],
-      [0, 1, 0],
-      Extrapolation.CLAMP,
-    );
-    const translateX = interpolate(
-      scrollX.value,
-      [
-        (index - 1) * screenWidth,
-        index * screenWidth,
-        (index + 1) * screenWidth,
-      ],
-      [screenWidth * 0.5, 0, screenWidth * 0.5],
-      Extrapolation.CLAMP,
-    );
-
-    return {
-      opacity,
-      transform: [{ translateX }],
-    };
-  });
-
   return (
     <View style={{ width: screenWidth }} className="px-6 pb-4 pt-2">
       <Animated.View
@@ -238,42 +180,6 @@ const OnboardingItem = ({
         >
           {item.description}
         </Text>
-
-        {/* Tech and Feature Labels */}
-        <View className="absolute inset-x-0 bottom-[-20px] flex-row justify-between px-8">
-          <Animated.View
-            style={[
-              techStyle,
-              {
-                backgroundColor: colors.primaryLight,
-                borderColor: colors.primary,
-              },
-            ]}
-            className="px-3 py-1 rounded-full border border-opacity-20"
-          >
-            <Text
-              style={{ color: colors.primary }}
-              className="text-xs font-bold uppercase tracking-wider"
-            >
-              {item.tech}
-            </Text>
-          </Animated.View>
-
-          <Animated.View
-            style={[
-              featureStyle,
-              { backgroundColor: colors.card, borderColor: colors.border },
-            ]}
-            className="px-3 py-1 rounded-full border"
-          >
-            <Text
-              style={{ color: colors.subtext }}
-              className="text-xs font-bold uppercase tracking-wider"
-            >
-              {item.feature}
-            </Text>
-          </Animated.View>
-        </View>
       </Animated.View>
     </View>
   );
@@ -293,8 +199,6 @@ const OnboardingScreen = () => {
       ...slide,
       title: t(`${key}.title`),
       description: t(`${key}.description`),
-      tech: t(`${key}.tech`),
-      feature: t(`${key}.feature`),
     };
   });
 

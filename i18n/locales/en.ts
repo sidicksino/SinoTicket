@@ -168,22 +168,16 @@ const en = {
         title: "Discover events across Chad",
         description:
           "Find concerts, festivals, and the best events happening near you with SinoTicket.",
-        tech: "Smart Event Radar",
-        feature: "Live Ticket Sync",
       },
       slide2: {
         title: "Book your event tickets fast",
         description:
           "Reserve your spot in seconds and never miss your favorite shows and parties.",
-        tech: "Instant Checkout",
-        feature: "Secure QR Entry",
       },
       slide3: {
         title: "Scan, enter, enjoy",
         description:
           "Get your digital ticket instantly and access events fast with secure QR code entry.",
-        tech: "Priority Lane",
-        feature: "Loyalty Rewards",
       },
     },
     forgotPassword: {
