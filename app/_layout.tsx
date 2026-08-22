@@ -9,7 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
 import { LogBox, Platform, Text, View } from "react-native";
-import "react-native-reanimated";
+import { configureReanimatedLogger } from "react-native-reanimated";
 import GlobalErrorBoundary, {
   ErrorBoundary,
 } from "../components/ErrorBoundary";
@@ -19,6 +19,14 @@ import { usePushNotifications } from "../hooks/usePushNotifications";
 import { tokenCache } from "../lib/auth";
 
 export { ErrorBoundary };
+
+// NativeWind's CSS-interop runtime (react-native-css-interop) reads/writes
+// shared values internally as part of its own style resolution on every
+// styled render - this predates Reanimated 4.5's stricter "strict mode"
+// render-purity checks and isn't something fixable in app code (confirmed:
+// already on NativeWind's latest stable release, no upstream fix yet).
+// Disabling only this check; other Reanimated warnings/errors still surface.
+configureReanimatedLogger({ strict: false });
 
 WebBrowser.maybeCompleteAuthSession();
 
