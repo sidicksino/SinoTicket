@@ -10,7 +10,6 @@ import * as WebBrowser from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
 import { LogBox, Platform, Text, View } from "react-native";
 import { configureReanimatedLogger } from "react-native-reanimated";
-import AnimatedSplash from "../components/AnimatedSplash";
 import GlobalErrorBoundary, {
   ErrorBoundary,
 } from "../components/ErrorBoundary";
@@ -40,11 +39,9 @@ LogBox.ignoreLogs(["Clerk:"]);
 function SplashManager({
   fontsLoaded,
   i18nReady,
-  onHidden,
 }: {
   fontsLoaded: boolean;
   i18nReady: boolean;
-  onHidden: () => void;
 }) {
   const { loaded: isClerkLoaded } = useClerk();
   const hasHidden = useRef(false);
@@ -53,11 +50,9 @@ function SplashManager({
     const hide = () => {
       if (hasHidden.current) return;
       hasHidden.current = true;
-      SplashScreen.hideAsync()
-        .catch((error) => {
-          console.warn("Splash hide failed:", error);
-        })
-        .finally(onHidden);
+      SplashScreen.hideAsync().catch((error) => {
+        console.warn("Splash hide failed:", error);
+      });
     };
 
     const timeout = setTimeout(hide, 6000);
@@ -70,7 +65,7 @@ function SplashManager({
     return () => {
       clearTimeout(timeout);
     };
-  }, [fontsLoaded, i18nReady, isClerkLoaded, onHidden]);
+  }, [fontsLoaded, i18nReady, isClerkLoaded]);
 
   return null;
 }
@@ -91,7 +86,7 @@ function AppShell() {
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
+        <Stack.Screen name="index" options={{ animation: "fade" }} />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(root)" />
         <Stack.Screen
@@ -110,8 +105,6 @@ export default function RootLayout() {
     Syne_700Bold,
   });
   const [i18nReady, setI18nReady] = useState(false);
-  const [nativeSplashHidden, setNativeSplashHidden] = useState(false);
-  const [introFinished, setIntroFinished] = useState(false);
 
   useEffect(() => {
     // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -187,17 +180,10 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-        <SplashManager
-          fontsLoaded={fontsLoaded}
-          i18nReady={i18nReady}
-          onHidden={() => setNativeSplashHidden(true)}
-        />
+        <SplashManager fontsLoaded={fontsLoaded} i18nReady={i18nReady} />
         <GlobalErrorBoundary>
           <AppShell />
         </GlobalErrorBoundary>
-        {nativeSplashHidden && !introFinished && (
-          <AnimatedSplash onFinish={() => setIntroFinished(true)} />
-        )}
       </ClerkProvider>
     </ThemeProvider>
   );
