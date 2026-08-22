@@ -69,10 +69,9 @@ function AppShell() {
 
   useEffect(() => {
     if (Platform.OS === "android") {
-      void NavigationBar.setBackgroundColorAsync(
-        isDark ? "#0F172A" : "#FFFFFF",
-      );
-      void NavigationBar.setButtonStyleAsync(isDark ? "light" : "dark");
+      // Android is edge-to-edge by default as of this SDK: the nav bar is
+      // always transparent, so only the button/icon style is configurable.
+      NavigationBar.setStyle(isDark ? "light" : "dark");
     }
   }, [isDark]);
 

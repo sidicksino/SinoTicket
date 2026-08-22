@@ -3,7 +3,7 @@ import { useFetch } from "@/lib/fetch";
 import { User as UserType } from "@/types/type";
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router/react-navigation";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useCallback } from "react";

@@ -134,7 +134,7 @@ export default function TicketScanner() {
   return (
     <View style={{ flex: 1, backgroundColor: "#000" }}>
       <CameraView
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         facing="back"
         barcodeScannerSettings={{
           barcodeTypes: ["qr"],
@@ -142,7 +142,7 @@ export default function TicketScanner() {
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
       />
 
-      <View style={StyleSheet.absoluteFillObject}>
+      <View style={StyleSheet.absoluteFill}>
         <SafeAreaView
           edges={["top"]}
           style={{

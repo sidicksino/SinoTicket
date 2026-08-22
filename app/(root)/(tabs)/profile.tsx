@@ -6,7 +6,7 @@ import { useAuthFetch, useFetch } from "@/lib/fetch";
 import { User as UserType } from "@/types/type";
 import { useClerk, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router/react-navigation";
 import { Image } from "expo-image";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";

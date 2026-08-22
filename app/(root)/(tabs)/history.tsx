@@ -4,7 +4,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAuthFetch } from "@/lib/fetch";
 import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router/react-navigation";
 import React, { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
