@@ -1,5 +1,6 @@
 import { useTheme } from "@/context/ThemeContext";
-import { useEffect } from "react";
+import { useAuth } from "@clerk/expo";
+import { useEffect, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
 import Animated, {
   Easing,
@@ -16,20 +17,34 @@ import Animated, {
 // splash to this screen has zero color flash.
 const NATIVE_SPLASH_BACKGROUND = { light: "#ffffff", dark: "#000000" };
 
+// Minimum time the reveal stays fully visible even if auth resolves instantly,
+// so it registers as a deliberate brand moment rather than a flash.
+const MIN_VISIBLE_MS = 900;
+// Safety cap: never hold the branded screen past this even if auth is
+// unusually slow to resolve - matches the ~3s ceiling real apps use.
+const MAX_VISIBLE_MS = 3000;
+
 type AnimatedSplashProps = {
-  /** Called once the intro animation has fully finished (safe to unmount). */
+  /** Called once it's safe to reveal the real app underneath. */
   onFinish: () => void;
 };
 
 /**
- * A branded animated intro shown for a brief moment right after the native
- * splash screen hides. Native splash screens can't be animated (a platform
- * limitation on both iOS and Android) - this screen is what actually
- * animates, and being a normal React screen, there's nothing here that can
- * break app store review or a production build.
+ * A single branded screen shown right after the native splash hides, that
+ * stays up through the entire auth check and only fades out once we know
+ * where to send the user - never handing off to a separate loading/spinner
+ * screen. This mirrors how Instagram/Spotify/TikTok/Netflix structure their
+ * launch sequence: one native frame, one branded screen, then straight into
+ * the app - never three sequential screens.
+ *
+ * Native splash screens can't themselves be animated (a platform limitation
+ * on both iOS and Android) - this screen is what actually animates, and
+ * being a normal React screen, there's nothing here that can break App
+ * Store review or a production build.
  */
 export default function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
   const { colors, isDark } = useTheme();
+  const { isLoaded: authLoaded } = useAuth();
 
   const bgProgress = useSharedValue(0);
   const iconOpacity = useSharedValue(0);
@@ -38,6 +53,20 @@ export default function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
   const textTranslateY = useSharedValue(12);
   const containerOpacity = useSharedValue(1);
 
+  const [mountedAt] = useState(() => Date.now());
+  const hasFinished = useRef(false);
+
+  const finish = () => {
+    if (hasFinished.current) return;
+    hasFinished.current = true;
+    containerOpacity.value = withTiming(0, { duration: 320 }, (finished) => {
+      if (finished) {
+        runOnJS(onFinish)();
+      }
+    });
+  };
+
+  // Entrance reveal - runs once on mount.
   useEffect(() => {
     bgProgress.value = withTiming(1, {
       duration: 500,
@@ -56,17 +85,23 @@ export default function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
       withTiming(0, { duration: 380, easing: Easing.out(Easing.cubic) }),
     );
 
-    // Hold briefly once fully revealed, then fade the whole intro out.
-    containerOpacity.value = withDelay(
-      1250,
-      withTiming(0, { duration: 320 }, (finished) => {
-        if (finished) {
-          runOnJS(onFinish)();
-        }
-      }),
-    );
+    // Safety fallback: fade out regardless once the max hold elapses, in
+    // case auth resolution is unusually slow or never resolves.
+    const maxWaitTimer = setTimeout(finish, MAX_VISIBLE_MS);
+    return () => clearTimeout(maxWaitTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once on mount only
   }, []);
+
+  // Fade out and reveal the app only once auth has actually resolved -
+  // this is what replaces the separate LoadingScreen/spinner screen.
+  useEffect(() => {
+    if (!authLoaded) return;
+    const elapsed = Date.now() - mountedAt;
+    const remainingHold = Math.max(0, MIN_VISIBLE_MS - elapsed);
+    const timer = setTimeout(finish, remainingHold);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- finish is stable enough for this purpose
+  }, [authLoaded]);
 
   const containerStyle = useAnimatedStyle(() => ({
     opacity: containerOpacity.value,
