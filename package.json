@@ -62,7 +62,6 @@
     "react-native-view-shot": "5.1.0",
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.10.1",
-    "react-native-worklets-core": "^1.6.3",
     "react-router-dom": "^7.13.2",
     "recharts": "^3.8.1"
   },
