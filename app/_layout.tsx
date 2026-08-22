@@ -10,6 +10,7 @@ import * as WebBrowser from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
 import { LogBox, Platform, Text, View } from "react-native";
 import { configureReanimatedLogger } from "react-native-reanimated";
+import AnimatedSplash from "../components/AnimatedSplash";
 import GlobalErrorBoundary, {
   ErrorBoundary,
 } from "../components/ErrorBoundary";
@@ -39,35 +40,37 @@ LogBox.ignoreLogs(["Clerk:"]);
 function SplashManager({
   fontsLoaded,
   i18nReady,
+  onHidden,
 }: {
   fontsLoaded: boolean;
   i18nReady: boolean;
+  onHidden: () => void;
 }) {
   const { loaded: isClerkLoaded } = useClerk();
   const hasHidden = useRef(false);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (!hasHidden.current) {
-        hasHidden.current = true;
-        SplashScreen.hideAsync().catch((error) => {
-          console.warn("Splash hide failed:", error);
-        });
-      }
-    }, 6000);
-
-    if (fontsLoaded && i18nReady && isClerkLoaded && !hasHidden.current) {
+    const hide = () => {
+      if (hasHidden.current) return;
       hasHidden.current = true;
+      SplashScreen.hideAsync()
+        .catch((error) => {
+          console.warn("Splash hide failed:", error);
+        })
+        .finally(onHidden);
+    };
+
+    const timeout = setTimeout(hide, 6000);
+
+    if (fontsLoaded && i18nReady && isClerkLoaded) {
       clearTimeout(timeout);
-      SplashScreen.hideAsync().catch((error) => {
-        console.warn("Splash hide failed:", error);
-      });
+      hide();
     }
 
     return () => {
       clearTimeout(timeout);
     };
-  }, [fontsLoaded, i18nReady, isClerkLoaded]);
+  }, [fontsLoaded, i18nReady, isClerkLoaded, onHidden]);
 
   return null;
 }
@@ -107,6 +110,8 @@ export default function RootLayout() {
     Syne_700Bold,
   });
   const [i18nReady, setI18nReady] = useState(false);
+  const [nativeSplashHidden, setNativeSplashHidden] = useState(false);
+  const [introFinished, setIntroFinished] = useState(false);
 
   useEffect(() => {
     // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -182,10 +187,17 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-        <SplashManager fontsLoaded={fontsLoaded} i18nReady={i18nReady} />
+        <SplashManager
+          fontsLoaded={fontsLoaded}
+          i18nReady={i18nReady}
+          onHidden={() => setNativeSplashHidden(true)}
+        />
         <GlobalErrorBoundary>
           <AppShell />
         </GlobalErrorBoundary>
+        {nativeSplashHidden && !introFinished && (
+          <AnimatedSplash onFinish={() => setIntroFinished(true)} />
+        )}
       </ClerkProvider>
     </ThemeProvider>
   );
