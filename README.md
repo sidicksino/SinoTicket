@@ -1,8 +1,29 @@
-#  to your Expo app 👋
+# 🎟️ SinoTicket
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**SinoTicket** is a cross-platform mobile ticketing app for events in Chad (and beyond). Users can browse events, pick seats, check out, and hold a digital ticket with a QR code — right from their phone.
 
-## Get started
+This repo is a monorepo with three parts:
+
+| Layer | Directory | Tech |
+|---|---|---|
+| Mobile App | `/` (root) | Expo / React Native / Expo Router |
+| REST API | [`/backend`](backend) | Node.js / Express / MongoDB |
+| Admin Dashboard | [`/admin-dashboard`](admin-dashboard) | React / Vite |
+
+> For a deep dive into the architecture, data models, API routes, and conventions, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+
+## Features
+
+- Browse and search events by title, date, and category
+- Event details with rich media, description, and venue info
+- Seat map selection and ticket category picker
+- Checkout flow with temporary seat holds (TTL-backed reservations)
+- Digital ticket wallet with QR code
+- Push notifications and in-app notification inbox
+- Google OAuth / email sign-in via Clerk
+- Dark/light theme, English/French localization
+
+## Getting started (Mobile App)
 
 1. Install dependencies
 
@@ -10,7 +31,16 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Set up environment variables — create a `.env` file in the project root:
+
+   ```env
+   EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+   EXPO_PUBLIC_API_URL=http://192.168.x.x:5001
+   ```
+
+   > `EXPO_PUBLIC_API_URL` must be your dev machine's **LAN IP** (not `localhost`) when testing on a physical device.
+
+3. Start the app
 
    ```bash
    npx expo start
@@ -23,29 +53,52 @@ In the output, you'll find options to open the app in a
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Getting started (Backend API)
 
 ```bash
-npm run reset-project
+cd backend
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Create a `backend/.env`:
+
+```env
+PORT=5001
+MONGO_URI=mongodb+srv://...
+CLERK_SECRET_KEY=sk_test_...
+```
+
+```bash
+npm run dev
+```
+
+The API listens on `0.0.0.0:PORT` and serves Swagger docs at `/api-docs`. See [backend/DEPLOY_RENDER.md](backend/DEPLOY_RENDER.md) for deployment notes.
+
+## Getting started (Admin Dashboard)
+
+```bash
+cd admin-dashboard
+npm install
+npm run dev
+```
+
+## Project structure
+
+```
+SinoTicket/
+├── app/                # Expo Router screens (file-based routing)
+├── components/         # Shared UI components
+├── constants/          # Theme color tokens, etc.
+├── context/            # ThemeContext and other React contexts
+├── hooks/              # Custom hooks (auth, notifications, ...)
+├── lib/                # fetch utilities, Clerk token cache
+├── i18n/ languages/     # Localization (en/fr)
+├── backend/            # Express + MongoDB REST API
+└── admin-dashboard/    # React/Vite admin panel
+```
 
 ## Learn more
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-# SinoTicket
+- [ARCHITECTURE.md](ARCHITECTURE.md) — full architecture, data models, API reference, and conventions
+- [Expo documentation](https://docs.expo.dev/)
+- [Expo Router](https://docs.expo.dev/router/introduction)
