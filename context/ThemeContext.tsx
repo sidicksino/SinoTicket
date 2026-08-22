@@ -61,8 +61,6 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const colors = Colors[resolvedTheme];
   const isDark = resolvedTheme === "dark";
 
-  if (!loaded) return <View style={{ flex: 1, backgroundColor: "#1E88E5" }} />;
-
   return (
     <ThemeContext.Provider value={{
       theme: resolvedTheme,

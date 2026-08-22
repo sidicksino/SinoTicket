@@ -1,6 +1,6 @@
 import { initializeI18n } from "@/i18n";
 import { ClerkProvider, useClerk } from "@clerk/expo";
-import { Syne_700Bold } from "@expo-google-fonts/syne";
+import { Syne_700Bold, Syne_800ExtraBold } from "@expo-google-fonts/syne";
 import { useFonts } from "expo-font";
 import * as NavigationBar from "expo-navigation-bar";
 import { Stack } from "expo-router";
@@ -103,6 +103,7 @@ function AppShell() {
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Syne_700Bold,
+    Syne_800ExtraBold,
   });
   const [i18nReady, setI18nReady] = useState(false);
 
