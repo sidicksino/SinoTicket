@@ -22,7 +22,9 @@ const SPACER_WIDTH = (width - CARD_WIDTH) / 2 - SPACING / 2;
 export default function PromoCarousel() {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const scrollX = useRef(new Animated.Value(0)).current;
+  // scrollX is read during render (interpolate calls below), so it's initialized via
+  // lazy useState rather than useRef.current, which isn't safe to read during render.
+  const [scrollX] = useState(() => new Animated.Value(0));
   const flatListRef = useRef<Animated.FlatList<any>>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 

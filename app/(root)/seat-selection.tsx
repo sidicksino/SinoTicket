@@ -68,6 +68,10 @@ export default function SeatSelection() {
         .map((r: any) => r.seat_id);
 
       if (myReservations.length > 0) {
+        // Legitimate external-sync effect: reservationsData arrives asynchronously
+        // from the network via useFetch, and selectedSeats is subsequently mutated
+        // independently by user taps, so it can't be derived at render time.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedSeats(myReservations);
       }
     }

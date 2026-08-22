@@ -49,6 +49,10 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
   const [hasMore, setHasMore] = useState(true);
+  const [prevFilters, setPrevFilters] = useState({
+    debouncedSearch,
+    selectedCategory,
+  });
 
   // Debounce search input
   useEffect(() => {
@@ -58,12 +62,18 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Reset when filters/search change
-  useEffect(() => {
+  // Reset pagination when filters/search change. Adjusted directly during
+  // render rather than in an effect, since it's fully derivable from props/state:
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  if (
+    prevFilters.debouncedSearch !== debouncedSearch ||
+    prevFilters.selectedCategory !== selectedCategory
+  ) {
+    setPrevFilters({ debouncedSearch, selectedCategory });
     setPage(1);
     setAllEvents([]);
     setHasMore(true);
-  }, [debouncedSearch, selectedCategory]);
+  }
 
   const apiUrl = `/api/events?limit=20&page=${page}${
     debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
@@ -84,6 +94,10 @@ export default function Home() {
   useEffect(() => {
     if (data?.success && Array.isArray(data.events)) {
       if (data.events.length === 0) {
+        // Legitimate external-sync effect: `data` arrives asynchronously from the
+        // network via useFetch, and allEvents accumulates across pages, so this
+        // can't be derived from render-time props/state alone.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setHasMore(false);
       } else {
         if (page === 1) {

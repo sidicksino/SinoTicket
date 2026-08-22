@@ -47,7 +47,10 @@ export default function EventDetail() {
   }>(`/api/events/${id}`, false);
   const event = data?.success ? data.event : null;
 
-  const eventDate = new Date(event?.date || Date.now());
+  // Date.now() is impure to call during render; use it only as a one-time
+  // fallback via useState's lazy initializer for the rare case event.date is missing.
+  const [fallbackDate] = useState(() => new Date());
+  const eventDate = event?.date ? new Date(event.date) : fallbackDate;
 
   if (loading) {
     return (
