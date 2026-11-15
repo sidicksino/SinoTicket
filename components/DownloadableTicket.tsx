@@ -33,7 +33,7 @@ export function DownloadableTicket({
   ticketRef,
 }: DownloadableTicketProps) {
   const { t } = useTranslation();
-  const qrUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/tickets/verify/${ticket.ticketId}`;
+  const qrUrl = ticket.ticketId;
 
   return (
     <View style={styles.container}>

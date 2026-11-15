@@ -1,7 +1,7 @@
 import AppHeader from "@/components/AppHeader";
 import EmptyState from "@/components/EmptyState";
 import { useTheme } from "@/context/ThemeContext";
-import { useAuthFetch } from "@/lib/fetch";
+import { api, convex, errorMessage } from "@/lib/convex";
 import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router/react-navigation";
@@ -28,7 +28,7 @@ const QRModal = React.memo(function QRModal({
   colors: any;
   onClose: () => void;
 }) {
-  const qrUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/tickets/verify/${code}`;
+  const qrUrl = code;
 
   return (
     <View
@@ -286,7 +286,6 @@ HistoryItem.displayName = "HistoryItem";
 const History = () => {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const { authFetch } = useAuthFetch();
   const { isSignedIn, isLoaded } = useAuth();
 
   const [tickets, setTickets] = useState<any[]>([]);
@@ -299,24 +298,24 @@ const History = () => {
     if (!isSignedIn) return;
     try {
       setError(null);
-      const result = await authFetch("/api/tickets/me");
-      if (result?.success) {
-        const pastTickets = (result.tickets || []).sort(
+      const result = await convex.query(api.tickets.mine, {});
+      if (result?.tickets) {
+        const pastTickets = [...result.tickets].sort(
           (a: any, b: any) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         );
         setTickets(pastTickets);
       } else {
-        setError(result?.message || "Failed to load history");
+        setError("Failed to load history");
       }
     } catch (err: any) {
       console.error("Error loading history:", err);
-      setError(err.message || "Failed to load history");
+      setError(errorMessage(err) || "Failed to load history");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [authFetch, isSignedIn]);
+  }, [isSignedIn]);
 
   useFocusEffect(
     useCallback(() => {

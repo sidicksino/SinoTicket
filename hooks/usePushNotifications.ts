@@ -1,5 +1,5 @@
-import { useAuthFetch } from "@/lib/fetch";
-import { useAuth } from "@clerk/expo";
+import { api } from "@/lib/convex";
+import { useConvexAuth, useMutation } from "convex/react";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
@@ -16,8 +16,8 @@ Notifications.setNotificationHandler({
 });
 
 export const usePushNotifications = () => {
-  const { authFetch } = useAuthFetch();
-  const { isLoaded, isSignedIn } = useAuth();
+  const updateUser = useMutation(api.users.update);
+  const { isAuthenticated } = useConvexAuth();
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
 
@@ -71,17 +71,14 @@ export const usePushNotifications = () => {
   };
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
+    if (!isAuthenticated) return;
 
     const syncToken = async () => {
       const token = await registerForPushNotificationsAsync();
       if (token) {
         try {
           // Send the token to the backend to register it for this user
-          await authFetch("/api/users/me", {
-            method: "PUT",
-            body: JSON.stringify({ push_token: token }),
-          });
+          await updateUser({ push_token: token });
           console.log("Push token registered successfully:", token);
         } catch (error) {
           console.error("Error syncing push token to backend:", error);
@@ -115,5 +112,5 @@ export const usePushNotifications = () => {
         responseListener.current.remove();
       }
     };
-  }, [isLoaded, isSignedIn, authFetch]);
+  }, [isAuthenticated, updateUser]);
 };

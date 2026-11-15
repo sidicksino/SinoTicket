@@ -1,6 +1,6 @@
 import { SummaryBar } from "@/components/Booking/SummaryBar";
 import { useTheme } from "@/context/ThemeContext";
-import { useAuthFetch } from "@/lib/fetch";
+import { api, useApiMutation } from "@/lib/convex";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -21,7 +21,7 @@ export default function Checkout() {
 
   const router = useRouter();
   const { colors } = useTheme();
-  const { authFetch } = useAuthFetch();
+  const checkout = useApiMutation(api.tickets.checkout);
   const { t } = useTranslation();
 
   const paymentMethods = [
@@ -49,17 +49,11 @@ export default function Checkout() {
     }
     setLoading(true);
     try {
-      // For now, checkout each reservation individually.
-      // Optimization: Implement a bulk checkout endpoint in the backend.
-      // Checkout sequentially to prevent MongoDB transactional WriteConflicts
-      // on shared documents (like Event ticket counts).
+      // Checkout each reservation in turn (each one is its own transaction).
       for (const id of reservationIds) {
-        await authFetch("/api/tickets/checkout", {
-          method: "POST",
-          body: JSON.stringify({
-            reservation_id: id,
-            payment_method: selectedMethod,
-          }),
+        await checkout({
+          reservation_id: id,
+          payment_method: selectedMethod as "MobileMoney" | "Card",
         });
       }
 

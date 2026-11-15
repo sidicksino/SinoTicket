@@ -1,6 +1,6 @@
 import CustomButton from "@/components/CustomButton";
 import { useTheme } from "@/context/ThemeContext";
-import { useAuthFetch } from "@/lib/fetch";
+import { api, useApiMutation } from "@/lib/convex";
 import { Ionicons } from "@expo/vector-icons";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router } from "expo-router";
@@ -19,7 +19,7 @@ export default function TicketScanner() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
-  const { authFetch } = useAuthFetch();
+  const verifyTicket = useApiMutation(api.tickets.verify);
 
   const [scanned, setScanned] = useState(false);
   const [validationLoading, setValidationLoading] = useState(false);
@@ -105,11 +105,11 @@ export default function TicketScanner() {
     setValidationLoading(true);
 
     try {
-      // The QR code contains the full verify URL
+      // New tickets encode the bare code; older ones wrapped it in a verify URL
       const parsedParts = data.split("/verify/");
-      const qrHash = parsedParts.length > 1 ? parsedParts.pop() : data;
+      const qrHash = (parsedParts.length > 1 ? parsedParts.pop() : data) ?? data;
 
-      const result = await authFetch(`/api/tickets/verify/${qrHash}`);
+      const result = await verifyTicket({ qr: qrHash });
 
       if (result) {
         setScanResult(result);

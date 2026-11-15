@@ -1,4 +1,3 @@
-import { useAuth } from "@clerk/clerk-react";
 import {
     ChevronLeft,
     ChevronRight,
@@ -8,7 +7,7 @@ import {
     User as UserIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { apiUrl } from "../lib/api";
+import { api, call, convex } from "../lib/api";
 
 interface EventData {
   title: string;
@@ -39,7 +38,6 @@ interface TicketRecord {
 }
 
 export default function TicketsManager() {
-  const { getToken } = useAuth();
 
   const [tickets, setTickets] = useState<TicketRecord[]>([]);
   const [totalTickets, setTotalTickets] = useState(0);
@@ -53,16 +51,13 @@ export default function TicketsManager() {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const token = await getToken();
-
-      let url = apiUrl(`/api/tickets/all?page=${page}&limit=${limit}`);
-      if (statusFilter !== "All") url += `&status=${statusFilter}`;
-
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await res.json();
+      const data = await call(
+        convex.query(api.tickets.listAll, {
+          page,
+          limit,
+          ...(statusFilter !== "All" ? { status: statusFilter } : {}),
+        }),
+      );
       if (data.success) {
         setTickets(data.tickets);
         setTotalTickets(data.total);

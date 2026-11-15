@@ -1,4 +1,3 @@
-import { useAuth } from "@clerk/clerk-react";
 import {
   Calendar as CalendarIcon,
   Edit,
@@ -19,7 +18,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from "react";
-import { apiUrl } from "../lib/api";
+import { api, call, convex } from "../lib/api";
 
 // ─── Types ────────────────────────────────────────
 interface Artist {
@@ -85,7 +84,6 @@ const EMPTY_FORM: EventFormData = {
 const CATEGORIES = ["Music", "Sports", "Cultural", "Business", "Fashion"];
 
 export default function EventsManager() {
-  const { getToken } = useAuth();
 
   const [events, setEvents] = useState<Event[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -118,12 +116,11 @@ export default function EventsManager() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [eventsRes, venuesRes] = await Promise.all([
-        fetch(apiUrl("/api/events")),
-        fetch(apiUrl("/api/venue/getVenue")),
+      const [eventsData, venuesData] = await Promise.all([
+        // Admins manage past events too, so ask for everything.
+        call(convex.query(api.events.list, { all: true, limit: 500 })),
+        call(convex.query(api.venues.list, {})),
       ]);
-      const eventsData = await eventsRes.json();
-      const venuesData = await venuesRes.json();
 
       if (eventsData.success) setEvents(eventsData.events);
       if (venuesData.success) {
@@ -153,8 +150,9 @@ export default function EventsManager() {
         return;
       }
       try {
-        const res = await fetch(apiUrl(`/api/sections?venue_id=${formData.venue_id}`));
-        const data = await res.json();
+        const data = await call(
+          convex.query(api.sections.list, { venue_id: formData.venue_id }),
+        );
         if (data.success) {
           setVenueSections(data.sections);
         }
@@ -233,19 +231,18 @@ export default function EventsManager() {
 
     setUploading(true);
     try {
-      const token = await getToken();
-      const uploadFormData = new FormData();
-      uploadFormData.append("image", selectedFile);
-
-      const res = await fetch(apiUrl("/api/upload"), {
+      // Convex file storage: get a one-time upload URL, send the file to it,
+      // then swap the returned storage id for a public image URL.
+      const uploadUrl = await convex.mutation(api.files.generateUploadUrl, {});
+      const res = await fetch(uploadUrl, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: uploadFormData,
+        headers: { "Content-Type": selectedFile.type },
+        body: selectedFile,
       });
+      if (!res.ok) throw new Error("Image upload failed");
+      const { storageId } = await res.json();
 
-      const data = await res.json();
+      const data = await call(convex.mutation(api.files.getUrl, { storageId }));
       if (data.success) {
         return data.imageUrl;
       } else {
@@ -285,8 +282,9 @@ export default function EventsManager() {
 
     if (field === "section_id" && value) {
       try {
-        const res = await fetch(apiUrl(`/api/seats?section_id=${value}&limit=1`));
-        const data = await res.json();
+        const data = await call(
+          convex.query(api.seats.list, { section_id: value, limit: 1 }),
+        );
         if (data.success && data.total !== undefined) {
           setFormData((prev) => {
             const newTickets = [...prev.ticket_categories];
@@ -335,8 +333,6 @@ export default function EventsManager() {
     setError("");
 
     try {
-      const token = await getToken();
-
       // 1. Upload image if selected
       const finalImageUrl = await uploadImage();
       if (!finalImageUrl && selectedFile) return; // Error already set in uploadImage
@@ -351,24 +347,21 @@ export default function EventsManager() {
         imageUrl: finalImageUrl,
         venue_id: formData.venue_id,
         category: formData.category,
-        ticket_categories: formData.ticket_categories,
-        artist_lineup: formData.artist_lineup,
+        // Sold counts belong to the backend; an empty section means "none".
+        ticket_categories: formData.ticket_categories.map((cat) => ({
+          name: cat.name,
+          price: cat.price,
+          quantity: cat.quantity,
+          ...(cat.section_id ? { section_id: cat.section_id } : {}),
+        })),
+        artist_lineup: formData.artist_lineup.map(({ name, time }) => ({ name, time })),
       };
 
-      const url = isEdit
-        ? apiUrl(`/api/events/${editingEvent!._id}`)
-        : apiUrl("/api/events/add");
-
-      const res = await fetch(url, {
-        method: isEdit ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
+      const data = await call(
+        isEdit
+          ? convex.mutation(api.events.update, { id: editingEvent!._id, ...payload })
+          : convex.mutation(api.events.add, payload),
+      );
 
       if (data.success) {
         setShowModal(false);
@@ -389,12 +382,9 @@ export default function EventsManager() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const token = await getToken();
-      const res = await fetch(apiUrl(`/api/events/${deleteTarget._id}`), {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
+      const data = await call(
+        convex.mutation(api.events.remove, { id: deleteTarget._id }),
+      );
       if (data.success) {
         setDeleteTarget(null);
         fetchData();

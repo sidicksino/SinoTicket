@@ -1,5 +1,5 @@
 import { useTheme } from "@/context/ThemeContext";
-import { useAuthFetch } from "@/lib/fetch";
+import { api, convex, errorMessage } from "@/lib/convex";
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -23,7 +23,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function PersonalInfo() {
   const { colors } = useTheme();
   const { user: clerkUser } = useUser();
-  const { authFetch } = useAuthFetch();
   const { t } = useTranslation();
 
   const [name, setName] = useState(clerkUser?.fullName || "");
@@ -39,8 +38,7 @@ export default function PersonalInfo() {
     const loadProfile = async () => {
       try {
         console.log("[PersonalInfo] Fetching profile...");
-        const result = await authFetch("/api/users/me");
-        console.log("[PersonalInfo] Got result:", result?.success);
+        const result = await convex.query(api.users.me, {});
         if (isMounted && result?.user) {
           setName(result.user.name || clerkUser?.fullName || "");
           setPhone(result.user.phone_number || "");
@@ -99,19 +97,34 @@ export default function PersonalInfo() {
 
     setSaving(true);
     try {
-      const body: Record<string, string> = {
-        name: name.trim(),
-        phone_number: phone.trim(),
-      };
+      const trimmedName = name.trim();
+      let photoUrl: string | undefined;
 
-      // Only send photo if it was changed (starts with data: means new pick)
-      if (avatarUri && avatarUri.startsWith("data:")) {
-        body.profile_photo = avatarUri;
+      // Clerk owns the name and avatar; keep it in step (best effort).
+      if (clerkUser) {
+        try {
+          const [firstName, ...rest] = trimmedName.split(" ");
+          await clerkUser.update({ firstName, lastName: rest.join(" ") });
+        } catch (clerkErr: any) {
+          console.warn("Clerk name sync failed (continuing):", clerkErr?.message);
+        }
+
+        // A data: URI means the user just picked a new photo.
+        if (avatarUri && avatarUri.startsWith("data:")) {
+          try {
+            await clerkUser.setProfileImage({ file: avatarUri });
+            await clerkUser.reload();
+            photoUrl = clerkUser.imageUrl;
+          } catch (clerkErr: any) {
+            console.warn("Clerk avatar sync failed (continuing):", clerkErr?.message);
+          }
+        }
       }
 
-      await authFetch("/api/users/me", {
-        method: "PUT",
-        body: JSON.stringify(body),
+      await convex.mutation(api.users.update, {
+        name: trimmedName,
+        phone_number: phone.trim(),
+        ...(photoUrl ? { profile_photo: photoUrl } : {}),
       });
 
       Alert.alert(t("common.success"), t("personalInfo.profileUpdated"), [
@@ -120,7 +133,7 @@ export default function PersonalInfo() {
     } catch (err: any) {
       Alert.alert(
         t("common.error"),
-        err.message || t("personalInfo.updateFailed"),
+        errorMessage(err) || t("personalInfo.updateFailed"),
       );
     } finally {
       setSaving(false);

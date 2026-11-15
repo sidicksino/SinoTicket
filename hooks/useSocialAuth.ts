@@ -1,15 +1,12 @@
-import { useClerk, useSSO } from "@clerk/expo";
+import { useSSO } from "@clerk/expo";
 import * as Linking from "expo-linking";
 import { useState } from "react";
 import { Alert } from "react-native";
 import { useWarmUpBrowser } from "./useWarmUpBrowser";
 
-const BACKEND_TIMEOUT_MS = 8000;
-
 const useSocialAuth = () => {
   const [loading, setLoading] = useState(false);
   const { startSSOFlow } = useSSO();
-  const clerk = useClerk();
 
   useWarmUpBrowser();
 
@@ -18,7 +15,7 @@ const useSocialAuth = () => {
     setLoading(true);
 
     try {
-      const { createdSessionId, setActive, signUp, signIn } = await startSSOFlow({
+      const { createdSessionId, setActive } = await startSSOFlow({
         strategy: "oauth_google",
         redirectUrl: Linking.createURL("/oauth-native-callback", { scheme: "sinoticket" }),
       });
@@ -26,55 +23,7 @@ const useSocialAuth = () => {
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
 
-        // Extract the user data directly from the fully-hydrated Clerk Client after activation!
-        const currentUser = clerk.user;
-        const fallbackSignUp = signUp as any;
-        const fallbackSignIn = signIn as any;
-
-        const syncId = currentUser?.id || fallbackSignUp?.createdUserId || fallbackSignIn?.id;
-
-        if (syncId) {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), BACKEND_TIMEOUT_MS);
-
-            // First check the authoritative active user, then fallback to signUp objects
-            const firstName = currentUser?.firstName || fallbackSignUp?.firstName || "";
-            const lastName = currentUser?.lastName || fallbackSignUp?.lastName || "";
-            const name = currentUser?.fullName || [firstName, lastName].filter(Boolean).join(" ").trim();
-            const email = currentUser?.primaryEmailAddress?.emailAddress || fallbackSignUp?.emailAddress || fallbackSignIn?.identifier || "";
-            const clerkId = syncId;
-            const profilePhoto = currentUser?.imageUrl || fallbackSignUp?.imageUrl || null;
-
-            // console.log("📤 Syncing user to backend:", { name, email, clerkId, profilePhoto });
-
-            const response = await fetch(
-              `${process.env.EXPO_PUBLIC_API_URL}/api/users`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  name,
-                  email,
-                  clerkId,
-                  profilePhoto,
-                }),
-                signal: controller.signal,
-              },
-            );
-
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-              const errorText = await response.text();
-              console.error("Backend sync failed:", response.status, errorText);
-            } else {
-              console.log("Backend sync successful");
-            }
-          } catch (backendError: any) {
-            console.error("Backend sync error:", backendError);
-          }
-        }
+        // The Convex user row is created by <UserSync /> once the session is active.
       } else {
         Alert.alert(
           "Sign-in incomplete",

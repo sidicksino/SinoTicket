@@ -1,4 +1,3 @@
-import { useAuth } from "@clerk/clerk-react";
 import {
     Armchair,
     ChevronLeft,
@@ -10,7 +9,7 @@ import {
     Trash2,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
-import { apiUrl } from "../lib/api";
+import { api, call, convex } from "../lib/api";
 
 interface Venue {
   _id: string;
@@ -31,7 +30,6 @@ interface Seat {
 }
 
 export default function SeatsManager() {
-  const { getToken } = useAuth();
 
   const [sections, setSections] = useState<Section[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -63,12 +61,10 @@ export default function SeatsManager() {
   const fetchMeta = async () => {
     try {
       setLoading(true);
-      const [sectionsRes, venuesRes] = await Promise.all([
-        fetch(apiUrl("/api/sections")),
-        fetch(apiUrl("/api/venue/getVenue")),
+      const [stData, vnData] = await Promise.all([
+        call(convex.query(api.sections.list, {})),
+        call(convex.query(api.venues.list, {})),
       ]);
-      const stData = await sectionsRes.json();
-      const vnData = await venuesRes.json();
 
       if (stData.success) setSections(stData.sections);
       if (vnData.success) setVenues(vnData.venues);
@@ -93,12 +89,9 @@ export default function SeatsManager() {
 
     try {
       setLoadingSeats(true);
-      const res = await fetch(
-        apiUrl(
-          `/api/seats?section_id=${filterSectionId}&page=${page}&limit=${limit}`,
-        ),
+      const data = await call(
+        convex.query(api.seats.list, { section_id: filterSectionId, page, limit }),
       );
-      const data = await res.json();
       if (data.success) {
         setSeats(data.seats);
         setTotalSeats(data.total);
@@ -125,21 +118,13 @@ export default function SeatsManager() {
     setGenError("");
 
     try {
-      const token = await getToken();
-      const res = await fetch(apiUrl("/api/seats/generate"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      const data = await call(
+        convex.action(api.seats.generate, {
           section_id: filterSectionId,
           start_number: parseInt(genStart, 10),
           count: parseInt(genCount, 10),
         }),
-      });
-
-      const data = await res.json();
+      );
       if (data.success) {
         setGeneratorOpen(false);
         setPage(1);
@@ -160,12 +145,9 @@ export default function SeatsManager() {
     if (filterSectionId === "All") return;
     setWiping(true);
     try {
-      const token = await getToken();
-      const res = await fetch(apiUrl(`/api/seats/section/${filterSectionId}`), {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
+      const data = await call(
+        convex.action(api.seats.clearSection, { section_id: filterSectionId }),
+      );
       if (data.success) {
         setWipeConfirmOpen(false);
         setPage(1);
@@ -187,15 +169,7 @@ export default function SeatsManager() {
           ? "booked"
           : "available";
     try {
-      const token = await getToken();
-      await fetch(apiUrl(`/api/seats/${seat._id}`), {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ status: nextStatus }),
-      });
+      await convex.mutation(api.seats.update, { id: seat._id, status: nextStatus });
       // Optimistic UI update
       setSeats(
         seats.map((s) =>

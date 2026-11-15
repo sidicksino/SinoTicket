@@ -2,7 +2,7 @@ import SettingsRow from "@/components/SettingsRow";
 import { useTheme } from "@/context/ThemeContext";
 import { getCurrentLanguage, setAppLanguage } from "@/i18n";
 import { AppLanguage } from "@/i18n/resources";
-import { useAuthFetch, useFetch } from "@/lib/fetch";
+import { api, useApiMutation, useLiveQuery } from "@/lib/convex";
 import { User as UserType } from "@/types/type";
 import { useClerk, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
@@ -44,14 +44,15 @@ export default function Profile() {
   const { user: clerkUser } = useUser();
   const { signOut } = useClerk();
   const { t } = useTranslation();
-  const { authFetch } = useAuthFetch();
+  const updateUser = useApiMutation(api.users.update);
 
   // Fetch backend User data
-  const { data, loading, refetch } = useFetch<{
-    success: boolean;
-    user: UserType;
-  }>("/api/users/me", true);
-  const backendUser = data?.user;
+  const { data, loading, refetch } = useLiveQuery(
+    api.users.me,
+    {},
+    { authenticated: true },
+  );
+  const backendUser = data?.user as unknown as UserType | null | undefined;
 
   // Refetch when screen comes into focus (e.g. after editing personal info)
   useFocusEffect(
@@ -77,14 +78,7 @@ export default function Profile() {
     const applyLanguage = async (language: AppLanguage) => {
       try {
         await setAppLanguage(language);
-        await authFetch("/api/users/me", {
-          method: "PUT",
-          body: JSON.stringify({
-            preferences: {
-              language,
-            },
-          }),
-        });
+        await updateUser({ preferences: { language } });
       } catch {
         Alert.alert(t("common.error"), t("profile.updateLanguageFailed"));
       }

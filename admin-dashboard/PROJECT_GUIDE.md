@@ -7,14 +7,14 @@ This document describes the architecture, setup, and technology choices for the 
 The Admin Dashboard is a sophisticated web portal intended for SinoTicket administrators to manage the core entities of the platform: Events, Venues, Sections, Seats, and Users.
 
 **Relationship to Backend:**
-It connects directly to the Node.js/Express backend running on port `5001`. Operations modifying data rely on the `checkAdmin` middleware on the backend and thus require a valid Admin Bearer token.
+It talks to the Convex backend in `/convex` (URL in `VITE_CONVEX_URL`). Operations modifying data are checked by `requireAdmin` on the backend, so they require a signed-in Clerk user with the Admin role.
 
 ## 2. Tech Stack
 
 *   **Framework**: React (Vite) for fast local development and HMR.
 *   **Routing**: `react-router-dom` for client-side navigation.
 *   **Styling**: TailwindCSS for utility-first styling to maintain a modern, premium look.
-*   **Data Fetching**: Native `fetch` API wrapped in custom hooks, mirroring the mobile app's pattern.
+*   **Data Fetching**: Convex client (`src/lib/api.ts`): `call(convex.query(api.x.y, args))` returns `{ success, ...data }` or `{ success: false, message }`.
 *   **Icons**: `lucide-react` for scalable, crisp iconography.
 
 ## 3. Directory Structure
@@ -24,26 +24,33 @@ admin-dashboard/
 ├── index.html           # Vite entry point
 ├── package.json
 ├── src/
-│   ├── main.jsx         # React bootstrapping
-│   ├── App.jsx          # Root component & Routing
+│   ├── main.tsx         # Providers: Theme, Clerk, ConvexProviderWithClerk
+│   ├── App.tsx          # Routing + admin gate (syncs the user, waits for the Admin role)
 │   ├── index.css        # Global styles & layout variables
-│   ├── components/      # Reusable UI (Buttons, Modals, Sidebar)
-│   ├── pages/           # High-level route views
-│   │   ├── Dashboard/   # Analytics and overview
-│   │   ├── Events/      # Event creation and management
-│   │   ├── Venues/      # Venue management
-│   │   └── Login/       # Admin authentication screen
-│   ├── hooks/           # Custom data fetching hooks
-│   └── lib/             # Utilities (API config, auth tokens, etc.)
+│   ├── components/      # Layout, auth visuals, UI primitives
+│   ├── pages/           # Dashboard, Events, Venues, Sections, Seats, Tickets, Users, Settings
+│   ├── i18n/            # English / French strings
+│   └── lib/
+│       ├── api.ts       # Convex client, `api` references, `call()` helper
+│       └── utils.ts
 └── ...
 ```
 
 ## 4. Setup & Running Locally
 
-Because the dashboard runs alongside the mobile app and backend, ensure the backend (`localhost:5001`) is running first.
+The dashboard talks to the Convex backend in `/convex`; there is no separate server to start. Make sure `npx convex dev` is running at the repo root (or that the deployment is already up).
 
 ### Environment Requirements
 You need Node.js `v18+` installed.
+
+Create `admin-dashboard/.env`:
+
+```env
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+VITE_CONVEX_URL=https://<your-deployment>.convex.cloud   # same value as EXPO_PUBLIC_CONVEX_URL in the root .env.local
+```
+
+On Vercel, add the same two variables in the project settings.
 
 ### Commands
 
@@ -59,10 +66,19 @@ npm run dev
 ```
 The dashboard typically opens on `http://localhost:5173`.
 
-## 5. Implementation Roadmap (Next Steps)
+### Who can sign in
+Only Clerk users whose `publicMetadata.role` is `Admin`. The dashboard waits until Convex confirms the role before showing any page.
 
-1. **Scaffold Layout**: Build a persistent sidebar navigation system (Desktop first approach).
-2. **Authentication**: Link Clerk React SDK (or manual Bearer token input) so the web app can authenticate API calls.
-3. **Venues CRUD**: Implement Venues table and "Add Venue" modal.
-4. **Events CRUD**: Implement complex Event creation form (including Ticket Categories and Sections).
-5. **Analytics**: Hook up a main dashboard with static/dynamic charts of total revenue and ticket sales.
+## 5. Data Access Pattern
+
+```ts
+import { api, call, convex } from "../lib/api";
+
+const data = await call(convex.query(api.venues.list, {}));
+if (data.success) setVenues(data.venues);
+
+const saved = await call(convex.mutation(api.venues.add, { name, location, capacity }));
+if (!saved.success) setError(saved.message);
+```
+
+Event images: `files.generateUploadUrl` → `POST` the file to that URL → `files.getUrl` returns the public image URL. The full list of backend functions is in [ARCHITECTURE.md §5.3](../ARCHITECTURE.md#53-functions).

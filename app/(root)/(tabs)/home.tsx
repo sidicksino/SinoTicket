@@ -3,7 +3,7 @@ import EmptyState from "@/components/EmptyState";
 import PromoCarousel from "@/components/PromoCarousel";
 import Skeleton from "@/components/Skeleton";
 import { useTheme } from "@/context/ThemeContext";
-import { useFetch } from "@/lib/fetch";
+import { api, useLiveQuery } from "@/lib/convex";
 import { Event } from "@/types/type";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -75,9 +75,6 @@ export default function Home() {
     setHasMore(true);
   }
 
-  const apiUrl = `/api/events?limit=20&page=${page}${
-    debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : ""
-  }${selectedCategory !== "All" ? `&category=${selectedCategory}` : ""}`;
 
   const {
     data,
@@ -87,13 +84,17 @@ export default function Home() {
     isRevalidating,
     hasFetched,
     refetch,
-  } = useFetch<{ success: boolean; events: Event[] }>(apiUrl, {
-    authenticated: false,
+  } = useLiveQuery(api.events.list, {
+    limit: 20,
+    page,
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+    ...(selectedCategory !== "All" ? { category: selectedCategory } : {}),
   });
 
   useEffect(() => {
-    if (data?.success && Array.isArray(data.events)) {
-      if (data.events.length === 0) {
+    if (Array.isArray(data?.events)) {
+      const pageEvents = data.events as unknown as Event[];
+      if (pageEvents.length === 0) {
         // Legitimate external-sync effect: `data` arrives asynchronously from the
         // network via useFetch, and allEvents accumulates across pages, so this
         // can't be derived from render-time props/state alone.
@@ -101,13 +102,13 @@ export default function Home() {
         setHasMore(false);
       } else {
         if (page === 1) {
-          setAllEvents(data.events);
+          setAllEvents(pageEvents);
         } else {
           setAllEvents((prev) => {
             // Deduplicate to prevent React key warnings in Strict Mode
             const existingIds = new Set(prev.map((e) => e._id));
-            const newEvents = data.events.filter(
-              (e: any) => !existingIds.has(e._id),
+            const newEvents = pageEvents.filter(
+              (e) => !existingIds.has(e._id),
             );
             if (newEvents.length === 0) setHasMore(false);
             return [...prev, ...newEvents];

@@ -1,4 +1,3 @@
-import { useAuth } from "@clerk/clerk-react";
 import {
     Building2,
     Edit,
@@ -9,7 +8,7 @@ import {
     X,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
-import { apiUrl } from "../lib/api";
+import { api, call, convex } from "../lib/api";
 
 interface Venue {
   _id: string;
@@ -27,7 +26,6 @@ interface VenueFormData {
 const EMPTY_FORM: VenueFormData = { name: "", location: "", capacity: "" };
 
 export default function VenuesManager() {
-  const { getToken } = useAuth();
 
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,8 +45,7 @@ export default function VenuesManager() {
   const fetchVenues = async () => {
     try {
       setLoading(true);
-      const res = await fetch(apiUrl("/api/venue/getVenue"));
-      const data = await res.json();
+      const data = await call(convex.query(api.venues.list, {}));
       if (data.success) {
         setVenues(data.venues);
       }
@@ -89,27 +86,17 @@ export default function VenuesManager() {
     setError("");
 
     try {
-      const token = await getToken();
-      const isEdit = !!editingVenue;
+      const fields = {
+        name: formData.name,
+        location: formData.location,
+        capacity: parseInt(formData.capacity, 10),
+      };
 
-      const url = isEdit
-        ? apiUrl(`/api/venue/updateVenue/${editingVenue!._id}`)
-        : apiUrl("/api/venue/add");
-
-      const res = await fetch(url, {
-        method: isEdit ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          location: formData.location,
-          capacity: parseInt(formData.capacity, 10),
-        }),
-      });
-
-      const data = await res.json();
+      const data = await call(
+        editingVenue
+          ? convex.mutation(api.venues.update, { id: editingVenue._id, ...fields })
+          : convex.mutation(api.venues.add, fields),
+      );
 
       if (data.success) {
         setShowModal(false);
@@ -130,15 +117,9 @@ export default function VenuesManager() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const token = await getToken();
-      const res = await fetch(
-        apiUrl(`/api/venue/deleteVenue/${deleteTarget._id}`),
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        },
+      const data = await call(
+        convex.mutation(api.venues.remove, { id: deleteTarget._id }),
       );
-      const data = await res.json();
       if (data.success) {
         setDeleteTarget(null);
         fetchVenues();
