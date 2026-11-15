@@ -2,7 +2,7 @@ import InputField from "@/components/InputField";
 import LoadingScreen from "@/components/LoadingScreen";
 import { useTheme } from "@/context/ThemeContext";
 import useSocialAuth from "@/hooks/useSocialAuth";
-import { fetchAPI } from "@/lib/fetch";
+import { api, convex } from "@/lib/convex";
 import { useAuth, useClerk, useSignUp } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, Redirect, useRouter } from "expo-router";
@@ -94,10 +94,9 @@ const SignUp = () => {
     setIsSubmitting(true);
 
     try {
-      //  0️⃣ Check if user exists in Neon DB first
-      const dbCheck = await fetchAPI("/api/users/check", {
-        method: "POST",
-        body: JSON.stringify({ email: emailAddress }),
+      //  0️⃣ Check if this email already has an account
+      const dbCheck = await convex.query(api.users.checkExists, {
+        email: emailAddress,
       });
 
       if (dbCheck?.exists) {
@@ -177,21 +176,7 @@ const SignUp = () => {
       }
 
       if ((signUp as any).status === "complete") {
-        try {
-          // Save user to our backend
-          await fetchAPI("/api/users", {
-            method: "POST",
-            body: JSON.stringify({
-              name: fullName,
-              email: emailAddress,
-              clerkId: (signUp as any).createdUserId,
-            }),
-          });
-        } catch (backendErr) {
-          console.error("Failed to sync user with Neon DB", backendErr);
-          // Optional: handle syncing failure, though account is already created in Clerk
-        }
-
+        // The user row is created by <UserSync /> once the session is active.
         await setActive({ session: (signUp as any).createdSessionId });
         router.replace("/(root)/(tabs)/home");
       } else {

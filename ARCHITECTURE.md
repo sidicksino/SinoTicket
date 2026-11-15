@@ -1,7 +1,7 @@
 # SinoTicket — Architecture & Implementation Guide
 
-> **Version:** 1.0 | **Stack:** Expo SDK 54 · Node.js/Express · MongoDB · Clerk  
-> **Last updated:** April 2026
+> **Version:** 1.0 | **Stack:** Expo · Convex · Clerk  
+> **Last updated:** November 2026
 
 ---
 
@@ -19,10 +19,10 @@
    - 4.6 [Component Library](#46-component-library)
    - 4.7 [Native Tab Bar](#47-native-tab-bar)
 5. [Backend Architecture](#5-backend-architecture)
-   - 5.1 [Server Entry Point](#51-server-entry-point)
+   - 5.1 [Convex](#51-convex)
    - 5.2 [Data Models](#52-data-models)
-   - 5.3 [API Routes](#53-api-routes)
-   - 5.4 [Authentication Middleware](#54-authentication-middleware)
+   - 5.3 [Functions](#53-functions)
+   - 5.4 [Authentication & Roles](#54-authentication--roles)
 6. [Booking Flow (End-to-End)](#6-booking-flow-end-to-end)
 7. [Environment Variables](#7-environment-variables)
 8. [Skills & Agent Setup](#8-skills--agent-setup)
@@ -45,7 +45,7 @@ The system is split into two codebases inside a single monorepo:
 | Layer | Directory | Tech |
 |---|---|---|
 | Mobile App | `/` (root) | Expo / React Native |
-| REST API | `/backend` | Node.js / Express / MongoDB |
+| Backend | `/convex` | Convex (database, functions, file storage, scheduling) |
 | Admin Dashboard | `/admin-dashboard` | (Separate app) |
 
 ### System Architecture
@@ -68,23 +68,18 @@ graph TD
         G[Google OAuth]:::auth
     end
 
-    subgraph "Backend APIs"
-        B[Node.js + Express<br/>REST API]:::backend
-        MW[Auth Middleware<br/>JWT Verification]:::backend
-        Ctrl[Event, User, Venue<br/>Controllers]:::backend
-    end
-
-    subgraph "Infrastructure"
-        DB[(MongoDB Atlas<br/>Database)]:::db
+    subgraph "Convex (backend)"
+        B[Queries, Mutations, Actions<br/>convex/*.ts]:::backend
+        MW[Auth helpers<br/>convex/lib.ts]:::backend
+        DB[(Convex Database<br/>+ File Storage)]:::db
     end
 
     A -->|OAuth / OTP SignIn| C
     C -->|SSO Request| G
-    A -->|API Request + Bearer JWT| B
-    B -->|Verify Keys| C
+    A -->|WebSocket: live queries + Clerk JWT| B
+    B -->|Verify JWT issuer| C
     B --> MW
-    MW --> Ctrl
-    Ctrl <-->|Mongoose ODM| DB
+    B <-->|Transactions| DB
     Cache -.->|Store Session| A
 ```
 
@@ -137,16 +132,17 @@ SinoTicket/
 │   └── useWarmUpBrowser.ts    # Expo WebBrowser pre-warming
 ├── lib/
 │   ├── auth.ts                 # Clerk token cache (SecureStore)
-│   └── fetch.ts                # fetchAPI + useFetch + useAuthFetch
-├── backend/
-│   ├── index.js                # Express server entry point
-│   ├── config/db.js            # MongoDB connection
-│   ├── models/                 # Mongoose schemas
-│   ├── routes/                 # Express route definitions
-│   ├── controllers/            # Route handler logic
-│   ├── middleware/auth.js      # JWT verification middleware
-│   ├── swagger/                # Swagger/OpenAPI setup
-│   └── scripts/                # DB seed scripts
+│   └── convex.ts               # Convex client + useLiveQuery / useApiMutation
+├── convex/
+│   ├── schema.ts               # Tables + indexes
+│   ├── auth.config.ts          # Clerk as the JWT issuer
+│   ├── lib.ts                  # Auth helpers (requireUser, requireAdmin, ...)
+│   ├── events.ts venues.ts sections.ts seats.ts
+│   ├── reservations.ts tickets.ts
+│   ├── users.ts notifications.ts dashboard.ts files.ts
+│   ├── push.ts                 # Expo push notifications (action)
+│   ├── crons.ts                # Hourly "mark past events as ended"
+│   └── seed.ts                 # Demo data
 └── .agents/skills/             # AI agent skill files (Expo skills)
 ```
 
@@ -173,12 +169,7 @@ SinoTicket/
 ### Backend
 | Package | Version | Purpose |
 |---|---|---|
-| `express` | ^4 | REST API framework |
-| `mongoose` | ^8 | MongoDB ODM |
-| `@clerk/express` | ^2 | Authentication validation |
-| `dotenv` | ^16 | Environment variables |
-| `cors` | ^2 | Cross-origin policy |
-| `swagger-jsdoc` / `swagger-ui-express` | — | API documentation |
+| `convex` | ^1.50 | Database, server functions, file storage, scheduler, React client |
 
 ---
 
@@ -206,23 +197,26 @@ The app uses **file-based routing** via Expo Router. The navigation tree:
 ```
 ThemeProvider
   └── ClerkProvider (+ tokenCache using SecureStore)
-        └── ClerkLoaded
-              └── AppShell (Stack navigator + StatusBar)
+        └── ConvexProviderWithClerk (sends the Clerk session to Convex)
+              ├── SplashManager
+              ├── UserSync (creates/refreshes the user's Convex row after sign-in)
+              └── GlobalErrorBoundary
+                    └── AppShell (Stack navigator + StatusBar)
 ```
 
 ### 4.2 Authentication Flow
 
 Authentication uses **Clerk** with the `@clerk/expo` SDK.
 
-**Sign-up:** Email + password → email verification OTP → backend user creation  
+**Sign-up:** Email + password → email verification OTP → session set → `UserSync` creates the user in Convex  
 **Sign-in:** Email/password or Google OAuth → session set via `setActive()`  
 **MFA:** If the account requires second-factor, the app sends an email code and verifies it
 
 **Google OAuth** is handled via `useSocialAuth` hook:
 ```ts
-const handleGoogleAuth = async () => {
-  await useOAuth({ strategy: 'oauth_google' }).startOAuthFlow(...)
-}
+const { createdSessionId, setActive } = await startSSOFlow({ strategy: "oauth_google", redirectUrl });
+if (createdSessionId) await setActive({ session: createdSessionId });
+// UserSync then calls users.store to create/refresh the Convex user row
 ```
 
 Sessions are cached with `expo-secure-store` via `lib/auth.ts`:
@@ -264,36 +258,42 @@ const { colors, isDark } = useTheme();
 
 ### 4.4 Data Fetching Layer
 
-**`lib/fetch.ts`** provides three utilities:
+**`lib/convex.ts`** wraps the Convex React client:
 
 | Export | Description |
 |---|---|
-| `fetchAPI(url, options?)` | Raw fetch wrapper — reads `EXPO_PUBLIC_API_URL` as base URL, handles non-JSON errors |
-| `useAuthFetch()` hook | Returns `authFetch` that automatically attaches the Clerk JWT Bearer token |
-| `useFetch<T>(url, authenticated?)` hook | State-managed fetcher with `{ data, loading, error, refetch }` |
+| `convex` | The shared `ConvexReactClient` (reads `EXPO_PUBLIC_CONVEX_URL`). Use `convex.query(...)` / `convex.mutation(...)` for one-off calls |
+| `api` | Typed references to the backend functions, e.g. `api.events.list` |
+| `useLiveQuery(ref, args, options?)` | Live query with an offline cache. Returns `{ data, loading, error, isOffline, refetch }`; `data` updates by itself when the database changes. `{ authenticated: true }` waits for the Clerk session |
+| `useApiMutation(ref)` / `useApiAction(ref)` | Like `useMutation` / `useAction`, but errors carry a clean message for `Alert.alert` |
+| `errorMessage(err)` | Extracts the readable message from a Convex error |
 
-Example usage (public endpoint):
+Example (public, live):
 ```ts
-const { data, loading, error } = useFetch<any>('/api/events?limit=20', false);
+const { data, loading } = useLiveQuery(api.events.list, { limit: 20, page: 1 });
 ```
 
-Example usage (authenticated endpoint):
+Example (signed-in user):
 ```ts
-const { authFetch } = useAuthFetch();
-const result = await authFetch('/api/tickets/me');
+const { data } = useLiveQuery(api.tickets.mine, {}, { authenticated: true });
+const checkout = useApiMutation(api.tickets.checkout);
+await checkout({ reservation_id, payment_method: "Card" });
 ```
+
+`app/_layout.tsx` wraps the app in `ConvexProviderWithClerk`, and `components/UserSync.tsx` creates/refreshes the user's row in Convex after sign-in.
 
 **Search debouncing** is done at the component level on the Home screen with a 500ms timeout.
 
 ### 4.5 Screen Reference
 
 #### Home (`/(tabs)/home.tsx`)
-- Fetches events from `/api/events` with `search`, `category`, pagination params
+- Live query `api.events.list` with `search`, `category`, `page`, `limit`
 - Shows promo carousel (`PromoCarousel`) for "All" category with no search
 - **Featured events**: top 3 as horizontal snap scroll cards (260x320, full bleed image)
 - **More Events**: remaining events as vertical list rows with image thumbnail and metadata
 
 #### Event Detail (`/(root)/event/[id].tsx`)
+- Live query `api.events.get`
 - **Hero Section**: full-width image, `LinearGradient` fade into theme background color
 - **Back + Share** buttons: circular `BlurView` glassmorphic overlays at top
 - **Date Badge**: `BlurView` card overlaid on image bottom-right
@@ -303,34 +303,36 @@ const result = await authFetch('/api/tickets/me');
 - Tap "Book Now" → bottom-sheet modal for ticket category + quantity selection, then → `seat-selection`
 
 #### Ticket Wallet (`/(tabs)/ticket.tsx`)
-- Fetches tickets from `/api/tickets/me` (authenticated)
-- Renders a `FlatList` of `TicketItem` components
-- Each ticket is expandable to reveal a custom pixel-art **QR code** display (hex-based pattern)
-- Pull-to-refresh supported
+- Live query `api.tickets.mine` (signed-in), cached offline under `active_tickets`
+- Shows active tickets for upcoming events; each expands to a QR code containing the ticket code
+- Tickets can be downloaded as an image (`DownloadableTicket`)
+
+#### History (`/(tabs)/history.tsx`)
+- `api.tickets.mine`, all tickets newest first, pull-to-refresh
 
 #### Notifications (`/(root)/notifications.tsx`)
-- Accessed via the bell icon in the `AppHeader` (which polls for unread count badge)
-- Fetches notifications from `/api/notifications` using `useAuthFetch`
-- Visually separates read vs. unread alerts using subtle glass-morphic backgrounds
+- Accessed via the bell icon in `AppHeader` (live unread count from `api.notifications.unreadCount`)
+- Loads `api.notifications.list`; marks read with `notifications.markRead` / `markAllRead`
 - Optimistic UI updates for "Mark as Read" and "Mark All as Read"
 
 #### Seat Selection (`/(root)/seat-selection.tsx`)
-- Receives params: `event_id`, `section_id`, `category_id`, `event_title`, `category_name`, initial `quantity` and `price`
-- Displays a visual seat map grid fetched from `/api/seats`
-- Supports dynamic selection of up to 10 seats on the map, overriding the initial `quantity` param
-- Available / Selected / Reserved / Booked states with color coding from `colors` tokens
-- Proceeds to `/checkout`
+- Receives params: `event_id`, `section_id`, `event_title`, `category_name`, initial `quantity` and `price`
+- Live query `api.seats.list` with `event_id`: seats turn reserved/booked on every phone as soon as someone else holds or buys them
+- Supports selection of up to 10 seats; pre-selects seats the user already holds (`api.reservations.mine`)
+- "Continue" calls `reservations.reserve` for each seat (15-minute hold), then → `/checkout`
 
 #### Checkout (`/(root)/checkout.tsx`)
-- Displays order summary
-- Calls `/api/reservations` to hold seats temporarily (TTL-backed)
-- Calls `/api/tickets` to confirm booking and generate QR code
+- Displays order summary and payment method (Mobile Money / Card, simulated)
+- Calls `tickets.checkout` for each reservation: records the payment, issues the ticket + QR code, sends a notification
 - On success → `/success` screen
+
+#### Scanner (`/(root)/scanner.tsx`) — admins only
+- Reads a ticket QR code with the camera and calls `tickets.verify`, which marks the ticket `Used`
 
 #### Personal Information (`/(root)/personal-info.tsx`)
 - Manages user's name, phone number, and avatar image
-- Uploads images via `expo-image-picker` with base64 data URIs
-- Saves via `PUT /api/users/me` and ensures changes apply across `AppHeader` and `Profile` instantly using optimized data fetch caching.
+- Name and avatar are saved to Clerk (`user.update`, `user.setProfileImage`); name, phone and the avatar URL are saved to Convex with `users.update`
+- `AppHeader` and `Profile` read `api.users.me` live, so changes show everywhere immediately
 
 ### 4.6 Component Library
 
@@ -369,17 +371,21 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 ## 5. Backend Architecture
 
-### 5.1 Server Entry Point
+### 5.1 Convex
 
-**`backend/index.js`** — Express server listening on `0.0.0.0:PORT` (default `5000`):
-- Connects to MongoDB via `config/db.js`
-- Registers all route namespaces
-- Mounts **Swagger UI** at `/api-docs`
-- Global error handler formats errors as `{ success: false, error: "..." }`
+There is no server to run or deploy by hand. The backend is the set of functions in `/convex`, hosted by Convex:
+
+- **Queries** read data and are live: clients re-render when results change.
+- **Mutations** write data. Each one is a serializable transaction, which is what prevents two people from booking the same seat.
+- **Actions** talk to the outside world (Expo push, Clerk API) and run long batch jobs (bulk seat generation).
+- **Scheduler / crons** release expired seat holds and mark past events as ended.
+- **File storage** holds event images uploaded from the admin dashboard.
+
+`npx convex dev` pushes changes to your dev deployment as you save; `npx convex deploy` ships to production.
 
 ### 5.2 Data Models
 
-All models live in `backend/models/` and use **Mongoose schemas**. Below is the Entity Relationship Diagram showing how these documents interconnect:
+All tables are defined in `convex/schema.ts`. Convex adds `_id` and `_creationTime` to every document; functions also return `createdAt`/`updatedAt` ISO strings for the UIs. Below is the Entity Relationship Diagram showing how these documents interconnect:
 
 ```mermaid
 erDiagram
@@ -394,53 +400,52 @@ erDiagram
     EVENT ||--o{ RESERVATION : "event_id"
     SEAT ||--o| RESERVATION : "seat_id"
     SEAT ||--o| TICKET : "seat_id"
-    RESERVATION ||--o{ PAYMENT : "reservation_id"
+    USER ||--o{ PAYMENT : "user_id"
+    EVENT ||--o{ PAYMENT : "event_id"
 
     USER {
-        ObjectId _id PK
+        Id _id PK
         string user_id "Clerk external ID"
         string email
         string name
-        string role "Attendee/Admin"
+        string role "mirrors Clerk role"
     }
     NOTIFICATION {
-        ObjectId _id PK
+        Id _id PK
         string title
         string type "SYSTEM/BOOKING/PROMO"
         boolean is_read
     }
     EVENT {
-        ObjectId _id PK
+        Id _id PK
         string title
         date date
         string status "Upcoming/Ongoing/Ended"
         string category
     }
     VENUE {
-        ObjectId _id PK
+        Id _id PK
         string name
-        string address
+        string location
         number capacity
     }
     SECTION {
-        ObjectId _id PK
+        Id _id PK
         string name
-        number rows
-        number seats_per_row
+        number seat_count
     }
     SEAT {
-        ObjectId _id PK
-        number row
+        Id _id PK
         number number
-        string status "Available/Reserved/Booked"
+        string status "available/reserved/booked"
     }
     RESERVATION {
-        ObjectId _id PK
-        date expires_at "TTL Index"
+        Id _id PK
+        number expires_at "auto-expires via scheduler"
         string status "Active/Completed/Expired"
     }
     TICKET {
-        ObjectId _id PK
+        Id _id PK
         string qr_code
         string status "Active/Used/Refunded"
     }
@@ -449,9 +454,9 @@ erDiagram
 #### User
 ```js
 { user_id, email, name, profile_photo, phone_number,
-  role: ['Attendee','Admin'], preferences, is_verified, last_login }
+  role, preferences, is_verified, push_tokens, last_login }
 ```
-> `user_id` maps to Clerk's external user ID.
+> `user_id` is the Clerk user ID. `role` mirrors Clerk's `publicMetadata.role` and is refreshed on every sign-in.
 
 #### Event
 ```js
@@ -464,24 +469,27 @@ erDiagram
 
 #### Venue
 ```js
-{ name, address, city, capacity }
+{ name, location, capacity, admin_id (->User), map_data }
 ```
 
 #### Section
 ```js
-{ venue_id (->Venue), name, rows, seats_per_row }
+{ venue_id (->Venue), name, description, parent_section_id (->Section), seat_count }
 ```
 
 #### Seat
 ```js
-{ section_id (->Section), row, number, status: ['Available','Reserved','Booked'] }
+{ section_id (->Section), number, status: ['available','reserved','booked'] }
+```
+> Per-event availability is computed by `seats.list` from tickets and active reservations; the stored `status` is only an admin override.
+```js
 ```
 
-#### Reservation *(TTL-indexed)*
+#### Reservation *(auto-expiring)*
 ```js
 { user_id, event_id, seat_id, expires_at, status: ['Active','Expired','Completed'] }
 ```
-> Uses a MongoDB TTL index (`expireAfterSeconds: 0`) so expired reservations are auto-deleted.
+> `reservations.reserve` schedules `reservations.expire` at `expires_at`, which marks the hold `Expired` and frees the seat.
 
 #### Ticket
 ```js
@@ -490,7 +498,8 @@ erDiagram
 
 #### Payment
 ```js
-{ reservation_id, amount, method, status }
+{ user_id, event_id, amount, currency, status: ['Pending','Success','Failed'],
+  payment_method: ['MobileMoney','Card'], transaction_id }
 ```
 
 #### Notification
@@ -498,95 +507,110 @@ erDiagram
 { user_id, title, message, type: ['SYSTEM','BOOKING','PROMO'], is_read, link }
 ```
 
-### 5.3 API Routes
+### 5.3 Functions
 
-| Method | Route | Auth | Description |
+| Function | Type | Auth | Description |
 |---|---|---|---|
-| `GET` | `/api/events` | Public | List/search events (supports `?search=`, `?category=`, `?limit=`, `?page=`) |
-| `GET` | `/api/events/:id` | Public | Single event details (populates `venue_id`) |
-| `POST` | `/api/events/add` | Admin | Create event |
-| `PUT` | `/api/events/:id` | Admin | Update event |
-| `DELETE` | `/api/events/:id` | Admin | Delete event |
-| `GET` | `/api/users` | Auth | List users |
-| `POST` | `/api/users` | Public | Create/sync user from Clerk |
-| `GET` | `/api/venue` | Public | List venues |
-| `POST` | `/api/venue` | Admin | Create venue |
-| `GET` | `/api/sections` | Public | List sections |
-| `GET` | `/api/seats` | Public | List seats (filter by section) |
-| `POST` | `/api/reservations` | Auth | Hold a seat |
-| `GET` | `/api/tickets/me` | Auth | Current user's tickets |
-| `POST` | `/api/tickets` | Auth | Confirm booking / issue ticket |
-| `GET` | `/api/notifications` | Auth | List user notifications |
-| `PUT` | `/api/notifications/:id/read` | Auth | Mark notification as read |
-| `PUT` | `/api/notifications/read-all` | Auth | Mark all notifications as read |
+| `events.list` | query | Public | List/search events (`search`, `category`, `status`, `page`, `limit`, `all`) |
+| `events.get` | query | Public | Single event with venue |
+| `events.add` / `update` / `remove` | mutation | Admin | Manage events |
+| `venues.list` | query | Public | List venues |
+| `venues.add` / `update` / `remove` | mutation | Admin | Manage venues |
+| `sections.list` / `get` | query | Public | List sections |
+| `sections.add` / `update` / `remove` | mutation | Venue owner | Manage sections (remove cascades to sub-sections and seats) |
+| `seats.list` | query | Public | Seats of a section; with `event_id`, live per-event status |
+| `seats.generate` / `clearSection` | action | Venue owner | Bulk create / delete seats |
+| `seats.update` / `remove` | mutation | Venue owner | Edit a seat |
+| `reservations.reserve` | mutation | User | Hold a seat for 15 minutes |
+| `reservations.cancel` | mutation | User | Release holds |
+| `reservations.mine` | query | User | Current holds |
+| `tickets.checkout` | mutation | User | Turn a hold into a ticket (simulated payment) |
+| `tickets.mine` | query | User | Current user's tickets |
+| `tickets.verify` | mutation | Admin | Scanner: validate a QR code and mark the ticket used |
+| `tickets.listAll` | query | Admin | All tickets |
+| `users.me` / `store` / `update` | query / mutation | User | Profile; `store` syncs the Clerk user after sign-in |
+| `users.checkExists` | query | Public | Is this email registered? |
+| `users.list` | query | Admin | All users |
+| `notifications.list` / `unreadCount` | query | User | In-app notifications |
+| `notifications.markRead` / `markAllRead` | mutation | User | Mark as read |
+| `dashboard.stats` | query | Admin | Dashboard totals and revenue chart |
+| `files.generateUploadUrl` / `getUrl` | mutation | Admin | Event image upload |
 
-> Full Swagger documentation available at `http://<backend-host>/api-docs`
+Browse and run them in the Convex dashboard (`npx convex dashboard`).
 
-### 5.4 Authentication Middleware
+### 5.4 Authentication & Roles
 
-`backend/middleware/auth.js` verifies the **Clerk JWT** from the `Authorization: Bearer <token>` header on protected routes. It decodes the token and attaches the user to `req.user` for downstream handlers.
+Clerk signs users in and issues JWTs; Convex verifies them (`convex/auth.config.ts`, issuer = `CLERK_JWT_ISSUER_DOMAIN`). Inside a function, `ctx.auth.getUserIdentity()` returns the caller. The helpers in `convex/lib.ts` build on that:
+
+- `requireUser(ctx)` — signed-in user (row created on first use)
+- `requireAdmin(ctx)` — user whose role is `admin`
+- `requireVenueOwner(ctx, venueId)` — admin who owns that venue
+
+The admin role lives in Clerk (`publicMetadata.role = "Admin"`). On every sign-in Convex copies it into `users.role` using `CLERK_SECRET_KEY`. Without that key, grant it by hand: `npx convex run users:setRole '{"email":"...","role":"admin"}'`.
 
 ---
 
 ## 6. Booking Flow (End-to-End)
 
-The complete end-to-end booking flow integrates frontend UI navigation and backend temporal seat holding (TTL).
+Seat holds and purchases are Convex mutations, which run as serializable transactions, so two people can never hold or buy the same seat.
 
 ```mermaid
 sequenceDiagram
     participant User
     participant App
-    participant Auth as Clerk Auth
-    participant Events API
-    participant Booking API
-    participant DB as MongoDB (TTL)
+    participant Auth as Clerk
+    participant Convex as Convex functions
+    participant DB as Convex DB
 
     User->>App: Opens event detail
-    App->>Events API: GET /api/events/:id
-    Events API-->>App: Event Data
-    User->>App: Taps "Book Now" & Selects Quantity
-    App->>Events API: GET /api/seats?section_id=...
-    Events API-->>App: Seat layout & statuses
-    User->>App: Selects specific seats
-    User->>App: Proceed to checkout
-    
-    opt User is not authenticated
-        App->>Auth: Prompts Sign In / OAuth
-        Auth-->>App: JWT Bearer Token
-    end
-    
-    App->>Booking API: POST /api/reservations (Hold Seats)
-    Booking API->>DB: Create Reservation (10 min TTL)
-    Booking API-->>App: Reservation ID
-    
-    User->>App: Confirms Checkout / Payment
-    App->>Booking API: POST /api/tickets (Confirm)
-    Booking API->>DB: Update Seat Status -> Booked
-    Booking API->>DB: Clear Reservation & Create Ticket
-    Booking API-->>App: Generated Ticket + QR Code
-    
-    App->>User: Renders Success Screen & updates Wallet
+    App->>Convex: events.get (live query)
+    Convex-->>App: Event data
+    User->>App: Taps "Book Now" & picks a category
+    App->>Convex: seats.list(section_id, event_id) (live query)
+    Convex-->>App: Seats with per-event status (updates live)
+    User->>App: Selects seats, taps Continue
+
+    Note over App,Auth: Signed-in users only (the (root) stack requires a Clerk session)
+    App->>Auth: Get session token
+    Auth-->>App: JWT (sent to Convex automatically)
+
+    App->>Convex: reservations.reserve (one per seat)
+    Convex->>DB: Create hold (15 min) + schedule reservations.expire
+    Convex-->>App: Reservation IDs
+
+    User->>App: Chooses payment method, taps Pay
+    App->>Convex: tickets.checkout (one per reservation)
+    Convex->>DB: Payment + Ticket (QR code), hold → Completed, sold count +1
+    Convex->>DB: Booking notification
+    Convex-->>App: Ticket
+    Convex-)User: Expo push notification (scheduled action)
+
+    App->>User: Success screen; wallet updates live
 ```
 
+If the user never pays, `reservations.expire` runs at the deadline and the seat becomes available again.
 
 ---
 
 ## 7. Environment Variables
 
-### Frontend (`/.env`)
+### Mobile app (`/.env`, `/.env.local`)
 ```env
 EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-EXPO_PUBLIC_API_URL=http://192.168.x.x:5001
+EXPO_PUBLIC_CONVEX_URL=https://<your-deployment>.convex.cloud   # written by `npx convex dev`
 ```
 
-### Backend (`/backend/.env`)
+### Admin dashboard (`/admin-dashboard/.env`)
 ```env
-PORT=5001
-MONGO_URI=mongodb+srv://...
-CLERK_SECRET_KEY=sk_test_...
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+VITE_CONVEX_URL=https://<your-deployment>.convex.cloud
 ```
 
-> **Note:** `EXPO_PUBLIC_API_URL` must be the **LAN IP** of your dev machine (not `localhost`) when testing on a physical device.
+### Convex deployment (set with `npx convex env set NAME value`)
+```env
+CLERK_JWT_ISSUER_DOMAIN=https://<your-app>.clerk.accounts.dev   # Clerk "Frontend API URL"
+CLERK_SECRET_KEY=sk_test_...                                    # lets Convex read the admin role from Clerk
+```
 
 ---
 
@@ -623,14 +647,14 @@ The project uses **Expo AI Agent Skills** installed via `npx skills add expo/ski
 - Deep link paths use the file-system path convention e.g. `/(root)/event/[id]`
 
 ### API Calls
-- Public data: `useFetch('/api/...', false)`
-- User-specific data: `useAuthFetch()` then `authFetch('/api/...')`
-- The base URL is always read from `EXPO_PUBLIC_API_URL` — never hardcoded
+- Screens that display data: `useLiveQuery(api.module.fn, args)` (add `{ authenticated: true }` for user data)
+- Writes: `useApiMutation(api.module.fn)`
+- One-off calls outside hooks: `convex.query(...)` / `convex.mutation(...)`
 
 ### Error Handling
-- The backend always returns `{ success: true, ... }` or `{ success: false, error: "..." }`
-- Frontend checks `data?.success` before reading payload fields
-- `fetchAPI` throws descriptive errors for non-JSON or non-OK responses
+- Backend functions fail with `fail("message")` (a `ConvexError`); successful calls just return data
+- `useApiMutation` / `errorMessage(err)` give the UI the plain message
+- `useLiveQuery` exposes failures as `error` instead of throwing
 
 ### Glassmorphism Pattern (Event Detail)
 ```tsx

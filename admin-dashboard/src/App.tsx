@@ -1,8 +1,10 @@
 import { SignedIn, SignedOut, useAuth, useUser } from "@clerk/clerk-react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AdminLayout from "./components/AdminLayout";
 import { useTranslation } from "./i18n";
+import { api } from "./lib/api";
 import DashboardHome from "./pages/DashboardHome";
 import EventsManager from "./pages/EventsManager";
 import HelpCenter from "./pages/HelpCenter";
@@ -22,7 +24,7 @@ interface ProtectedAdminProps {
 }
 
 function ProtectedAdmin({ children }: ProtectedAdminProps) {
-  const { getToken, signOut } = useAuth();
+  const { signOut } = useAuth();
   const { user } = useUser();
   const { t } = useTranslation();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
@@ -41,6 +43,37 @@ function ProtectedAdmin({ children }: ProtectedAdminProps) {
     }
     setLoading(false);
   }, [user]);
+
+  // The backend keeps its own copy of the user (and their role). Sync it once
+  // the Clerk session reaches Convex, then wait until Convex agrees we're admin
+  // so the pages below never fire requests that would be rejected.
+  const { isAuthenticated } = useConvexAuth();
+  const storeUser = useMutation(api.users.store);
+  const me = useQuery(api.users.me, isAuthenticated ? {} : "skip");
+  const [synced, setSynced] = useState(false);
+  const [backendSlow, setBackendSlow] = useState(false);
+  const userId = user?.id;
+
+  useEffect(() => {
+    if (!isAuthenticated || !userId) return;
+    storeUser({
+      name: user?.fullName ?? undefined,
+      email: user?.primaryEmailAddress?.emailAddress,
+      profile_photo: user?.imageUrl,
+    })
+      .then(() => setSynced(true))
+      .catch((err) => console.error("User sync failed", err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, userId]);
+
+  const backendRole = String(me?.user?.role ?? "").toLowerCase();
+  const backendReady = synced && backendRole === "admin";
+
+  useEffect(() => {
+    if (backendReady || !isAdmin) return;
+    const timer = setTimeout(() => setBackendSlow(true), 10000);
+    return () => clearTimeout(timer);
+  }, [backendReady, isAdmin]);
 
   // Auto sign-out countdown when access is denied
   useEffect(() => {
@@ -143,6 +176,24 @@ function ProtectedAdmin({ children }: ProtectedAdminProps) {
             {t("auth.signOutNow")}
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (!backendReady) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 p-8 text-center">
+        <div className="w-10 h-10 border-4 border-card-border border-t-primary rounded-full animate-spin"></div>
+        <p className="text-subtext font-medium animate-pulse">
+          {t("auth.verifyingAccess")}
+        </p>
+        {backendSlow && (
+          <p className="text-subtext text-xs max-w-md">
+            The backend has not confirmed your admin role yet. Check that
+            CLERK_JWT_ISSUER_DOMAIN and CLERK_SECRET_KEY are set on the Convex
+            deployment, then reload.
+          </p>
+        )}
       </div>
     );
   }

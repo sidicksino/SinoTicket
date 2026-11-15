@@ -5,7 +5,7 @@ import {
 } from "@/components/DownloadableTicket";
 import EmptyState from "@/components/EmptyState";
 import { useTheme } from "@/context/ThemeContext";
-import { useFetch } from "@/lib/fetch";
+import { api, useLiveQuery } from "@/lib/convex";
 import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import * as MediaLibrary from "expo-media-library";
@@ -38,7 +38,7 @@ const QRModal = React.memo(function QRModal({
   eventTitle: string;
   onClose: () => void;
 }) {
-  const qrUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/tickets/verify/${code}`;
+  const qrUrl = code;
 
   return (
     <View
@@ -520,10 +520,11 @@ export default function TicketWallet() {
     loading: fetchLoading,
     isOffline,
     refetch,
-  } = useFetch<any>("/api/tickets/me", {
-    authenticated: true,
-    cacheKey: "active_tickets",
-  });
+  } = useLiveQuery(
+    api.tickets.mine,
+    {},
+    { authenticated: true, cacheKey: "active_tickets" },
+  );
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
@@ -633,7 +634,7 @@ export default function TicketWallet() {
 
   // Derive active tickets from fetch data
   const tickets = React.useMemo(() => {
-    if (!data?.success || !Array.isArray(data.tickets)) return [];
+    if (!Array.isArray(data?.tickets)) return [];
 
     return data.tickets.filter((ticket: any) => {
       // Must be Active status

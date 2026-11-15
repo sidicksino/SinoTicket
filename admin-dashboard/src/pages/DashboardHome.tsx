@@ -1,4 +1,3 @@
-import { useAuth } from "@clerk/clerk-react";
 import {
   Calendar,
   DollarSign,
@@ -18,7 +17,7 @@ import {
   YAxis,
 } from "recharts";
 import { useTranslation } from "../i18n";
-import { apiUrl } from "../lib/api";
+import { api, call, convex } from "../lib/api";
 
 interface StatCardProps {
   label: string;
@@ -66,7 +65,6 @@ const formatNumber = (num: number) =>
   new Intl.NumberFormat("en-US").format(num);
 
 export default function DashboardHome() {
-  const { getToken } = useAuth();
   const { t } = useTranslation();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -74,11 +72,7 @@ export default function DashboardHome() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const token = await getToken();
-        const res = await fetch(apiUrl("/api/dashboard/stats"), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
+        const data = await call(convex.query(api.dashboard.stats, {}));
         if (data.success) {
           setStats(data.stats);
         }

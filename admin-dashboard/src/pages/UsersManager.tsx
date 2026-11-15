@@ -1,4 +1,4 @@
-import { useAuth, useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 import {
     Calendar,
     Loader2,
@@ -9,7 +9,7 @@ import {
     Users,
 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
-import { apiUrl } from "../lib/api";
+import { api, call, convex } from "../lib/api";
 
 interface LocalUser {
   _id: string;
@@ -23,7 +23,6 @@ interface LocalUser {
 }
 
 export default function UsersManager() {
-  const { getToken } = useAuth();
   const { user: clerkUser } = useUser();
 
   const [users, setUsers] = useState<LocalUser[]>([]);
@@ -40,20 +39,13 @@ export default function UsersManager() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const token = await getToken();
-
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
-        ...(activeSearch && { search: activeSearch }),
-      });
-
-      const res = await fetch(apiUrl(`/api/users/all?${queryParams}`), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const data = await res.json();
+      const data = await call(
+        convex.query(api.users.list, {
+          page,
+          limit,
+          ...(activeSearch ? { search: activeSearch } : {}),
+        }),
+      );
 
       if (data.success) {
         setUsers(data.users);

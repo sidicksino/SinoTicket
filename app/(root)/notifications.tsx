@@ -1,5 +1,5 @@
 import { useTheme } from "@/context/ThemeContext";
-import { useAuthFetch } from "@/lib/fetch";
+import { api, convex } from "@/lib/convex";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router/react-navigation";
 import { useRouter } from "expo-router";
@@ -18,7 +18,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function Notifications() {
   const { colors, isDark } = useTheme();
   const router = useRouter();
-  const { authFetch } = useAuthFetch();
   const { t } = useTranslation();
 
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -27,8 +26,8 @@ export default function Notifications() {
 
   const loadNotifications = useCallback(async () => {
     try {
-      const res = await authFetch("/api/notifications");
-      if (res?.success) {
+      const res = await convex.query(api.notifications.list, {});
+      if (res?.notifications) {
         setNotifications(res.notifications);
       }
     } catch (err: any) {
@@ -37,7 +36,7 @@ export default function Notifications() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [authFetch]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -67,7 +66,7 @@ export default function Notifications() {
     );
 
     try {
-      await authFetch(`/api/notifications/${id}/read`, { method: "PUT" });
+      await convex.mutation(api.notifications.markRead, { id: id as any });
     } catch (err: any) {
       console.log("Failed to mark as read", err);
       // Revert if failed
@@ -82,7 +81,7 @@ export default function Notifications() {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
 
     try {
-      await authFetch(`/api/notifications/read-all`, { method: "PUT" });
+      await convex.mutation(api.notifications.markAllRead, {});
     } catch (err: any) {
       console.log("Failed to mark all as read", err);
       loadNotifications(); // Reload to restore correct state

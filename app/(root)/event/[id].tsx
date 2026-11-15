@@ -2,7 +2,7 @@ import { QuantitySelector } from "@/components/Booking/QuantitySelector";
 import { SummaryBar } from "@/components/Booking/SummaryBar";
 import { TicketCategoryCard } from "@/components/Booking/TicketCategoryCard";
 import { useTheme } from "@/context/ThemeContext";
-import { useFetch } from "@/lib/fetch";
+import { api, useLiveQuery } from "@/lib/convex";
 import { Event } from "@/types/type";
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
@@ -41,11 +41,10 @@ export default function EventDetail() {
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
 
-  const { data, loading, error, refetch } = useFetch<{
-    success: boolean;
-    event: Event;
-  }>(`/api/events/${id}`, false);
-  const event = data?.success ? data.event : null;
+  const { data, loading, error, refetch } = useLiveQuery(api.events.get, {
+    id: String(id),
+  });
+  const event = (data?.event ?? null) as unknown as Event | null;
 
   // Date.now() is impure to call during render; use it only as a one-time
   // fallback via useState's lazy initializer for the rare case event.date is missing.
@@ -112,7 +111,7 @@ export default function EventDetail() {
     try {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-      const eventLink = `${process.env.EXPO_PUBLIC_API_URL}/events/${id}`;
+      const eventLink = `sinoticket://event/${id}`;
       const dateText = event.date
         ? new Date(event.date).toLocaleString([], {
             year: "numeric",

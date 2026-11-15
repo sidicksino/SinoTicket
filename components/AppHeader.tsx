@@ -1,6 +1,5 @@
 import { useTheme } from "@/context/ThemeContext";
-import { useFetch } from "@/lib/fetch";
-import { User as UserType } from "@/types/type";
+import { api, useLiveQuery } from "@/lib/convex";
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router/react-navigation";
@@ -24,11 +23,11 @@ export default function AppHeader({ subtitle = "Welcome back,", displayName }: A
   const { t } = useTranslation();
 
   // Fetch backend user data so updated name/photo are reflected immediately
-  const { data, refetch } = useFetch<{ success: boolean; user: UserType }>("/api/users/me", true);
+  const { data, refetch } = useLiveQuery(api.users.me, {}, { authenticated: true });
   const backendUser = data?.user;
 
   // Fetch unread notification count
-  const { data: notifData, refetch: refetchNotifs } = useFetch<{ success: boolean; count: number }>("/api/notifications/unread-count", true);
+  const { data: notifData, refetch: refetchNotifs } = useLiveQuery(api.notifications.unreadCount, {}, { authenticated: true });
 
   // Re-fetch when the screen containing this header gains focus
   useFocusEffect(

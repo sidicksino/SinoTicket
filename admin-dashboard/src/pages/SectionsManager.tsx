@@ -1,7 +1,6 @@
-import { useAuth } from "@clerk/clerk-react";
 import { Edit, Layers, Loader2, MapPin, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
-import { apiUrl } from "../lib/api";
+import { api, call, convex } from "../lib/api";
 
 interface Venue {
   _id: string;
@@ -31,7 +30,6 @@ const EMPTY_FORM: SectionFormData = {
 };
 
 export default function SectionsManager() {
-  const { getToken } = useAuth();
 
   const [sections, setSections] = useState<Section[]>([]);
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -54,12 +52,10 @@ export default function SectionsManager() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [sectionsRes, venuesRes] = await Promise.all([
-        fetch(apiUrl("/api/sections")),
-        fetch(apiUrl("/api/venue/getVenue")),
+      const [stData, vnData] = await Promise.all([
+        call(convex.query(api.sections.list, {})),
+        call(convex.query(api.venues.list, {})),
       ]);
-      const stData = await sectionsRes.json();
-      const vnData = await venuesRes.json();
 
       if (stData.success) setSections(stData.sections);
       if (vnData.success) setVenues(vnData.venues);
@@ -102,7 +98,6 @@ export default function SectionsManager() {
     setError("");
 
     try {
-      const token = await getToken();
       const isEdit = !!editingSection;
 
       const payload: any = {
@@ -117,20 +112,11 @@ export default function SectionsManager() {
         }
       }
 
-      const url = isEdit
-        ? apiUrl(`/api/sections/${editingSection!._id}`)
-        : apiUrl("/api/sections/add");
-
-      const res = await fetch(url, {
-        method: isEdit ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
+      const data = await call(
+        isEdit
+          ? convex.mutation(api.sections.update, { id: editingSection!._id, ...payload })
+          : convex.mutation(api.sections.add, payload),
+      );
       if (data.success) {
         setShowModal(false);
         fetchData();
@@ -152,12 +138,9 @@ export default function SectionsManager() {
     setDeleting(true);
     setError("");
     try {
-      const token = await getToken();
-      const res = await fetch(apiUrl(`/api/sections/${deleteTarget._id}`), {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
+      const data = await call(
+        convex.mutation(api.sections.remove, { id: deleteTarget._id }),
+      );
       if (data.success) {
         setDeleteTarget(null);
         fetchData();

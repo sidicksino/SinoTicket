@@ -1,8 +1,9 @@
 import { initializeI18n } from "@/i18n";
-import { ClerkProvider, useClerk } from "@clerk/expo";
+import { ClerkProvider, useAuth, useClerk } from "@clerk/expo";
 import { Syne_700Bold, Syne_800ExtraBold } from "@expo-google-fonts/syne";
 import { useFonts } from "expo-font";
 import * as NavigationBar from "expo-navigation-bar";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -16,7 +17,9 @@ import GlobalErrorBoundary, {
 import { ThemeProvider, useTheme } from "../context/ThemeContext";
 import "../global.css";
 import { usePushNotifications } from "../hooks/usePushNotifications";
+import UserSync from "../components/UserSync";
 import { tokenCache } from "../lib/auth";
+import { convex } from "../lib/convex";
 
 export { ErrorBoundary };
 
@@ -181,10 +184,13 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-        <SplashManager fontsLoaded={fontsLoaded} i18nReady={i18nReady} />
-        <GlobalErrorBoundary>
-          <AppShell />
-        </GlobalErrorBoundary>
+        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+          <SplashManager fontsLoaded={fontsLoaded} i18nReady={i18nReady} />
+          <UserSync />
+          <GlobalErrorBoundary>
+            <AppShell />
+          </GlobalErrorBoundary>
+        </ConvexProviderWithClerk>
       </ClerkProvider>
     </ThemeProvider>
   );

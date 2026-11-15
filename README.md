@@ -7,7 +7,7 @@ This repo is a monorepo with three parts:
 | Layer | Directory | Tech |
 |---|---|---|
 | Mobile App | `/` (root) | Expo / React Native / Expo Router |
-| REST API | [`/backend`](backend) | Node.js / Express / MongoDB |
+| Backend | [`/convex`](convex) | Convex (database, server functions, file storage) |
 | Admin Dashboard | [`/admin-dashboard`](admin-dashboard) | React / Vite |
 
 > For a deep dive into the architecture, data models, API routes, and conventions, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
@@ -17,7 +17,7 @@ This repo is a monorepo with three parts:
 - Browse and search events by title, date, and category
 - Event details with rich media, description, and venue info
 - Seat map selection and ticket category picker
-- Checkout flow with temporary seat holds (TTL-backed reservations)
+- Live seat map and checkout flow with 15-minute seat holds
 - Digital ticket wallet with QR code
 - Push notifications and in-app notification inbox
 - Google OAuth / email sign-in via Clerk
@@ -35,12 +35,11 @@ This repo is a monorepo with three parts:
 
    ```env
    EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-   EXPO_PUBLIC_API_URL=http://192.168.x.x:5001
    ```
 
-   > `EXPO_PUBLIC_API_URL` must be your dev machine's **LAN IP** (not `localhost`) when testing on a physical device.
+3. Start the backend (see [Backend](#getting-started-backend) below). It writes `EXPO_PUBLIC_CONVEX_URL` to `.env.local` for you.
 
-3. Start the app
+4. Start the app
 
    ```bash
    npx expo start
@@ -53,28 +52,40 @@ In the output, you'll find options to open the app in a
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-## Getting started (Backend API)
+## Getting started (Backend)
+
+The backend runs on [Convex](https://convex.dev). There is no server to host.
 
 ```bash
-cd backend
-npm install
+npx convex dev
 ```
 
-Create a `backend/.env`:
+The first run asks you to log in and create a project, then keeps your functions in sync as you edit `convex/`. One-time setup:
 
-```env
-PORT=5001
-MONGO_URI=mongodb+srv://...
-CLERK_SECRET_KEY=sk_test_...
-```
+1. In the Clerk dashboard, enable the **Convex** integration (or create a JWT template named `convex`) and copy the **Frontend API URL**.
+2. Tell Convex about Clerk:
 
-```bash
-npm run dev
-```
+   ```bash
+   npx convex env set CLERK_JWT_ISSUER_DOMAIN https://<your-app>.clerk.accounts.dev
+   npx convex env set CLERK_SECRET_KEY sk_test_...
+   ```
 
-The API listens on `0.0.0.0:PORT` and serves Swagger docs at `/api-docs`. See [backend/DEPLOY_RENDER.md](backend/DEPLOY_RENDER.md) for deployment notes.
+3. Optional demo data (3 venues, 9 sections, 360 seats, 5 events):
+
+   ```bash
+   npx convex run seed:run
+   ```
+
+Admins are users whose Clerk `publicMetadata.role` is `Admin`. Deploy to production with `npx convex deploy`.
 
 ## Getting started (Admin Dashboard)
+
+Create `admin-dashboard/.env`:
+
+```env
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+VITE_CONVEX_URL=https://<your-deployment>.convex.cloud
+```
 
 ```bash
 cd admin-dashboard
@@ -91,9 +102,9 @@ SinoTicket/
 ├── constants/          # Theme color tokens, etc.
 ├── context/            # ThemeContext and other React contexts
 ├── hooks/              # Custom hooks (auth, notifications, ...)
-├── lib/                # fetch utilities, Clerk token cache
+├── lib/                # Convex client helpers, Clerk token cache
 ├── i18n/ languages/     # Localization (en/fr)
-├── backend/            # Express + MongoDB REST API
+├── convex/             # Backend: schema + server functions
 └── admin-dashboard/    # React/Vite admin panel
 ```
 

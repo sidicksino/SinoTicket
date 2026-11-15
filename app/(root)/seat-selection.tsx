@@ -1,6 +1,6 @@
 import { SummaryBar } from "@/components/Booking/SummaryBar";
 import { useTheme } from "@/context/ThemeContext";
-import { useAuthFetch, useFetch } from "@/lib/fetch";
+import { api, useApiMutation, useLiveQuery } from "@/lib/convex";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -28,7 +28,7 @@ export default function SeatSelection() {
 
   const router = useRouter();
   const { colors } = useTheme();
-  const { authFetch } = useAuthFetch();
+  const reserveSeat = useApiMutation(api.reservations.reserve);
   const { t } = useTranslation();
 
   const SEAT_COLORS = {
@@ -41,24 +41,24 @@ export default function SeatSelection() {
   const [selectedSeats, setSelectedSeats] = useState<any[]>([]);
   const [reserving, setReserving] = useState(false);
 
-  const { data, loading, refetch } = useFetch<any>(
-    `/api/seats?section_id=${params.section_id}&event_id=${params.event_id}&limit=200`,
-    false,
+  // Live: seat colours change as other people reserve or buy.
+  const { data, loading, refetch } = useLiveQuery(api.seats.list, {
+    section_id: params.section_id,
+    event_id: params.event_id,
+    limit: 200,
+  });
+
+  const { data: reservationsData } = useLiveQuery(
+    api.reservations.mine,
+    {},
+    { authenticated: true },
   );
 
-  const { data: reservationsData } = useFetch<any>(
-    `/api/reservations/me`,
-    true,
-  );
-
-  const seats = data?.success && Array.isArray(data?.seats) ? data.seats : [];
+  const seats: any[] = Array.isArray(data?.seats) ? data.seats : [];
 
   // Pre-populate selections if user already has active reservations for this event
   useEffect(() => {
-    if (
-      reservationsData?.success &&
-      Array.isArray(reservationsData?.reservations)
-    ) {
+    if (Array.isArray(reservationsData?.reservations)) {
       const myReservations = reservationsData.reservations
         .filter((r: any) => {
           const resEventId =
@@ -107,12 +107,9 @@ export default function SeatSelection() {
     try {
       const reservations = await Promise.all(
         selectedSeats.map((seat) =>
-          authFetch("/api/reservations/reserve", {
-            method: "POST",
-            body: JSON.stringify({
-              event_id: params.event_id,
-              seat_id: seat._id,
-            }),
+          reserveSeat({
+            event_id: params.event_id as any,
+            seat_id: seat._id,
           }),
         ),
       );
