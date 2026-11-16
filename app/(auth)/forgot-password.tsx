@@ -1,28 +1,15 @@
+import AuthScreen, { AuthError, AuthFooterLink } from "@/components/auth/AuthScreen";
+import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
 import { useClerk } from "@clerk/expo";
-import { useTheme } from "@/context/ThemeContext";
-import { Ionicons } from "@expo/vector-icons";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import React from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Alert } from "react-native";
 
 const ForgotPassword = () => {
   const { client, setActive } = useClerk();
   const signIn = client.signIn;
-  const { colors } = useTheme();
   const { t } = useTranslation();
   const [email, setEmail] = React.useState("");
   const [code, setCode] = React.useState("");
@@ -56,7 +43,6 @@ const ForgotPassword = () => {
         err.message ||
         t("forgotPassword.sendResetFailed");
       setError(msg);
-      Alert.alert(t("common.error"), msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -94,167 +80,97 @@ const ForgotPassword = () => {
         err.message ||
         t("forgotPassword.invalidReset");
       setError(msg);
-      Alert.alert(t("common.error"), msg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: colors.background }}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-        >
-          {/* TOP BACK BUTTON */}
-          <View className="px-5 pt-4">
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="h-12 w-12 items-center justify-center rounded-full border"
-              style={{ backgroundColor: colors.card, borderColor: colors.border }}
-            >
-              <Ionicons name="arrow-back" size={24} color={colors.text} />
-            </TouchableOpacity>
-          </View>
+    <AuthScreen
+      title={isSuccess ? t("authUi.resetTitle") : t("authUi.forgotTitle")}
+      subtitle={
+        isSuccess
+          ? t("forgotPassword.codeSent", { email })
+          : t("forgotPassword.intro")
+      }
+      onBack={() => (isSuccess ? setIsSuccess(false) : router.back())}
+      footer={
+        <AuthFooterLink
+          prompt={t("forgotPassword.rememberPassword")}
+          action={t("auth.logIn")}
+          onPress={() => router.replace("/(auth)/sign-in")}
+        />
+      }
+    >
+      {!isSuccess ? (
+        <InputField
+          placeholder={t("forgotPassword.emailAddress")}
+          icon="mail-outline"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          textContentType="emailAddress"
+          autoComplete="email"
+          returnKeyType="send"
+          onSubmitEditing={handleReset}
+          value={email}
+          onChangeText={(val) => {
+            setEmail(val);
+            setError("");
+          }}
+        />
+      ) : (
+        <>
+          <InputField
+            placeholder={t("forgotPassword.enterCode")}
+            icon="key-outline"
+            keyboardType="number-pad"
+            textContentType="oneTimeCode"
+            autoComplete="one-time-code"
+            maxLength={6}
+            value={code}
+            onChangeText={(val) => {
+              setCode(val);
+              setError("");
+            }}
+          />
+          <InputField
+            placeholder={t("forgotPassword.newPassword")}
+            icon="lock-closed-outline"
+            secureTextEntry
+            textContentType="newPassword"
+            autoComplete="new-password"
+            hint={t("authUi.passwordHint")}
+            value={newPassword}
+            onChangeText={(val) => {
+              setNewPassword(val);
+              setError("");
+            }}
+          />
+        </>
+      )}
 
-          <View className="flex-1 px-8 pt-6">
-            {/* HEADER SECTION */}
-            <Animated.View
-              entering={FadeInDown.duration(800).delay(100).springify().damping(18)}
-            >
-              <View className="mb-5 h-14 w-14 items-center justify-center rounded-[20px]" style={{ backgroundColor: colors.primaryLight }}>
-                <Ionicons name="lock-closed" size={32} color={colors.primary} />
-              </View>
-              <Text className="font-syne text-[42px] font-black leading-tight" style={{ color: colors.text }}>
-                {isSuccess ? t("forgotPassword.reset") : t("forgotPassword.forgot")}
-              </Text>
-              <Text className="font-syne text-[42px] font-black leading-tight mb-4" style={{ color: colors.primary }}>
-                {t("forgotPassword.passwordQuestion")}
-              </Text>
-              <Text className="mb-8 text-[16px] font-medium leading-relaxed" style={{ color: colors.subtext }}>
-                {isSuccess 
-                  ? t("forgotPassword.codeSent", { email })
-                  : t("forgotPassword.intro")}
-              </Text>
-            </Animated.View>
+      <AuthError message={error} />
 
-            {/* FORM SECTION */}
-            <View className="w-full mt-2">
-              {!isSuccess ? (
-                <Animated.View entering={FadeInDown.duration(800).delay(200).springify().damping(18)}>
-                  <InputField
-                    label={t("forgotPassword.emailAddress")}
-                    placeholder={t("forgotPassword.enterEmail")}
-                    icon="mail-outline"
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    value={email}
-                    onChangeText={(val) => { setEmail(val); setError(""); }}
-                  />
-                </Animated.View>
-              ) : (
-                <Animated.View entering={FadeInDown.duration(800).delay(200).springify().damping(18)}>
-                  <InputField
-                    label={t("forgotPassword.resetCode")}
-                    placeholder={t("forgotPassword.enterCode")}
-                    icon="key-outline"
-                    keyboardType="numeric"
-                    value={code}
-                    onChangeText={(val) => { setCode(val); setError(""); }}
-                  />
-                  <InputField
-                    label={t("forgotPassword.newPassword")}
-                    placeholder={t("forgotPassword.enterNewPassword")}
-                    icon="lock-closed-outline"
-                    secureTextEntry={true}
-                    value={newPassword}
-                    onChangeText={(val) => { setNewPassword(val); setError(""); }}
-                  />
-                </Animated.View>
-              )}
-
-              {error ? (
-                <Text className="font-medium text-[14px] mt-4 text-center" style={{ color: colors.error }}>
-                  {error}
-                </Text>
-              ) : null}
-
-              {/* CALL TO ACTION BUTTON */}
-              <Animated.View
-                entering={FadeInDown.duration(800).delay(300).springify().damping(18)}
-                style={styles.button}
-              >
-                {!isSuccess ? (
-                  <TouchableOpacity
-                    onPress={handleReset}
-                    disabled={isSubmitting || !email.trim()}
-                    className="w-full h-[60px] rounded-full flex items-center justify-center shadow-lg active:opacity-80"
-                    style={[isSubmitting || !email.trim() ? { opacity: 0.6 } : {}, { backgroundColor: colors.primary, shadowColor: colors.primaryLight }]}
-                  >
-                    {isSubmitting ? (
-                      <ActivityIndicator color={colors.white} />
-                    ) : (
-                        <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>
-                        {t("forgotPassword.sendResetCode")}
-                        </Text>
-                    )}
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    onPress={handleVerify}
-                    disabled={isSubmitting || !code.trim() || !newPassword.trim()}
-                    className="w-full h-[60px] rounded-full flex items-center justify-center shadow-lg active:opacity-80"
-                    style={[isSubmitting || !code.trim() || !newPassword.trim() ? { opacity: 0.6 } : {}, { backgroundColor: colors.primary, shadowColor: colors.primaryLight }]}
-                  >
-                    {isSubmitting ? (
-                      <ActivityIndicator color={colors.white} />
-                    ) : (
-                        <Text className="font-syne font-bold text-[18px]" style={{ color: colors.white }}>
-                        {t("forgotPassword.resetPassword")}
-                        </Text>
-                    )}
-                  </TouchableOpacity>
-                )}
-              </Animated.View>
-            </View>
-
-            {/* FOOTER */}
-            <Animated.View
-              entering={FadeInUp.duration(800).delay(500).springify().damping(18)}
-              style={styles.footer}
-            >
-              <Text className="text-[15px] font-medium" style={{ color: colors.subtext }}>
-                {t("forgotPassword.rememberPassword")}{" "}
-              </Text>
-              <Link href="/(auth)/sign-in">
-                <Text className="text-[15px] font-bold" style={{ color: colors.primary }}>
-                  {t("auth.logIn")}
-                </Text>
-              </Link>
-            </Animated.View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      {!isSuccess ? (
+        <CustomButton
+          title={t("forgotPassword.sendResetCode")}
+          onPress={handleReset}
+          loading={isSubmitting}
+          disabled={!email.trim()}
+          className="mt-2"
+        />
+      ) : (
+        <CustomButton
+          title={t("forgotPassword.resetPassword")}
+          onPress={handleVerify}
+          loading={isSubmitting}
+          disabled={!code.trim() || !newPassword.trim()}
+          className="mt-2"
+        />
+      )}
+    </AuthScreen>
   );
 };
-
-const styles = StyleSheet.create({
-  button: {
-    marginTop: 24,
-  },
-  footer: {
-    marginTop: 40,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
 
 export default ForgotPassword;

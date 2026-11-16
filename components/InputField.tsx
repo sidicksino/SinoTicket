@@ -1,17 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 
-import { InputFieldProps } from "@/types/type";
 import { useTheme } from "@/context/ThemeContext";
+import { InputFieldProps } from "@/types/type";
 
+/**
+ * Text field with an optional icon, label and password visibility toggle.
+ * Keyboard avoidance is handled once per screen (see AuthScreen), not here.
+ */
 const InputField = ({
   label,
   icon,
@@ -21,72 +18,77 @@ const InputField = ({
   inputStyle,
   iconStyle,
   className,
+  hint,
   ...props
 }: InputFieldProps) => {
   const [isFocused, setIsFocused] = useState(false);
-  const [isSecureTextVisible, setIsSecureTextVisible] = useState(secureTextEntry);
+  const [isHidden, setIsHidden] = useState(secureTextEntry);
   const { colors } = useTheme();
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <View className={`mb-5 w-full ${className}`}>
-        {label ? (
-          <Text className={`text-[15px] font-syne font-bold ml-1 mb-2 tracking-wide ${labelStyle}`} style={{ color: colors.text }}>
-            {label}
-          </Text>
-        ) : null}
-        <View
-          className={`flex h-[60px] flex-row items-center justify-start rounded-2xl border px-4 transition-all duration-300 ${containerStyle}`}
-          style={
-            isFocused
-              ? {
-                borderColor: colors.primary,
-                backgroundColor: colors.inputBg,
-                shadowColor: colors.primary,
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.12,
-                shadowRadius: 10,
-                elevation: 6,
-              }
-              : {
-                borderColor: colors.border,
-                backgroundColor: colors.inputBg,
-              }
-          }
+    <View className={`mb-3 w-full ${className ?? ""}`}>
+      {label ? (
+        <Text
+          className={`text-[13px] font-semibold ml-1 mb-1.5 ${labelStyle ?? ""}`}
+          style={{ color: colors.subtext }}
         >
-          {icon && (
-            <Ionicons name={icon as any}
-              size={24}
-              color={isFocused ? colors.primary : colors.tabBarIcon}
-              className={`mr-3 ${iconStyle}`}
-              style={{ marginRight: 12 }}
-            />
-          )}
-          <TextInput
-            className={`flex-1 font-medium text-[16px] h-full text-left ${inputStyle}`}
-            secureTextEntry={isSecureTextVisible}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            placeholderTextColor={colors.subtext}
-            style={{ paddingVertical: 0, color: colors.text }}
-            {...props}
+          {label}
+        </Text>
+      ) : null}
+      <View
+        className={`flex h-[52px] flex-row items-center rounded-2xl border px-4 ${containerStyle ?? ""}`}
+        style={{
+          borderColor: isFocused ? colors.primary : colors.border,
+          borderWidth: isFocused ? 1.5 : 1,
+          backgroundColor: colors.inputBg,
+        }}
+      >
+        {icon ? (
+          <Ionicons
+            name={icon as any}
+            size={20}
+            color={isFocused ? colors.primary : colors.tabBarIcon}
+            style={{ marginRight: 10 }}
+            className={iconStyle}
           />
-          {secureTextEntry && (
-            <TouchableOpacity
-              onPress={() => setIsSecureTextVisible(!isSecureTextVisible)}
-              className="p-2"
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name={isSecureTextVisible ? "eye-off-outline" : "eye-outline"}
-                size={22}
-                color={colors.tabBarIcon}
-              />
-            </TouchableOpacity>
-          )}
-        </View>
+        ) : null}
+        <TextInput
+          className={`flex-1 text-[16px] h-full ${inputStyle ?? ""}`}
+          secureTextEntry={isHidden}
+          placeholderTextColor={colors.subtext}
+          accessibilityLabel={label || (props.placeholder as string)}
+          style={{ paddingVertical: 0, color: colors.text }}
+          {...props}
+          onFocus={(e) => {
+            setIsFocused(true);
+            props.onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setIsFocused(false);
+            props.onBlur?.(e);
+          }}
+        />
+        {secureTextEntry ? (
+          <TouchableOpacity
+            onPress={() => setIsHidden(!isHidden)}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel={isHidden ? "Show password" : "Hide password"}
+          >
+            <Ionicons
+              name={isHidden ? "eye-off-outline" : "eye-outline"}
+              size={20}
+              color={colors.tabBarIcon}
+            />
+          </TouchableOpacity>
+        ) : null}
       </View>
-    </KeyboardAvoidingView>
+      {hint ? (
+        <Text className="text-[12px] ml-1 mt-1.5" style={{ color: colors.subtext }}>
+          {hint}
+        </Text>
+      ) : null}
+    </View>
   );
 };
 
