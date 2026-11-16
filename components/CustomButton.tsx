@@ -2,6 +2,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { ButtonProps } from "@/types/type";
 import { ActivityIndicator, Text, TouchableOpacity } from "react-native";
 
+/** The app's one button style: 54pt tall, rounded, full width. */
 const CustomButton = ({
     onPress,
     title,
@@ -11,6 +12,8 @@ const CustomButton = ({
     IconRight,
     className,
     loading,
+    disabled,
+    style,
     ...props
 }: ButtonProps) => {
     const { colors } = useTheme();
@@ -45,15 +48,17 @@ const CustomButton = ({
         }
     };
 
+    const isDisabled = !!disabled || !!loading;
+
     return (
         <TouchableOpacity
             onPress={onPress}
-            disabled={loading}
-            className={`w-full rounded-xl p-4 flex flex-row justify-center items-center${className}`}
-            style={[
-                getBgStyle(bgVariant),
-                { shadowColor: colors.text, shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }
-            ]}
+            disabled={isDisabled}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isDisabled, busy: !!loading }}
+            className={`w-full h-[54px] rounded-2xl px-4 flex flex-row justify-center items-center gap-2 ${className ?? ""}`}
+            style={[getBgStyle(bgVariant), { opacity: disabled && !loading ? 0.5 : 1 }, style]}
             {...props}
         >
             {loading ? (
@@ -61,7 +66,7 @@ const CustomButton = ({
             ) : (
                 <>
                     {IconLeft && <IconLeft />}
-                    <Text className="text-lg font-bold" style={getTextStyle(textVariant)}>
+                    <Text className="text-[17px] font-bold" style={getTextStyle(textVariant)}>
                         {title}
                     </Text>
                     {IconRight && <IconRight />}

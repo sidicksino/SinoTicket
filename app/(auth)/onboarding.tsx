@@ -23,6 +23,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import CustomButton from "@/components/CustomButton";
 import { onboarding } from "@/constants";
 import { useTheme } from "@/context/ThemeContext";
+import { markOnboardingSeen } from "@/lib/onboarding";
 
 type OnboardingSlide = {
   id: number;
@@ -210,9 +211,14 @@ const OnboardingScreen = () => {
 
   const isLastSlide = activeIndex === onboarding.length - 1;
 
+  const finishOnboarding = () => {
+    markOnboardingSeen();
+    router.replace("/(auth)/welcome");
+  };
+
   const handleNext = () => {
     if (isLastSlide) {
-      router.replace("/(auth)/welcome" as any);
+      finishOnboarding();
       return;
     }
 
@@ -229,7 +235,7 @@ const OnboardingScreen = () => {
     >
       <StatusBar style={theme === "dark" ? "light" : "dark"} />
       <TouchableOpacity
-        onPress={() => router.replace("/(auth)/welcome" as any)}
+        onPress={finishOnboarding}
         className="w-full items-end px-6 py-4"
       >
         <Text

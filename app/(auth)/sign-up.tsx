@@ -1,28 +1,20 @@
+import AuthScreen, {
+  AuthDivider,
+  AuthError,
+  AuthFooterLink,
+} from "@/components/auth/AuthScreen";
+import SocialButton from "@/components/auth/SocialButton";
+import CustomButton from "@/components/CustomButton";
 import InputField from "@/components/InputField";
 import LoadingScreen from "@/components/LoadingScreen";
 import { useTheme } from "@/context/ThemeContext";
 import useSocialAuth from "@/hooks/useSocialAuth";
 import { api, convex } from "@/lib/convex";
 import { useAuth, useClerk, useSignUp } from "@clerk/expo";
-import { Ionicons } from "@expo/vector-icons";
-import { Link, Redirect, useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-const AnimatedView = Animated.View;
+import { Text, TouchableOpacity } from "react-native";
 
 const CLERK_ERRORS = {
   EMAIL_EXISTS: "form_identifier_exists",
@@ -42,7 +34,6 @@ const SignUp = () => {
   const [fullName, setFullName] = React.useState("");
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [confirmPassword, setConfirmPassword] = React.useState("");
   const [code, setCode] = React.useState("");
   const [pendingVerification, setPendingVerification] = React.useState(false);
   const [apiError, setApiError] = React.useState("");
@@ -54,8 +45,6 @@ const SignUp = () => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress))
       return t("signUp.validation.invalidEmail");
     if (password.length < 8) return t("signUp.validation.passwordMinLength");
-    if (password !== confirmPassword)
-      return t("signUp.validation.passwordsDoNotMatch");
     return null;
   };
 
@@ -122,20 +111,9 @@ const SignUp = () => {
       if (err.message === "EMAIL_EXISTS_IN_DB") {
         setApiError(t("signUp.validation.emailAlreadyRegistered"));
         setShowLoginInstead(true);
-        Alert.alert(
-          t("signUp.accountAlreadyExistsTitle"),
-          t("signUp.accountAlreadyExistsMessage"),
-          [
-            { text: t("common.cancel"), style: "cancel" },
-            {
-              text: t("auth.logIn"),
-              onPress: () => router.replace("/(auth)/sign-in"),
-            },
-          ],
-        );
       } else if (err?.errors?.[0]?.code === CLERK_ERRORS.EMAIL_EXISTS) {
         // Fallback for race conditions if the email was created in Clerk but not our DB yet
-        setApiError(t("signUp.validation.emailAlreadyRegisteredClerk"));
+        setApiError(t("signUp.validation.emailAlreadyRegistered"));
         setShowLoginInstead(true);
       } else {
         setApiError(resolveClerkError(err));
@@ -200,430 +178,153 @@ const SignUp = () => {
     return <Redirect href="/(root)/(tabs)/home" />;
   }
 
-  // ─── OTP Screen ───────────────────────────────────────────────────────────
+  const goBack = router.canGoBack() ? () => router.back() : undefined;
+
+  // ─── Step 2: Enter the emailed code ──────────────────────────────────────
   if (pendingVerification) {
     return (
-      <SafeAreaView
-        className="flex-1"
-        style={{ backgroundColor: colors.background }}
+      <AuthScreen
+        title={t("authUi.verifyTitle")}
+        subtitle={
+          <>
+            {t("signUp.codeSent")}{" "}
+            <Text style={{ fontWeight: "700", color: colors.text }}>
+              {emailAddress}
+            </Text>
+          </>
+        }
+        onBack={() => {
+          setPendingVerification(false);
+          setCode("");
+          setApiError("");
+        }}
       >
-        <View className="flex-1 px-8 pt-16">
-          <View className="mb-8">
-            <View
-              className="mb-5 h-14 w-14 items-center justify-center rounded-[20px]"
-              style={{ backgroundColor: colors.primaryLight }}
-            >
-              <Ionicons
-                name="mail-unread-outline"
-                size={28}
-                color={colors.primary}
-              />
-            </View>
-            <Text
-              className="font-syne text-[32px] font-black leading-tight"
-              style={{ color: colors.text }}
-            >
-              {t("signUp.checkYour")}
-            </Text>
-            <Text
-              className="font-syne text-[32px] font-black leading-tight mb-3"
-              style={{ color: colors.primary }}
-            >
-              {t("signUp.email")}
-            </Text>
-            <Text
-              className="text-[15px] font-medium"
-              style={{ color: colors.subtext }}
-            >
-              {t("signUp.codeSent")}{" "}
-              <Text className="font-bold" style={{ color: colors.text }}>
-                {emailAddress}
-              </Text>
-            </Text>
-          </View>
-
-          <InputField
-            label={t("auth.verificationCode")}
-            placeholder={t("signUp.enterCode")}
-            icon="key-outline"
-            keyboardType="numeric"
-            value={code}
-            onChangeText={(val) => {
-              setCode(val);
-              setApiError("");
-              setShowLoginInstead(false);
-            }}
-          />
-
-          {apiError ? (
-            <Text
-              className="font-medium mt-2 mb-2 text-center"
-              style={{ color: colors.error }}
-            >
-              {apiError}
-            </Text>
-          ) : null}
-
-          <TouchableOpacity
-            onPress={handleVerify}
-            disabled={isSubmitting || !code}
-            className="w-full h-[60px] rounded-full flex items-center justify-center shadow-lg active:opacity-80 mt-6"
-            style={[
-              isSubmitting || !code ? { opacity: 0.6 } : {},
-              {
-                backgroundColor: colors.primary,
-                shadowColor: colors.primaryLight,
-              },
-            ]}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color={colors.white} />
-            ) : (
-              <Text
-                className="font-syne font-bold text-[18px]"
-                style={{ color: colors.white }}
-              >
-                {t("signUp.verifyEmail")}
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setPendingVerification(false)}
-            className="mt-4 items-center"
-          >
-            <Text
-              className="text-[14px] font-medium"
-              style={{ color: colors.subtext }}
-            >
-              {"<- "}
-              {t("signUp.changeEmail")}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+        <InputField
+          placeholder={t("signUp.enterCode")}
+          icon="key-outline"
+          keyboardType="number-pad"
+          textContentType="oneTimeCode"
+          autoComplete="one-time-code"
+          autoFocus
+          maxLength={6}
+          value={code}
+          onChangeText={(val) => {
+            setCode(val);
+            setApiError("");
+          }}
+        />
+        <AuthError message={apiError} />
+        <CustomButton
+          title={t("signUp.verifyEmail")}
+          onPress={handleVerify}
+          loading={isSubmitting}
+          disabled={!code}
+          className="mt-2"
+        />
+      </AuthScreen>
     );
   }
 
-  const canSubmit =
-    !!fullName &&
-    !!emailAddress &&
-    !!password &&
-    !!confirmPassword &&
-    !isSubmitting;
+  const canSubmit = !!fullName && !!emailAddress && !!password;
 
-  // ─── Sign Up Screen ───────────────────────────────────────────────────────
+  const clearError = () => {
+    setApiError("");
+    setShowLoginInstead(false);
+  };
+
+  // ─── Step 1: Account details ─────────────────────────────────────────────
   return (
-    <SafeAreaView
-      className="flex-1"
-      style={{ backgroundColor: colors.background }}
+    <AuthScreen
+      title={t("authUi.signUpTitle")}
+      subtitle={t("authUi.signUpSubtitle")}
+      onBack={goBack}
+      footer={
+        <AuthFooterLink
+          prompt={t("signUp.alreadyHaveAccount")}
+          action={t("auth.logIn")}
+          onPress={() => router.replace("/(auth)/sign-in")}
+        />
+      }
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
+      <InputField
+        placeholder={t("signUp.fullName")}
+        icon="person-outline"
+        autoCapitalize="words"
+        textContentType="name"
+        autoComplete="name"
+        returnKeyType="next"
+        value={fullName}
+        onChangeText={(val) => {
+          setFullName(val);
+          clearError();
+        }}
+      />
+      <InputField
+        placeholder={t("signUp.emailAddress")}
+        icon="mail-outline"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        textContentType="emailAddress"
+        autoComplete="email"
+        returnKeyType="next"
+        value={emailAddress}
+        onChangeText={(val) => {
+          setEmailAddress(val);
+          clearError();
+        }}
+      />
+      <InputField
+        placeholder={t("signUp.password")}
+        icon="lock-closed-outline"
+        secureTextEntry
+        textContentType="newPassword"
+        autoComplete="new-password"
+        returnKeyType="go"
+        onSubmitEditing={handleSubmit}
+        hint={t("authUi.passwordHint")}
+        value={password}
+        onChangeText={(val) => {
+          setPassword(val);
+          clearError();
+        }}
+      />
+
+      <AuthError message={apiError} />
+      {showLoginInstead ? (
+        <TouchableOpacity
+          onPress={() => router.replace("/(auth)/sign-in")}
+          style={{ alignSelf: "center", marginBottom: 12 }}
+          hitSlop={8}
         >
-          <View className="flex-1 px-8 pt-8">
-            {/* HEADER */}
-            <AnimatedView
-              entering={FadeInDown.duration(800)
-                .delay(100)
-                .springify()
-                .damping(18)}
-            >
-              <View className="mb-8">
-                <View
-                  className="mb-5 h-14 w-14 items-center justify-center rounded-[20px]"
-                  style={{ backgroundColor: colors.primaryLight }}
-                >
-                  <Ionicons name="sparkles" size={28} color={colors.primary} />
-                </View>
-                <Text
-                  className="font-syne text-[42px] font-black leading-tight"
-                  style={{ color: colors.text }}
-                >
-                  {t("signUp.create")}
-                </Text>
-                <Text
-                  className="font-syne text-[42px] font-black leading-tight mb-4"
-                  style={{ color: colors.primary }}
-                >
-                  {t("signUp.account")}
-                </Text>
-                <Text
-                  className="text-[16px] font-medium leading-relaxed"
-                  style={{ color: colors.subtext }}
-                >
-                  {t("signUp.subtitle")}
-                </Text>
-              </View>
-            </AnimatedView>
+          <Text style={{ fontWeight: "700", color: colors.primary }}>
+            {t("signUp.logInInstead")}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
 
-            {/* FORM */}
-            <View className="w-full mt-2">
-              <AnimatedView
-                entering={FadeInDown.duration(800)
-                  .delay(200)
-                  .springify()
-                  .damping(18)}
-              >
-                <InputField
-                  label={t("signUp.fullName")}
-                  placeholder={t("signUp.enterName")}
-                  icon="person-outline"
-                  autoCapitalize="words"
-                  value={fullName}
-                  onChangeText={(val) => {
-                    setFullName(val);
-                    setApiError("");
-                    setShowLoginInstead(false);
-                  }}
-                />
-              </AnimatedView>
+      <CustomButton
+        title={t("signUp.signUp")}
+        onPress={handleSubmit}
+        loading={isSubmitting}
+        disabled={!canSubmit}
+        className="mt-3"
+      />
 
-              <AnimatedView
-                entering={FadeInDown.duration(800)
-                  .delay(300)
-                  .springify()
-                  .damping(18)}
-              >
-                <InputField
-                  label={t("signUp.emailAddress")}
-                  placeholder={t("signUp.enterEmail")}
-                  icon="mail-outline"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  value={emailAddress}
-                  onChangeText={(val) => {
-                    setEmailAddress(val);
-                    setApiError("");
-                    setShowLoginInstead(false);
-                  }}
-                />
-              </AnimatedView>
+      <AuthDivider />
 
-              <AnimatedView
-                entering={FadeInDown.duration(800)
-                  .delay(400)
-                  .springify()
-                  .damping(18)}
-              >
-                <InputField
-                  label={t("signUp.password")}
-                  placeholder={t("signUp.enterPassword")}
-                  icon="lock-closed-outline"
-                  secureTextEntry={true}
-                  value={password}
-                  onChangeText={(val) => {
-                    setPassword(val);
-                    setApiError("");
-                    setShowLoginInstead(false);
-                  }}
-                />
-              </AnimatedView>
-
-              <AnimatedView
-                entering={FadeInDown.duration(800)
-                  .delay(450)
-                  .springify()
-                  .damping(18)}
-              >
-                <InputField
-                  label={t("signUp.confirmPassword")}
-                  placeholder={t("signUp.confirmYourPassword")}
-                  icon="lock-closed-outline"
-                  secureTextEntry={true}
-                  value={confirmPassword}
-                  onChangeText={(val) => {
-                    setConfirmPassword(val);
-                    setApiError("");
-                    setShowLoginInstead(false);
-                  }}
-                />
-              </AnimatedView>
-
-              <AnimatedView
-                entering={FadeInDown.duration(800)
-                  .delay(500)
-                  .springify()
-                  .damping(18)}
-                style={{ marginTop: 24 }}
-              >
-                <TouchableOpacity
-                  onPress={handleSubmit}
-                  disabled={!canSubmit}
-                  className="w-full h-[60px] rounded-full flex items-center justify-center shadow-lg active:opacity-80"
-                  style={[
-                    !canSubmit ? { opacity: 0.6 } : {},
-                    {
-                      backgroundColor: colors.primary,
-                      shadowColor: colors.primaryLight,
-                    },
-                  ]}
-                >
-                  {isSubmitting ? (
-                    <ActivityIndicator color={colors.white} />
-                  ) : (
-                    <Text
-                      className="font-syne font-bold text-[18px]"
-                      style={{ color: colors.white }}
-                    >
-                      {t("signUp.signUp")}
-                    </Text>
-                  )}
-                </TouchableOpacity>
-
-                {apiError ? (
-                  <View
-                    className="mt-4 px-4 py-3 rounded-2xl border"
-                    style={{
-                      backgroundColor: colors.card,
-                      borderColor: colors.error,
-                    }}
-                  >
-                    <Text
-                      className="font-medium text-[13px] text-center"
-                      style={{ color: colors.error }}
-                    >
-                      {apiError}
-                    </Text>
-                    {showLoginInstead && (
-                      <TouchableOpacity
-                        onPress={() => router.push("/(auth)/sign-in")}
-                        className="mt-2 items-center"
-                      >
-                        <Text
-                          className="font-bold text-[13px]"
-                          style={{ color: colors.primary }}
-                        >
-                          {t("signUp.logInInstead")}
-                          {" ->"}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                ) : null}
-              </AnimatedView>
-
-              {/* DIVIDER */}
-              <AnimatedView
-                entering={FadeInDown.duration(800)
-                  .delay(600)
-                  .springify()
-                  .damping(18)}
-                style={{
-                  marginTop: 40,
-                  marginBottom: 24,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 16,
-                }}
-              >
-                <View
-                  className="h-[1px] flex-1"
-                  style={{ backgroundColor: colors.border }}
-                />
-                <Text
-                  className="text-[13px] font-bold uppercase tracking-widest"
-                  style={{ color: colors.subtext }}
-                >
-                  {t("auth.orContinueWith")}
-                </Text>
-                <View
-                  className="h-[1px] flex-1"
-                  style={{ backgroundColor: colors.border }}
-                />
-              </AnimatedView>
-
-              {/* SOCIAL LOGIN */}
-              <AnimatedView
-                entering={FadeInDown.duration(800)
-                  .delay(700)
-                  .springify()
-                  .damping(18)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 16,
-                }}
-              >
-                <TouchableOpacity
-                  onPress={handleGoogleAuth}
-                  disabled={googleLoading}
-                  className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border active:opacity-80"
-                  style={[
-                    googleLoading ? { opacity: 0.6 } : {},
-                    {
-                      backgroundColor: colors.card,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                >
-                  {googleLoading ? (
-                    <ActivityIndicator color={colors.primary} />
-                  ) : (
-                    <Image
-                      source={require("@/assets/icons/google-icon.png")}
-                      style={{ width: 24, height: 24 }}
-                      resizeMode="contain"
-                    />
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => router.push("/(auth)/sign-up-phone")}
-                  className="flex-1 h-[56px] flex-row items-center justify-center rounded-2xl border active:opacity-80"
-                  style={{
-                    backgroundColor: colors.card,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <Image
-                    source={require("@/assets/icons/phone-icon.png")}
-                    style={{ width: 24, height: 24 }}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              </AnimatedView>
-
-              {/* FOOTER */}
-              <AnimatedView
-                entering={FadeInUp.duration(800)
-                  .delay(800)
-                  .springify()
-                  .damping(18)}
-                style={{
-                  marginTop: 40,
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  className="text-[15px] font-medium"
-                  style={{ color: colors.subtext }}
-                >
-                  {t("signUp.alreadyHaveAccount")}{" "}
-                </Text>
-                <Link href="/(auth)/sign-in">
-                  <Text
-                    className="text-[15px] font-bold"
-                    style={{ color: colors.primary }}
-                  >
-                    {t("auth.logIn")}
-                  </Text>
-                </Link>
-              </AnimatedView>
-            </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <SocialButton
+        title={t("authUi.continueWithGoogle")}
+        image={require("@/assets/icons/google-icon.png")}
+        onPress={handleGoogleAuth}
+        loading={googleLoading}
+      />
+      <SocialButton
+        title={t("authUi.continueWithPhone")}
+        icon="call-outline"
+        onPress={() => router.push("/(auth)/sign-up-phone")}
+      />
+    </AuthScreen>
   );
 };
 

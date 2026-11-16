@@ -11,7 +11,7 @@ export interface ButtonProps extends TouchableOpacityProps {
 }
 
 export interface InputFieldProps extends TextInputProps {
-  label: string;
+  label?: string;
   icon?: any;
   secureTextEntry?: boolean;
   labelStyle?: string;
@@ -19,6 +19,8 @@ export interface InputFieldProps extends TextInputProps {
   inputStyle?: string;
   iconStyle?: string;
   className?: string;
+  /** Small helper text shown under the field. */
+  hint?: string;
 }
 
 export interface Event {

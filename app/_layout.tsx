@@ -8,7 +8,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as WebBrowser from "expo-web-browser";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { LogBox, Platform, Text, View } from "react-native";
 import { configureReanimatedLogger } from "react-native-reanimated";
 import GlobalErrorBoundary, {
@@ -19,6 +19,7 @@ import "../global.css";
 import { usePushNotifications } from "../hooks/usePushNotifications";
 import UserSync from "../components/UserSync";
 import { tokenCache } from "../lib/auth";
+import { hideNativeSplash, isNativeSplashClaimed } from "../lib/splash";
 import { convex } from "../lib/convex";
 
 export { ErrorBoundary };
@@ -37,8 +38,8 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
 
 LogBox.ignoreLogs(["Clerk:"]);
 
-// SplashManager: Hides splash only when fonts, i18n, and Clerk are all ready
-// Runs outside ClerkLoaded to hide splash immediately when everything is ready
+// SplashManager: hides the native splash once fonts, i18n and Clerk are ready,
+// unless the animated intro has taken over that job.
 function SplashManager({
   fontsLoaded,
   i18nReady,
@@ -47,22 +48,16 @@ function SplashManager({
   i18nReady: boolean;
 }) {
   const { loaded: isClerkLoaded } = useClerk();
-  const hasHidden = useRef(false);
 
   useEffect(() => {
-    const hide = () => {
-      if (hasHidden.current) return;
-      hasHidden.current = true;
-      SplashScreen.hideAsync().catch((error) => {
-        console.warn("Splash hide failed:", error);
-      });
-    };
+    // Safety net: never keep the native splash up for more than 6 seconds.
+    const timeout = setTimeout(hideNativeSplash, 6000);
 
-    const timeout = setTimeout(hide, 6000);
-
-    if (fontsLoaded && i18nReady && isClerkLoaded) {
+    // When the animated intro is showing, it hides the native splash itself
+    // once its logo has painted (see lib/splash.ts).
+    if (fontsLoaded && i18nReady && isClerkLoaded && !isNativeSplashClaimed()) {
       clearTimeout(timeout);
-      hide();
+      hideNativeSplash();
     }
 
     return () => {
@@ -74,7 +69,7 @@ function SplashManager({
 }
 
 function AppShell() {
-  const { isDark } = useTheme();
+  const { isDark, colors } = useTheme();
 
   useEffect(() => {
     if (Platform.OS === "android") {
@@ -88,10 +83,15 @@ function AppShell() {
   usePushNotifications();
   return (
     <>
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
+      >
         <Stack.Screen name="index" options={{ animation: "fade" }} />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(root)" />
+        <Stack.Screen name="(auth)" options={{ animation: "fade" }} />
+        <Stack.Screen name="(root)" options={{ animation: "fade" }} />
         <Stack.Screen
           name="oauth-native-callback"
           options={{ presentation: "transparentModal" }}
